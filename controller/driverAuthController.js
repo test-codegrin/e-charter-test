@@ -10,7 +10,7 @@ require("dotenv").config();
 const resetCodes = new Map();
 const RESET_EXPIRATION = 5 * 60 * 1000;
 
-const transport = nodemailer.createTransport({
+const transport = nodemailer.createTransporter({
     service: "gmail",
     auth: {
         user: process.env.EMAIL_USER,
@@ -61,6 +61,8 @@ const registerDriver = asyncHandler(async (req, res) => {
 const loginDriver = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
+  console.log('Driver login attempt:', { email });
+
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }
@@ -85,15 +87,30 @@ const loginDriver = asyncHandler(async (req, res) => {
     {
       driver_id: driver[0].driver_id,
       email: driver[0].email,
+      role: 'driver'
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "1d" }
   );
+
+  // Get full driver details for response
+  const [driverDetails] = await db.query(driverAuthQueries.driverMailCheck, [email]);
+  const driverData = driverDetails[0];
+
+  // Return consistent user object
+  const user = {
+    driver_id: driverData.driver_id,
+    driverName: driverData.driverName,
+    email: driverData.email,
+    role: 'driver'
+  };
+
+  console.log('Driver login successful:', { driver_id: driver[0].driver_id, email: driver[0].email });
 
   res.status(200).json({
     message: "Login successful",
     token,
-    driver_id: driver[0].driver_id,
+    user
   });
 });
 

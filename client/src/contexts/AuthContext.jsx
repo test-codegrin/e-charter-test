@@ -21,7 +21,19 @@ export const AuthProvider = ({ children }) => {
     
     if (token && userData) {
       try {
-        setUser(JSON.parse(userData))
+        const parsedUser = JSON.parse(userData)
+        // Add role to user object if not present
+        if (!parsedUser.role) {
+          // Determine role based on user properties
+          if (parsedUser.admin_id || parsedUser.adminName) {
+            parsedUser.role = 'admin'
+          } else if (parsedUser.driver_id || parsedUser.driverName) {
+            parsedUser.role = 'driver'
+          } else {
+            parsedUser.role = 'customer'
+          }
+        }
+        setUser(parsedUser)
       } catch (error) {
         console.error('Error parsing user data:', error)
         localStorage.removeItem('token')
@@ -33,19 +45,44 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password, role) => {
     try {
+      console.log('Attempting login with:', { email, role })
+      
       const response = await authAPI.login(email, password, role)
+      console.log('Login response:', response.data)
+      
       const { token, user: userData } = response.data
       
-      localStorage.setItem('token', token)
-      localStorage.setItem('user', JSON.stringify(userData))
-      setUser(userData)
+      if (!token) {
+        throw new Error('No token received from server')
+      }
+
+      // Ensure user object has role
+      const userWithRole = {
+        ...userData,
+        role: role,
+        // Map different user types to consistent format
+        name: userData.adminName || userData.driverName || `${userData.firstName} ${userData.lastName}` || userData.name,
+        email: userData.email
+      }
       
-      return { success: true }
+      console.log('Storing user data:', userWithRole)
+      
+      localStorage.setItem('token', token)
+      localStorage.setItem('user', JSON.stringify(userWithRole))
+      setUser(userWithRole)
+      
+      return { success: true, user: userWithRole }
     } catch (error) {
       console.error('Login error:', error)
+      
+      // Clear any existing auth data on error
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      setUser(null)
+      
       return { 
         success: false, 
-        error: error.response?.data?.error || 'Login failed' 
+        error: error.response?.data?.error || error.message || 'Login failed' 
       }
     }
   }
@@ -54,6 +91,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setUser(null)
+    // Force page reload to clear any cached state
+    window.location.href = '/login'
   }
 
   const value = {

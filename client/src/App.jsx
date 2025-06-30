@@ -21,6 +21,8 @@ import DriverProfile from './pages/driver/Profile'
 function App() {
   const { user, loading } = useAuth()
 
+  console.log('App render - User:', user, 'Loading:', loading)
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-secondary-50">
@@ -30,8 +32,11 @@ function App() {
   }
 
   if (!user) {
+    console.log('No user found, showing login')
     return <Login />
   }
+
+  console.log('User authenticated, role:', user.role)
 
   return (
     <Layout>

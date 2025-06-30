@@ -22,17 +22,32 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (!formData.email || !formData.password) {
+      toast.error('Please fill in all fields')
+      return
+    }
+
     setLoading(true)
 
     try {
+      console.log('Submitting login form with:', { 
+        email: formData.email, 
+        role: formData.role 
+      })
+      
       const result = await login(formData.email, formData.password, formData.role)
+      
+      console.log('Login result:', result)
       
       if (result.success) {
         toast.success('Login successful!')
+        // Don't manually redirect - let App.jsx handle it based on auth state
       } else {
         toast.error(result.error || 'Login failed')
       }
     } catch (error) {
+      console.error('Login submission error:', error)
       toast.error('An error occurred during login')
     } finally {
       setLoading(false)
@@ -117,6 +132,7 @@ const Login = () => {
                 required
                 className="input-field"
                 placeholder="Enter your email"
+                disabled={loading}
               />
             </div>
 
@@ -135,11 +151,13 @@ const Login = () => {
                   required
                   className="input-field pr-10"
                   placeholder="Enter your password"
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-400 hover:text-secondary-600"
+                  disabled={loading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -171,6 +189,7 @@ const Login = () => {
                 type="button"
                 onClick={() => fillTestCredentials('admin')}
                 className="text-xs bg-secondary-100 hover:bg-secondary-200 text-secondary-700 py-2 px-3 rounded-lg transition-colors duration-200"
+                disabled={loading}
               >
                 Admin Test
               </button>
@@ -178,6 +197,7 @@ const Login = () => {
                 type="button"
                 onClick={() => fillTestCredentials('driver')}
                 className="text-xs bg-secondary-100 hover:bg-secondary-200 text-secondary-700 py-2 px-3 rounded-lg transition-colors duration-200"
+                disabled={loading}
               >
                 Driver Test
               </button>

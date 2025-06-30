@@ -63,13 +63,13 @@ const adminRegister = asyncHandler(async (req, res) => {
 const adminLogin = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-  
+    console.log('Admin login attempt:', { email });
+
     if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required" });
     }
 
     try {
-    
         const [adminRows] = await db.query(adminAuthQueries.adminMailCheck, [email]);
 
         if (adminRows.length === 0) {
@@ -89,15 +89,26 @@ const adminLogin = asyncHandler(async (req, res) => {
                 admin_id: admin.admin_id,
                 adminName: admin.adminName,
                 email: admin.email,
+                role: 'admin'
             },
             process.env.JWT_SECRET,
             { expiresIn: "1d" }
         );
 
+        // Return consistent user object
+        const user = {
+            admin_id: admin.admin_id,
+            adminName: admin.adminName,
+            email: admin.email,
+            role: 'admin'
+        };
+
+        console.log('Admin login successful:', { admin_id: admin.admin_id, email: admin.email });
+
         res.status(200).json({
             message: "Login successful",
             token,
-            admin_id: admin.admin_id,
+            user
         });
 
     } catch (err) {
@@ -106,7 +117,4 @@ const adminLogin = asyncHandler(async (req, res) => {
     }
 });
 
-
-
-
-module.exports = { adminRegister,adminLogin }
+module.exports = { adminRegister, adminLogin }

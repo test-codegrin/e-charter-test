@@ -24,10 +24,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Error:', error.response?.data || error.message)
+    
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
@@ -36,6 +41,7 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: (email, password, role) => {
+    console.log('Making login request to:', role === 'admin' ? '/admin/login' : '/driver/login')
     const endpoint = role === 'admin' ? '/admin/login' : '/driver/login'
     return api.post(endpoint, { email, password })
   }
@@ -75,7 +81,7 @@ export const driverAPI = {
   getDashboardStats: () => api.get('/driver/dashboard/stats'),
   
   // Trips
-  getTrips: () => api.get('/trips/driver'),
+  getTrips: () => api.get('/trips/user-trips'),
   getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
   startTrip: (tripId) => api.post(`/trips/${tripId}/start`),
   completeTrip: (tripId) => api.post(`/trips/${tripId}/complete`),
