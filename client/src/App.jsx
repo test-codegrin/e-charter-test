@@ -23,6 +23,7 @@ function App() {
 
   console.log('App render - User:', user, 'Loading:', loading)
 
+  // Show loading spinner while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-secondary-50">
@@ -31,6 +32,7 @@ function App() {
     )
   }
 
+  // Show login if no user is authenticated
   if (!user) {
     console.log('No user found, showing login')
     return <Login />
@@ -72,7 +74,7 @@ function App() {
           </>
         )}
 
-        {/* Fallback */}
+        {/* Fallback - redirect to home based on role */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

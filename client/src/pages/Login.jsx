@@ -42,7 +42,7 @@ const Login = () => {
       
       if (result.success) {
         toast.success(`Welcome ${result.user.name || 'back'}!`)
-        // The App component will handle the redirect based on user role
+        // Don't manually redirect - let App component handle it based on user state
       } else {
         toast.error(result.error || 'Login failed')
       }

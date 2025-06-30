@@ -26,9 +26,10 @@ api.interceptors.response.use(
   (error) => {
     console.error('API Error:', error.response?.data || error.message)
     
-    if (error.response?.status === 401) {
-      // Only clear auth and redirect if not already on login page
-      if (!window.location.pathname.includes('/login')) {
+    // Only handle 401 errors if not on login page and not during login
+    if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
+      // Check if this is not a login request
+      if (!error.config?.url?.includes('/login')) {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         window.location.href = '/'

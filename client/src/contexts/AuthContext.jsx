@@ -16,34 +16,47 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const userData = localStorage.getItem('user')
-    
-    console.log('AuthProvider init - Token exists:', !!token, 'UserData exists:', !!userData)
-    
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData)
-        console.log('Parsed user from localStorage:', parsedUser)
-        
-        // Ensure user object has proper structure
-        const userWithRole = {
-          ...parsedUser,
-          // Ensure role is set correctly
-          role: parsedUser.role || (parsedUser.admin_id ? 'admin' : parsedUser.driver_id ? 'driver' : 'customer'),
-          // Ensure name is set correctly
-          name: parsedUser.name || parsedUser.adminName || parsedUser.driverName || `${parsedUser.firstName || ''} ${parsedUser.lastName || ''}`.trim() || 'User'
+    const initializeAuth = () => {
+      const token = localStorage.getItem('token')
+      const userData = localStorage.getItem('user')
+      
+      console.log('AuthProvider init - Token exists:', !!token, 'UserData exists:', !!userData)
+      
+      if (token && userData) {
+        try {
+          const parsedUser = JSON.parse(userData)
+          console.log('Parsed user from localStorage:', parsedUser)
+          
+          // Validate the user object has required fields
+          if (parsedUser && (parsedUser.admin_id || parsedUser.driver_id || parsedUser.user_id)) {
+            // Ensure user object has proper structure
+            const userWithRole = {
+              ...parsedUser,
+              // Ensure role is set correctly
+              role: parsedUser.role || (parsedUser.admin_id ? 'admin' : parsedUser.driver_id ? 'driver' : 'customer'),
+              // Ensure name is set correctly
+              name: parsedUser.name || parsedUser.adminName || parsedUser.driverName || `${parsedUser.firstName || ''} ${parsedUser.lastName || ''}`.trim() || 'User'
+            }
+            
+            setUser(userWithRole)
+            console.log('User set from localStorage:', userWithRole)
+          } else {
+            console.log('Invalid user data in localStorage, clearing...')
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+          }
+        } catch (error) {
+          console.error('Error parsing user data:', error)
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
         }
-        
-        setUser(userWithRole)
-        console.log('User set from localStorage:', userWithRole)
-      } catch (error) {
-        console.error('Error parsing user data:', error)
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
       }
+      setLoading(false)
     }
-    setLoading(false)
+
+    // Small delay to prevent flash
+    const timer = setTimeout(initializeAuth, 100)
+    return () => clearTimeout(timer)
   }, [])
 
   const login = async (email, password, role) => {
@@ -76,6 +89,8 @@ export const AuthProvider = ({ children }) => {
       
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(userWithRole))
+      
+      // Set user state immediately
       setUser(userWithRole)
       
       return { success: true, user: userWithRole }
