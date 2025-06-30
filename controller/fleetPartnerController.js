@@ -76,14 +76,14 @@ const registerFleetPartner = asyncHandler(async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert fleet partner with all required information
+    // Insert fleet partner with all required information - FIXED column name
     const [result] = await db.query(`
       INSERT INTO drivers (
         driverName, email, password, address, cityName, zipCord, phoneNo,
         company_name, legal_entity_type, business_address, contact_person_name, 
         contact_person_position, fleet_size, service_areas, operating_hours,
         years_experience, safety_protocols, insurance_policy_number, 
-        business_license_number, certifications, references, additional_services,
+        business_license_number, certifications, client_references, additional_services,
         sustainability_practices, special_offers, communication_channels,
         terms_accepted, technology_agreement, registration_type, status
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -284,7 +284,7 @@ const getFleetPartnerProfile = asyncHandler(async (req, res) => {
         ...partner,
         service_areas: partner.service_areas ? JSON.parse(partner.service_areas) : [],
         certifications: partner.certifications ? JSON.parse(partner.certifications) : [],
-        references: partner.references ? JSON.parse(partner.references) : [],
+        client_references: partner.client_references ? JSON.parse(partner.client_references) : [],
         additional_services: partner.additional_services ? JSON.parse(partner.additional_services) : [],
         communication_channels: partner.communication_channels ? JSON.parse(partner.communication_channels) : [],
         serviceAreas,
