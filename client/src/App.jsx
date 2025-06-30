@@ -65,6 +65,13 @@ function App() {
           </>
         )}
 
+        {/* Customer Routes - Add when needed */}
+        {user.role === 'customer' && (
+          <>
+            <Route path="/" element={<div className="p-6"><h1>Customer Dashboard Coming Soon</h1></div>} />
+          </>
+        )}
+
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

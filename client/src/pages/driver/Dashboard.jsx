@@ -25,10 +25,15 @@ const Dashboard = () => {
       const tripsResponse = await driverAPI.getTrips()
       const trips = tripsResponse.data.trips || []
 
-      // Calculate stats
+      // Calculate stats with proper number handling
       const completedTrips = trips.filter(t => t.status === 'completed')
       const activeTrips = trips.filter(t => t.status === 'in_progress')
-      const totalEarnings = completedTrips.reduce((sum, trip) => sum + (trip.total_price || 0), 0)
+      
+      // Safely calculate total earnings
+      const totalEarnings = completedTrips.reduce((sum, trip) => {
+        const price = parseFloat(trip.total_price) || 0
+        return sum + price
+      }, 0)
       
       // Calculate monthly earnings (current month)
       const currentMonth = new Date().getMonth()
@@ -37,13 +42,16 @@ const Dashboard = () => {
         const tripDate = new Date(trip.created_at)
         return tripDate.getMonth() === currentMonth && tripDate.getFullYear() === currentYear
       })
-      const monthlyEarnings = monthlyTrips.reduce((sum, trip) => sum + (trip.total_price || 0), 0)
+      const monthlyEarnings = monthlyTrips.reduce((sum, trip) => {
+        const price = parseFloat(trip.total_price) || 0
+        return sum + price
+      }, 0)
 
       setStats({
         totalTrips: trips.length,
         completedTrips: completedTrips.length,
-        totalEarnings,
-        monthlyEarnings,
+        totalEarnings: Number(totalEarnings),
+        monthlyEarnings: Number(monthlyEarnings),
         activeTrips: activeTrips.length,
         rating: 4.8 // Mock rating
       })
@@ -53,15 +61,30 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
+      // Set default values on error
+      setStats({
+        totalTrips: 0,
+        completedTrips: 0,
+        totalEarnings: 0,
+        monthlyEarnings: 0,
+        activeTrips: 0,
+        rating: 4.8
+      })
     } finally {
       setLoading(false)
     }
   }
 
+  // Helper function to safely format currency
+  const formatCurrency = (value) => {
+    const numValue = Number(value) || 0
+    return numValue.toFixed(2)
+  }
+
   const statCards = [
     {
       title: 'Total Earnings',
-      value: `$${stats.totalEarnings.toFixed(2)}`,
+      value: `$${formatCurrency(stats.totalEarnings)}`,
       icon: DollarSign,
       color: 'bg-green-500',
       change: '+15%',
@@ -69,7 +92,7 @@ const Dashboard = () => {
     },
     {
       title: 'Monthly Earnings',
-      value: `$${stats.monthlyEarnings.toFixed(2)}`,
+      value: `$${formatCurrency(stats.monthlyEarnings)}`,
       icon: Calendar,
       color: 'bg-blue-500',
       change: '+8%',
@@ -241,7 +264,7 @@ const Dashboard = () => {
                     </span>
                   </td>
                   <td className="table-cell font-medium">
-                    ${trip.total_price?.toFixed(2) || '0.00'}
+                    ${formatCurrency(trip.total_price)}
                   </td>
                   <td className="table-cell text-secondary-500">
                     {new Date(trip.created_at).toLocaleDateString()}
