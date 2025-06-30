@@ -10,7 +10,8 @@ import {
   Bell,
   User,
   LogOut,
-  Truck
+  Truck,
+  Building
 } from 'lucide-react'
 
 const Sidebar = () => {
@@ -20,6 +21,7 @@ const Sidebar = () => {
   const adminMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Users, label: 'Drivers', path: '/admin/drivers' },
+    { icon: Building, label: 'Fleet Partners', path: '/admin/fleet-partners' },
     { icon: Car, label: 'Vehicles', path: '/admin/vehicles' },
     { icon: MapPin, label: 'Trips', path: '/admin/trips' },
     { icon: FileText, label: 'Invoices', path: '/admin/invoices' },

@@ -18,6 +18,7 @@ const pricingRoutes = require("./routes/pricingRoutes")
 const enhancedTripRoutes = require("./routes/enhancedTripRoutes")
 const invoiceRoutes = require("./routes/invoiceRoutes")
 const notificationRoutes = require("./routes/notificationRoutes")
+const fleetPartnerRoutes = require("./routes/fleetPartnerRoutes")
 
 const app = express();
 const PORT = process.env.PORT || 3000
@@ -64,6 +65,10 @@ try {
     
     app.use("/api/driver", driverCarRoutes)
     console.log("✓ Driver car routes registered");
+    
+    // Fleet partner routes
+    app.use("/api/fleet", fleetPartnerRoutes)
+    console.log("✓ Fleet partner routes registered");
     
     // Verification routes
     app.use("/api/verification", verificationRoutes)
@@ -135,6 +140,7 @@ app.listen(PORT, async () => {
     console.log("   - User Auth: /api/user/*");
     console.log("   - Admin: /api/admin/*");
     console.log("   - Driver: /api/driver/*");
+    console.log("   - Fleet Partners: /api/fleet/*");
     console.log("   - Pricing: /api/pricing/*");
     console.log("   - Trips: /api/trips/*");
     console.log("   - Invoices: /api/invoices/*");
@@ -145,6 +151,9 @@ app.listen(PORT, async () => {
     console.log("     - POST /api/admin/login");
     console.log("     - POST /api/driver/login");
     console.log("     - POST /api/user/login");
+    console.log("   🏢 Fleet Partners:");
+    console.log("     - POST /api/fleet/register");
+    console.log("     - GET /api/fleet/admin/all");
     console.log("   📊 Admin Dashboard:");
     console.log("     - GET /api/admin/dashboard/stats");
     console.log("     - GET /api/admin/alldrivers");

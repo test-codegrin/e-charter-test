@@ -11,12 +11,16 @@ import AdminVehicles from './pages/admin/Vehicles'
 import AdminTrips from './pages/admin/Trips'
 import AdminInvoices from './pages/admin/Invoices'
 import AdminNotifications from './pages/admin/Notifications'
+import FleetPartners from './pages/admin/FleetPartners'
 
 // Driver Pages
 import DriverDashboard from './pages/driver/Dashboard'
 import DriverTrips from './pages/driver/Trips'
 import DriverVehicles from './pages/driver/Vehicles'
 import DriverProfile from './pages/driver/Profile'
+
+// Public Pages
+import FleetPartnerRegistration from './pages/FleetPartnerRegistration'
 
 function App() {
   const { user, loading } = useAuth()
@@ -35,7 +39,12 @@ function App() {
   // Show login if no user is authenticated
   if (!user) {
     console.log('No user found, showing login')
-    return <Login />
+    return (
+      <Routes>
+        <Route path="/fleet-partner-registration" element={<FleetPartnerRegistration />} />
+        <Route path="*" element={<Login />} />
+      </Routes>
+    )
   }
 
   console.log('User authenticated, role:', user.role)
@@ -53,6 +62,7 @@ function App() {
             <Route path="/admin/trips" element={<AdminTrips />} />
             <Route path="/admin/invoices" element={<AdminInvoices />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/fleet-partners" element={<FleetPartners />} />
           </>
         )}
 
