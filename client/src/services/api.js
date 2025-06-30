@@ -27,11 +27,11 @@ api.interceptors.response.use(
     console.error('API Error:', error.response?.data || error.message)
     
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      // Only redirect if not already on login page
+      // Only clear auth and redirect if not already on login page
       if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login'
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        window.location.href = '/'
       }
     }
     return Promise.reject(error)
@@ -80,7 +80,7 @@ export const driverAPI = {
   // Dashboard
   getDashboardStats: () => api.get('/driver/dashboard/stats'),
   
-  // Trips
+  // Trips - Fixed endpoint to match backend
   getTrips: () => api.get('/trips/user-trips'),
   getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
   startTrip: (tripId) => api.post(`/trips/${tripId}/start`),

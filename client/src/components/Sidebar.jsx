@@ -39,6 +39,15 @@ const Sidebar = () => {
     return location.pathname === path || (path === '/' && location.pathname === '/')
   }
 
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (user?.name) return user.name
+    if (user?.adminName) return user.adminName
+    if (user?.driverName) return user.driverName
+    if (user?.firstName && user?.lastName) return `${user.firstName} ${user.lastName}`
+    return 'User'
+  }
+
   return (
     <div className="bg-white w-64 min-h-screen shadow-lg border-r border-secondary-200">
       {/* Logo */}
@@ -49,7 +58,7 @@ const Sidebar = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-secondary-900">eCharter</h1>
-            <p className="text-sm text-secondary-500 capitalize">{user?.role} Panel</p>
+            <p className="text-sm text-secondary-500 capitalize">{user?.role || 'User'} Panel</p>
           </div>
         </div>
       </div>
@@ -79,7 +88,7 @@ const Sidebar = () => {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-secondary-900 truncate">
-              {user?.name || user?.adminName || user?.driverName || 'User'}
+              {getUserDisplayName()}
             </p>
             <p className="text-xs text-secondary-500 truncate">{user?.email}</p>
           </div>

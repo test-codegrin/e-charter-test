@@ -6,6 +6,15 @@ const Header = () => {
   const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (user?.name) return user.name
+    if (user?.adminName) return user.adminName
+    if (user?.driverName) return user.driverName
+    if (user?.firstName && user?.lastName) return `${user.firstName} ${user.lastName}`
+    return 'User'
+  }
+
   return (
     <header className="bg-white border-b border-secondary-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -38,9 +47,9 @@ const Header = () => {
             </div>
             <div className="hidden md:block">
               <p className="text-sm font-medium text-secondary-900">
-                {user?.name || user?.adminName || user?.driverName || 'User'}
+                {getUserDisplayName()}
               </p>
-              <p className="text-xs text-secondary-500 capitalize">{user?.role}</p>
+              <p className="text-xs text-secondary-500 capitalize">{user?.role || 'User'}</p>
             </div>
           </div>
         </div>
