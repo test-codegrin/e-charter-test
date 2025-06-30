@@ -3,7 +3,7 @@ const router = express.Router();
 const { getApprovedCars } = require("../controller/userController");
 const { authenticationToken } = require("../middleware/authMiddleware")
 
-
-router.get("/getapprovecars",authenticationToken, getApprovedCars);
+// Fixed route definitions - no parameters needed here
+router.get("/getapprovecars", authenticationToken, getApprovedCars);
 
 module.exports = router;

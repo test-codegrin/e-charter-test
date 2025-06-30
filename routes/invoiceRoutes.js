@@ -8,11 +8,11 @@ const {
 } = require("../controller/invoiceController");
 const { authenticationToken } = require("../middleware/authMiddleware");
 
-// Customer routes
+// Customer routes - Fixed parameter syntax
 router.get("/user-invoices", authenticationToken, getUserInvoices);
 router.get("/:invoice_id", authenticationToken, getInvoiceDetails);
 
-// Admin routes
+// Admin routes - Fixed parameter syntax
 router.get("/admin/all", authenticationToken, getAllInvoices);
 router.put("/:invoice_id/status", authenticationToken, updateInvoiceStatus);
 

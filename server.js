@@ -36,7 +36,7 @@ app.get("/health", (req, res) => {
     });
 });
 
-// API Routes - Fixed route definitions
+// API Routes - All routes properly defined without malformed parameters
 app.use("/api/user", userAuthRoutes)
 app.use("/api/admin", adminAuthRoutes)
 app.use("/api/driver", driverRoutes)

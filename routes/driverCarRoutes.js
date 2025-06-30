@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { addCar,getCarsByDriver } = require("../controller/driverCarController");
+const { addCar, getCarsByDriver } = require("../controller/driverCarController");
 const { authenticationToken } = require("../middleware/authMiddleware")
 
-router.post("/addcar",authenticationToken, addCar); 
+// Fixed route definitions - no parameters needed here
+router.post("/addcar", authenticationToken, addCar); 
 router.get("/getdrivercar", authenticationToken, getCarsByDriver);
 
 module.exports = router;

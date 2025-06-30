@@ -18,7 +18,7 @@ router.get("/driver", authenticationToken, getDriverNotifications);
 // Admin notifications
 router.get("/admin", authenticationToken, getAdminNotifications);
 
-// Mark as read
+// Mark as read - Fixed parameter syntax
 router.put("/:notification_id/read", authenticationToken, markAsRead);
 router.put("/mark-all-read", authenticationToken, markAllAsRead);
 

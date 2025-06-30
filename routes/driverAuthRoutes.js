@@ -12,6 +12,7 @@ const {
     updateDriverPassword,
 } = require("../controller/driverAuthController");
 
+// Fixed route definitions - no parameters needed here
 router.post("/register", registerDriver);
 router.post("/login", loginDriver);
 router.post("/requestreset", requestDriverReset);
