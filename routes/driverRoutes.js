@@ -1,13 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const {
-    registerDriver,
-    loginDriver,
-    requestDriverReset,
-    verifyDriverResetCode,
-    resetDriverPassword,
-    updateDriverPassword,
-} = require("../controller/driverAuthController");
 
 const {
     getDashboardStats,
@@ -18,15 +10,7 @@ const {
 
 const { authenticationToken } = require("../middleware/authMiddleware");
 
-console.log("Setting up driver routes...");
-
-// Authentication routes
-router.post("/register", registerDriver);
-router.post("/login", loginDriver);
-router.post("/requestreset", requestDriverReset);
-router.post("/verifyreset", verifyDriverResetCode);
-router.post("/resetpassword", resetDriverPassword);
-router.put("/updatepassword", updateDriverPassword);
+console.log("Setting up driver main routes...");
 
 // Dashboard and profile routes
 router.get("/dashboard/stats", authenticationToken, getDashboardStats);
@@ -34,6 +18,11 @@ router.get("/trips", authenticationToken, getDriverTrips);
 router.get("/profile", authenticationToken, getDriverProfile);
 router.put("/profile", authenticationToken, updateDriverProfile);
 
-console.log("Driver routes configured successfully");
+console.log("Driver main routes configured successfully");
+console.log("Available driver routes:");
+console.log("  - GET /api/driver/dashboard/stats");
+console.log("  - GET /api/driver/trips");
+console.log("  - GET /api/driver/profile");
+console.log("  - PUT /api/driver/profile");
 
 module.exports = router;
