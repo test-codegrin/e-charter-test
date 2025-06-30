@@ -60,7 +60,7 @@ export const adminAPI = {
   getAllVehicles: () => api.get('/admin/allcars'),
   approveVehicle: (carId, status) => api.post(`/verification/approvecar/${carId}`, { status }),
   
-  // Trips
+  // Trips - Fixed endpoint
   getAllTrips: () => api.get('/trips/admin/all'),
   getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
   updateTripStatus: (tripId, status) => api.put(`/trips/${tripId}/status`, { status }),

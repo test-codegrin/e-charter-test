@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const {getAllDrivers,getAllCars} = require("../controller/adminController")
+const {getAllDrivers, getAllCars, getAllTrips} = require("../controller/adminController")
 const { authenticationToken } = require("../middleware/authMiddleware")
 
 // Fixed route definitions - no parameters needed here

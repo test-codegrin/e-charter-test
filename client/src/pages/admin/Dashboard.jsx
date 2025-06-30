@@ -32,18 +32,23 @@ const Dashboard = () => {
       const vehicles = vehiclesRes.data.cars || []
       const trips = tripsRes.data.trips || []
 
-      // Calculate stats
+      // Calculate stats with proper number handling
       const pendingDrivers = drivers.filter(d => d.status === 0).length
       const pendingVehicles = vehicles.filter(v => v.status === 0).length
       const activeTrips = trips.filter(t => t.status === 'in_progress').length
       const completedTrips = trips.filter(t => t.status === 'completed')
-      const totalRevenue = completedTrips.reduce((sum, trip) => sum + (trip.total_price || 0), 0)
+      
+      // Safely calculate total revenue with proper number conversion
+      const totalRevenue = completedTrips.reduce((sum, trip) => {
+        const price = parseFloat(trip.total_price) || 0
+        return sum + price
+      }, 0)
 
       setStats({
         totalDrivers: drivers.length,
         totalVehicles: vehicles.length,
         totalTrips: trips.length,
-        totalRevenue,
+        totalRevenue: Number(totalRevenue), // Ensure it's a number
         pendingApprovals: pendingDrivers + pendingVehicles,
         activeTrips
       })
@@ -53,9 +58,24 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
+      // Set default values on error
+      setStats({
+        totalDrivers: 0,
+        totalVehicles: 0,
+        totalTrips: 0,
+        totalRevenue: 0,
+        pendingApprovals: 0,
+        activeTrips: 0
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  // Helper function to safely format currency
+  const formatCurrency = (value) => {
+    const numValue = Number(value) || 0
+    return numValue.toFixed(2)
   }
 
   const statCards = [
@@ -85,7 +105,7 @@ const Dashboard = () => {
     },
     {
       title: 'Total Revenue',
-      value: `$${stats.totalRevenue.toFixed(2)}`,
+      value: `$${formatCurrency(stats.totalRevenue)}`, // Use helper function
       icon: DollarSign,
       color: 'bg-yellow-500',
       change: '+23%',
@@ -248,7 +268,7 @@ const Dashboard = () => {
                     </span>
                   </td>
                   <td className="table-cell font-medium">
-                    ${trip.total_price?.toFixed(2) || '0.00'}
+                    ${formatCurrency(trip.total_price)}
                   </td>
                   <td className="table-cell text-secondary-500">
                     {new Date(trip.created_at).toLocaleDateString()}
@@ -257,6 +277,12 @@ const Dashboard = () => {
               ))}
             </tbody>
           </table>
+
+          {recentTrips.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-secondary-500">No recent trips found.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
