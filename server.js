@@ -36,21 +36,52 @@ app.get("/health", (req, res) => {
     });
 });
 
-// API Routes - All routes properly defined without malformed parameters
-app.use("/api/user", userAuthRoutes)
-app.use("/api/admin", adminAuthRoutes)
-app.use("/api/driver", driverRoutes)
-app.use("/api/verification", verificationRoutes)
-app.use("/api/admin", adminRoutes)
-app.use("/api/driver", driverCarRoutes)
-app.use("/api/user", userRoutes)
-app.use("/api/trip", tripBookingRoutes)
+console.log("Registering routes...");
 
-// Enhanced API Routes - Fixed parameter syntax
-app.use("/api/pricing", pricingRoutes)
-app.use("/api/trips", enhancedTripRoutes)
-app.use("/api/invoices", invoiceRoutes)
-app.use("/api/notifications", notificationRoutes)
+// API Routes - All routes properly defined without malformed parameters
+try {
+    app.use("/api/user", userAuthRoutes)
+    console.log("✓ User auth routes registered");
+    
+    app.use("/api/admin", adminAuthRoutes)
+    console.log("✓ Admin auth routes registered");
+    
+    app.use("/api/driver", driverRoutes)
+    console.log("✓ Driver routes registered");
+    
+    app.use("/api/verification", verificationRoutes)
+    console.log("✓ Verification routes registered");
+    
+    app.use("/api/admin", adminRoutes)
+    console.log("✓ Admin routes registered");
+    
+    app.use("/api/driver", driverCarRoutes)
+    console.log("✓ Driver car routes registered");
+    
+    app.use("/api/user", userRoutes)
+    console.log("✓ User routes registered");
+    
+    app.use("/api/trip", tripBookingRoutes)
+    console.log("✓ Trip booking routes registered");
+
+    // Enhanced API Routes - Fixed parameter syntax
+    app.use("/api/pricing", pricingRoutes)
+    console.log("✓ Pricing routes registered");
+    
+    app.use("/api/trips", enhancedTripRoutes)
+    console.log("✓ Enhanced trip routes registered");
+    
+    app.use("/api/invoices", invoiceRoutes)
+    console.log("✓ Invoice routes registered");
+    
+    app.use("/api/notifications", notificationRoutes)
+    console.log("✓ Notification routes registered");
+    
+    console.log("All routes registered successfully!");
+} catch (routeError) {
+    console.error("Error registering routes:", routeError);
+    process.exit(1);
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {

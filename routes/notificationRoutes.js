@@ -9,6 +9,8 @@ const {
 } = require("../controller/notificationController");
 const { authenticationToken } = require("../middleware/authMiddleware");
 
+console.log("Setting up notification routes...");
+
 // User notifications
 router.get("/user", authenticationToken, getUserNotifications);
 
@@ -21,5 +23,7 @@ router.get("/admin", authenticationToken, getAdminNotifications);
 // Mark as read - Fixed parameter syntax
 router.put("/:notification_id/read", authenticationToken, markAsRead);
 router.put("/mark-all-read", authenticationToken, markAllAsRead);
+
+console.log("Notification routes configured successfully");
 
 module.exports = router;

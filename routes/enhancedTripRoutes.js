@@ -10,6 +10,8 @@ const {
 } = require("../controller/enhancedTripController");
 const { authenticationToken } = require("../middleware/authMiddleware");
 
+console.log("Setting up enhanced trip routes...");
+
 // Customer routes - Fixed parameter syntax
 router.post("/book", authenticationToken, bookTripWithPricing);
 router.get("/user-trips", authenticationToken, getUserTrips);
@@ -38,5 +40,7 @@ router.get("/admin/all", authenticationToken, async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
+
+console.log("Enhanced trip routes configured successfully");
 
 module.exports = router;
