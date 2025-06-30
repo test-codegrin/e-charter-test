@@ -3,100 +3,169 @@ require("dotenv").config();
 
 class EmailService {
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // Only initialize if email credentials are provided
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      this.transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+    } else {
+      console.warn('Email credentials not provided. Email service will be disabled.');
+      this.transporter = null;
+    }
   }
 
   // Customer emails
   async sendBookingConfirmation(customerData, tripData, invoiceData) {
+    if (!this.transporter) {
+      console.log('Email disabled - would send booking confirmation to:', customerData.email);
+      return;
+    }
+
     const subject = `Booking Confirmation - Trip #${tripData.trip_id}`;
     const html = this.generateBookingConfirmationHTML(customerData, tripData, invoiceData);
 
-    await this.transporter.sendMail({
-      from: `"eCharter" <${process.env.EMAIL_USER}>`,
-      to: customerData.email,
-      subject,
-      html
-    });
+    try {
+      await this.transporter.sendMail({
+        from: `"eCharter" <${process.env.EMAIL_USER}>`,
+        to: customerData.email,
+        subject,
+        html
+      });
+    } catch (error) {
+      console.error('Email sending failed:', error);
+    }
   }
 
   async sendNoVehicleAvailable(customerData, tripData) {
+    if (!this.transporter) {
+      console.log('Email disabled - would send no vehicle notification to:', customerData.email);
+      return;
+    }
+
     const subject = `Booking Request Received - Trip Inquiry`;
     const html = this.generateNoVehicleHTML(customerData, tripData);
 
-    await this.transporter.sendMail({
-      from: `"eCharter" <${process.env.EMAIL_USER}>`,
-      to: customerData.email,
-      subject,
-      html
-    });
+    try {
+      await this.transporter.sendMail({
+        from: `"eCharter" <${process.env.EMAIL_USER}>`,
+        to: customerData.email,
+        subject,
+        html
+      });
+    } catch (error) {
+      console.error('Email sending failed:', error);
+    }
   }
 
   async sendInvoice(customerData, invoiceData) {
+    if (!this.transporter) {
+      console.log('Email disabled - would send invoice to:', customerData.email);
+      return;
+    }
+
     const subject = `Invoice #${invoiceData.invoice_number} - eCharter`;
     const html = this.generateInvoiceHTML(customerData, invoiceData);
 
-    await this.transporter.sendMail({
-      from: `"eCharter" <${process.env.EMAIL_USER}>`,
-      to: customerData.email,
-      subject,
-      html
-    });
+    try {
+      await this.transporter.sendMail({
+        from: `"eCharter" <${process.env.EMAIL_USER}>`,
+        to: customerData.email,
+        subject,
+        html
+      });
+    } catch (error) {
+      console.error('Email sending failed:', error);
+    }
   }
 
   async sendTrackingLink(customerData, tripData, trackingUrl) {
+    if (!this.transporter) {
+      console.log('Email disabled - would send tracking link to:', customerData.email);
+      return;
+    }
+
     const subject = `Your Trip Has Started - Track Your Journey`;
     const html = this.generateTrackingHTML(customerData, tripData, trackingUrl);
 
-    await this.transporter.sendMail({
-      from: `"eCharter" <${process.env.EMAIL_USER}>`,
-      to: customerData.email,
-      subject,
-      html
-    });
+    try {
+      await this.transporter.sendMail({
+        from: `"eCharter" <${process.env.EMAIL_USER}>`,
+        to: customerData.email,
+        subject,
+        html
+      });
+    } catch (error) {
+      console.error('Email sending failed:', error);
+    }
   }
 
   // Admin emails
   async sendAdminBookingNotification(tripData, customerData, vehicleData) {
+    if (!this.transporter || !process.env.ADMIN_EMAIL) {
+      console.log('Email disabled - would send admin notification');
+      return;
+    }
+
     const subject = `New Booking - Trip #${tripData.trip_id}`;
     const html = this.generateAdminBookingHTML(tripData, customerData, vehicleData);
 
-    await this.transporter.sendMail({
-      from: `"eCharter" <${process.env.EMAIL_USER}>`,
-      to: process.env.ADMIN_EMAIL,
-      subject,
-      html
-    });
+    try {
+      await this.transporter.sendMail({
+        from: `"eCharter" <${process.env.EMAIL_USER}>`,
+        to: process.env.ADMIN_EMAIL,
+        subject,
+        html
+      });
+    } catch (error) {
+      console.error('Email sending failed:', error);
+    }
   }
 
   async sendAdminNoVehicleNotification(tripData, customerData) {
+    if (!this.transporter || !process.env.ADMIN_EMAIL) {
+      console.log('Email disabled - would send admin no vehicle notification');
+      return;
+    }
+
     const subject = `No Vehicle Available - Trip Inquiry`;
     const html = this.generateAdminNoVehicleHTML(tripData, customerData);
 
-    await this.transporter.sendMail({
-      from: `"eCharter" <${process.env.EMAIL_USER}>`,
-      to: process.env.ADMIN_EMAIL,
-      subject,
-      html
-    });
+    try {
+      await this.transporter.sendMail({
+        from: `"eCharter" <${process.env.EMAIL_USER}>`,
+        to: process.env.ADMIN_EMAIL,
+        subject,
+        html
+      });
+    } catch (error) {
+      console.error('Email sending failed:', error);
+    }
   }
 
   // Driver/Fleet emails
   async sendDriverBookingNotification(driverData, tripData, customerData) {
+    if (!this.transporter) {
+      console.log('Email disabled - would send driver notification to:', driverData.email);
+      return;
+    }
+
     const subject = `New Booking Assignment - Trip #${tripData.trip_id}`;
     const html = this.generateDriverBookingHTML(driverData, tripData, customerData);
 
-    await this.transporter.sendMail({
-      from: `"eCharter" <${process.env.EMAIL_USER}>`,
-      to: driverData.email,
-      subject,
-      html
-    });
+    try {
+      await this.transporter.sendMail({
+        from: `"eCharter" <${process.env.EMAIL_USER}>`,
+        to: driverData.email,
+        subject,
+        html
+      });
+    } catch (error) {
+      console.error('Email sending failed:', error);
+    }
   }
 
   // HTML Templates
