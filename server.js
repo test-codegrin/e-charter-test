@@ -46,7 +46,7 @@ app.use("/api/driver", driverCarRoutes)
 app.use("/api/user", userRoutes)
 app.use("/api/trip", tripBookingRoutes)
 
-// Enhanced API Routes
+// Enhanced API Routes - Fixed parameter syntax
 app.use("/api/pricing", pricingRoutes)
 app.use("/api/trips", enhancedTripRoutes)
 app.use("/api/invoices", invoiceRoutes)
