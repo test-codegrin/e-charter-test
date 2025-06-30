@@ -37,7 +37,7 @@ app.get("/health", (req, res) => {
     });
 });
 
-console.log("Registering routes...");
+console.log("🔧 Registering API routes...");
 
 // API Routes - Fixed order and proper registration
 try {
@@ -86,9 +86,9 @@ try {
     app.use("/api/notifications", notificationRoutes)
     console.log("✓ Notification routes registered");
     
-    console.log("All routes registered successfully!");
+    console.log("🎉 All routes registered successfully!");
 } catch (routeError) {
-    console.error("Error registering routes:", routeError);
+    console.error("❌ Error registering routes:", routeError);
     process.exit(1);
 }
 
@@ -103,7 +103,7 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
-    console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
+    console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
     res.status(404).json({ 
         error: "Route not found",
         message: `The requested route ${req.originalUrl} does not exist`
@@ -131,7 +131,7 @@ app.listen(PORT, async () => {
         console.log("   Please check your database configuration");
     }
     
-    console.log("🎯 Available API endpoints:");
+    console.log("\n🎯 Available API endpoints:");
     console.log("   - User Auth: /api/user/*");
     console.log("   - Admin: /api/admin/*");
     console.log("   - Driver: /api/driver/*");
@@ -140,18 +140,25 @@ app.listen(PORT, async () => {
     console.log("   - Invoices: /api/invoices/*");
     console.log("   - Notifications: /api/notifications/*");
     
-    // Log all registered routes for debugging
-    console.log("\n📋 Registered routes:");
-    app._router.stack.forEach((middleware) => {
-        if (middleware.route) {
-            console.log(`   ${Object.keys(middleware.route.methods).join(', ').toUpperCase()} ${middleware.route.path}`);
-        } else if (middleware.name === 'router') {
-            middleware.handle.stack.forEach((handler) => {
-                if (handler.route) {
-                    const path = middleware.regexp.source.replace('\\/?', '').replace('(?=\\/|$)', '').replace('^', '');
-                    console.log(`   ${Object.keys(handler.route.methods).join(', ').toUpperCase()} ${path}${handler.route.path}`);
-                }
-            });
-        }
-    });
+    console.log("\n📋 Key routes available:");
+    console.log("   🔐 Authentication:");
+    console.log("     - POST /api/admin/login");
+    console.log("     - POST /api/driver/login");
+    console.log("     - POST /api/user/login");
+    console.log("   📊 Admin Dashboard:");
+    console.log("     - GET /api/admin/dashboard/stats");
+    console.log("     - GET /api/admin/alldrivers");
+    console.log("     - GET /api/admin/allcars");
+    console.log("     - GET /api/admin/alltrips");
+    console.log("   🚗 Driver Dashboard:");
+    console.log("     - GET /api/driver/dashboard/stats");
+    console.log("     - GET /api/driver/trips");
+    console.log("     - GET /api/driver/profile");
+    console.log("     - GET /api/driver/getdrivercar");
+    console.log("   💰 Business Operations:");
+    console.log("     - POST /api/pricing/quote");
+    console.log("     - GET /api/invoices/admin/all");
+    console.log("     - GET /api/notifications/admin");
+    
+    console.log("\n🎯 Server ready for requests!");
 })
