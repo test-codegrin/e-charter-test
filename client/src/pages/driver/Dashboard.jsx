@@ -8,10 +8,16 @@ const Dashboard = () => {
     completedTrips: 0,
     totalEarnings: 0,
     monthlyEarnings: 0,
-    activeTrips: 0,
-    rating: 4.8
+    inProgressTrips: 0,
+    confirmedTrips: 0,
+    totalVehicles: 0,
+    approvedVehicles: 0,
+    averageRating: 4.8,
+    completionRate: 0,
+    onTimeRate: 0
   })
   const [recentTrips, setRecentTrips] = useState([])
+  const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,90 +28,30 @@ const Dashboard = () => {
     try {
       setLoading(true)
       
-      // Try to fetch driver trips
-      try {
-        const tripsResponse = await driverAPI.getTrips()
-        const trips = tripsResponse.data.trips || []
+      // Fetch dashboard statistics from the new endpoint
+      const response = await driverAPI.getDashboardStats()
+      const { stats: dashboardStats, recentTrips: trips, vehicles: driverVehicles } = response.data
 
-        // Calculate stats with proper number handling
-        const completedTrips = trips.filter(t => t.status === 'completed')
-        const activeTrips = trips.filter(t => t.status === 'in_progress')
-        
-        // Safely calculate total earnings
-        const totalEarnings = completedTrips.reduce((sum, trip) => {
-          const price = parseFloat(trip.total_price) || 0
-          return sum + price
-        }, 0)
-        
-        // Calculate monthly earnings (current month)
-        const currentMonth = new Date().getMonth()
-        const currentYear = new Date().getFullYear()
-        const monthlyTrips = completedTrips.filter(trip => {
-          const tripDate = new Date(trip.created_at)
-          return tripDate.getMonth() === currentMonth && tripDate.getFullYear() === currentYear
-        })
-        const monthlyEarnings = monthlyTrips.reduce((sum, trip) => {
-          const price = parseFloat(trip.total_price) || 0
-          return sum + price
-        }, 0)
-
-        setStats({
-          totalTrips: trips.length,
-          completedTrips: completedTrips.length,
-          totalEarnings: Number(totalEarnings),
-          monthlyEarnings: Number(monthlyEarnings),
-          activeTrips: activeTrips.length,
-          rating: 4.8 // Mock rating
-        })
-
-        // Set recent trips (last 5)
-        setRecentTrips(trips.slice(0, 5))
-      } catch (apiError) {
-        console.log('API not available, using mock data')
-        // Use mock data if API is not available
-        setStats({
-          totalTrips: 12,
-          completedTrips: 10,
-          totalEarnings: 1250.75,
-          monthlyEarnings: 450.25,
-          activeTrips: 2,
-          rating: 4.8
-        })
-        
-        setRecentTrips([
-          {
-            trip_id: 1,
-            firstName: 'John',
-            lastName: 'Smith',
-            pickupLocation: 'Toronto Airport',
-            dropLocation: 'Downtown',
-            status: 'completed',
-            total_price: 125.50,
-            created_at: new Date().toISOString()
-          },
-          {
-            trip_id: 2,
-            firstName: 'Sarah',
-            lastName: 'Johnson',
-            pickupLocation: 'Hotel',
-            dropLocation: 'Airport',
-            status: 'in_progress',
-            total_price: 98.75,
-            created_at: new Date().toISOString()
-          }
-        ])
-      }
+      setStats(dashboardStats)
+      setRecentTrips(trips || [])
+      setVehicles(driverVehicles || [])
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
+      
       // Set default values on error
       setStats({
         totalTrips: 0,
         completedTrips: 0,
         totalEarnings: 0,
         monthlyEarnings: 0,
-        activeTrips: 0,
-        rating: 4.8
+        inProgressTrips: 0,
+        confirmedTrips: 0,
+        totalVehicles: 0,
+        approvedVehicles: 0,
+        averageRating: 4.8,
+        completionRate: 0,
+        onTimeRate: 0
       })
     } finally {
       setLoading(false)
@@ -118,13 +64,20 @@ const Dashboard = () => {
     return numValue.toFixed(2)
   }
 
+  // Helper function to calculate percentage change (mock for now)
+  const getPercentageChange = (current, previous = 0) => {
+    if (previous === 0) return '+0%'
+    const change = ((current - previous) / previous * 100).toFixed(1)
+    return change >= 0 ? `+${change}%` : `${change}%`
+  }
+
   const statCards = [
     {
       title: 'Total Earnings',
       value: `$${formatCurrency(stats.totalEarnings)}`,
       icon: DollarSign,
       color: 'bg-green-500',
-      change: '+15%',
+      change: getPercentageChange(stats.totalEarnings, stats.totalEarnings * 0.85),
       trend: 'up'
     },
     {
@@ -132,7 +85,7 @@ const Dashboard = () => {
       value: `$${formatCurrency(stats.monthlyEarnings)}`,
       icon: Calendar,
       color: 'bg-blue-500',
-      change: '+8%',
+      change: getPercentageChange(stats.monthlyEarnings, stats.monthlyEarnings * 0.9),
       trend: 'up'
     },
     {
@@ -140,12 +93,12 @@ const Dashboard = () => {
       value: stats.completedTrips,
       icon: MapPin,
       color: 'bg-purple-500',
-      change: '+12%',
+      change: getPercentageChange(stats.completedTrips, stats.completedTrips * 0.9),
       trend: 'up'
     },
     {
       title: 'Active Trips',
-      value: stats.activeTrips,
+      value: stats.inProgressTrips,
       icon: Clock,
       color: 'bg-orange-500',
       change: '0',
@@ -207,40 +160,43 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">Average Rating</span>
               <div className="flex items-center space-x-1">
-                <span className="font-bold text-yellow-500">{stats.rating}</span>
+                <span className="font-bold text-yellow-500">{stats.averageRating}</span>
                 <span className="text-sm text-secondary-500">/ 5.0</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">Completion Rate</span>
-              <span className="font-bold text-green-600">98%</span>
+              <span className="font-bold text-green-600">{stats.completionRate}%</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">On-Time Rate</span>
-              <span className="font-bold text-blue-600">95%</span>
+              <span className="font-bold text-blue-600">{stats.onTimeRate}%</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-secondary-600">Response Time</span>
-              <span className="font-bold text-purple-600">2 min</span>
+              <span className="text-sm text-secondary-600">Total Trips</span>
+              <span className="font-bold text-purple-600">{stats.totalTrips}</span>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Vehicle Status */}
         <div className="card">
-          <h3 className="text-lg font-semibold text-secondary-900 mb-4">Quick Actions</h3>
+          <h3 className="text-lg font-semibold text-secondary-900 mb-4">My Vehicles</h3>
           <div className="space-y-3">
-            <button className="w-full btn-primary text-left p-4 rounded-lg">
-              <div className="font-medium">View Active Trips</div>
-              <div className="text-sm opacity-90">Check ongoing bookings</div>
-            </button>
-            <button className="w-full btn-secondary text-left p-4 rounded-lg">
-              <div className="font-medium">Add New Vehicle</div>
-              <div className="text-sm">Register another vehicle</div>
-            </button>
-            <button className="w-full btn-secondary text-left p-4 rounded-lg">
-              <div className="font-medium">Update Availability</div>
-              <div className="text-sm">Manage your schedule</div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-secondary-600">Total Vehicles</span>
+              <span className="font-bold text-blue-600">{stats.totalVehicles}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-secondary-600">Approved</span>
+              <span className="font-bold text-green-600">{stats.approvedVehicles}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-secondary-600">Pending</span>
+              <span className="font-bold text-warning-600">{stats.totalVehicles - stats.approvedVehicles}</span>
+            </div>
+            <button className="w-full btn-secondary text-sm mt-3">
+              Manage Vehicles
             </button>
           </div>
         </div>
@@ -249,10 +205,15 @@ const Dashboard = () => {
         <div className="card">
           <h3 className="text-lg font-semibold text-secondary-900 mb-4">Today's Schedule</h3>
           <div className="space-y-3">
-            {stats.activeTrips > 0 ? (
+            {stats.inProgressTrips > 0 ? (
               <div className="p-3 bg-primary-50 rounded-lg">
                 <div className="font-medium text-primary-800">Active Trip</div>
                 <div className="text-sm text-primary-600">In progress</div>
+              </div>
+            ) : stats.confirmedTrips > 0 ? (
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="font-medium text-green-800">Upcoming Trips</div>
+                <div className="text-sm text-green-600">{stats.confirmedTrips} confirmed</div>
               </div>
             ) : (
               <div className="text-center py-6">

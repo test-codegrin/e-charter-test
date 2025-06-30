@@ -15,6 +15,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [formData, setFormData] = useState({})
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     fetchProfile()
@@ -24,10 +25,12 @@ const Profile = () => {
     try {
       setLoading(true)
       const response = await driverAPI.getProfile()
-      setProfile(response.data.profile || {})
-      setFormData(response.data.profile || {})
+      const profileData = response.data.profile || {}
+      setProfile(profileData)
+      setFormData(profileData)
     } catch (error) {
       console.error('Error fetching profile:', error)
+      toast.error('Failed to load profile')
     } finally {
       setLoading(false)
     }
@@ -35,12 +38,16 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
+      setSaving(true)
       await driverAPI.updateProfile(formData)
       setProfile(formData)
       setEditing(false)
       toast.success('Profile updated successfully!')
     } catch (error) {
       console.error('Error updating profile:', error)
+      toast.error('Failed to update profile')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -84,13 +91,15 @@ const Profile = () => {
           <div className="flex space-x-2">
             <button
               onClick={handleSave}
+              disabled={saving}
               className="btn-success flex items-center space-x-2"
             >
               <Save className="w-5 h-5" />
-              <span>Save</span>
+              <span>{saving ? 'Saving...' : 'Save'}</span>
             </button>
             <button
               onClick={handleCancel}
+              disabled={saving}
               className="btn-secondary flex items-center space-x-2"
             >
               <X className="w-5 h-5" />
@@ -115,9 +124,10 @@ const Profile = () => {
                   value={formData.driverName || ''}
                   onChange={handleChange}
                   className="input-field text-2xl font-bold"
+                  placeholder="Driver Name"
                 />
               ) : (
-                profile.driverName
+                profile.driverName || 'Driver Name'
               )}
             </h2>
             <p className="text-secondary-600">Professional Driver</p>
@@ -147,9 +157,10 @@ const Profile = () => {
                       value={formData.email || ''}
                       onChange={handleChange}
                       className="input-field"
+                      placeholder="Email address"
                     />
                   ) : (
-                    <p className="text-secondary-900">{profile.email}</p>
+                    <p className="text-secondary-900">{profile.email || 'Not provided'}</p>
                   )}
                 </div>
               </div>
@@ -167,9 +178,10 @@ const Profile = () => {
                       value={formData.phoneNo || ''}
                       onChange={handleChange}
                       className="input-field"
+                      placeholder="Phone number"
                     />
                   ) : (
-                    <p className="text-secondary-900">{profile.phoneNo}</p>
+                    <p className="text-secondary-900">{profile.phoneNo || 'Not provided'}</p>
                   )}
                 </div>
               </div>
@@ -193,9 +205,10 @@ const Profile = () => {
                       onChange={handleChange}
                       rows={2}
                       className="input-field"
+                      placeholder="Street address"
                     />
                   ) : (
-                    <p className="text-secondary-900">{profile.address}</p>
+                    <p className="text-secondary-900">{profile.address || 'Not provided'}</p>
                   )}
                 </div>
               </div>
@@ -212,9 +225,10 @@ const Profile = () => {
                       value={formData.cityName || ''}
                       onChange={handleChange}
                       className="input-field"
+                      placeholder="City"
                     />
                   ) : (
-                    <p className="text-secondary-900">{profile.cityName}</p>
+                    <p className="text-secondary-900">{profile.cityName || 'Not provided'}</p>
                   )}
                 </div>
 
@@ -229,9 +243,10 @@ const Profile = () => {
                       value={formData.zipCord || ''}
                       onChange={handleChange}
                       className="input-field"
+                      placeholder="Postal code"
                     />
                   ) : (
-                    <p className="text-secondary-900">{profile.zipCord}</p>
+                    <p className="text-secondary-900">{profile.zipCord || 'Not provided'}</p>
                   )}
                 </div>
               </div>
@@ -244,7 +259,6 @@ const Profile = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="card text-center">
           <div className="text-2xl font-bold text-primary-600">4.8</div>
-          
           <div className="text-sm text-secondary-600">Average Rating</div>
         </div>
         <div className="card text-center">

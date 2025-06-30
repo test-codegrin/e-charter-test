@@ -98,6 +98,12 @@ const Trips = () => {
     setShowModal(true)
   }
 
+  // Helper function to safely format currency
+  const formatCurrency = (value) => {
+    const numValue = Number(value) || 0
+    return numValue.toFixed(2)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -141,7 +147,7 @@ const Trips = () => {
         </div>
         <div className="card text-center">
           <div className="text-2xl font-bold text-green-600">
-            ${trips.filter(t => t.status === 'completed').reduce((sum, trip) => sum + (trip.total_price || 0), 0).toFixed(2)}
+            ${trips.filter(t => t.status === 'completed').reduce((sum, trip) => sum + (parseFloat(trip.total_price) || 0), 0).toFixed(2)}
           </div>
           <div className="text-sm text-secondary-600">Total Earnings</div>
         </div>
@@ -238,7 +244,7 @@ const Trips = () => {
                     {getStatusBadge(trip.status)}
                   </td>
                   <td className="table-cell font-medium">
-                    ${trip.total_price?.toFixed(2) || '0.00'}
+                    ${formatCurrency(trip.total_price)}
                   </td>
                   <td className="table-cell">
                     <div className="flex items-center space-x-2">
@@ -371,7 +377,7 @@ const Trips = () => {
                       <div>
                         <label className="block text-sm font-medium text-secondary-700">Earnings</label>
                         <p className="text-lg font-bold text-green-600">
-                          ${selectedTrip.total_price?.toFixed(2) || '0.00'}
+                          ${formatCurrency(selectedTrip.total_price)}
                         </p>
                       </div>
                     </div>

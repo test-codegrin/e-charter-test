@@ -56,7 +56,7 @@ export const authAPI = {
   }
 }
 
-// Admin API
+// Admin API - Updated with correct endpoints
 export const adminAPI = {
   // Dashboard
   getDashboardStats: () => api.get('/admin/dashboard/stats'),
@@ -69,8 +69,8 @@ export const adminAPI = {
   getAllVehicles: () => api.get('/admin/allcars'),
   approveVehicle: (carId, status) => api.post(`/verification/approvecar/${carId}`, { status }),
   
-  // Trips - Fixed endpoint
-  getAllTrips: () => api.get('/trips/admin/all'),
+  // Trips
+  getAllTrips: () => api.get('/admin/alltrips'),
   getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
   updateTripStatus: (tripId, status) => api.put(`/trips/${tripId}/status`, { status }),
   
@@ -84,13 +84,13 @@ export const adminAPI = {
   markAllAsRead: () => api.put('/notifications/mark-all-read')
 }
 
-// Driver API
+// Driver API - Updated with correct endpoints
 export const driverAPI = {
   // Dashboard
   getDashboardStats: () => api.get('/driver/dashboard/stats'),
   
-  // Trips - Fixed endpoint to match backend
-  getTrips: () => api.get('/trips/user-trips'),
+  // Trips
+  getTrips: () => api.get('/driver/trips'),
   getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
   startTrip: (tripId) => api.post(`/trips/${tripId}/start`),
   completeTrip: (tripId) => api.post(`/trips/${tripId}/complete`),

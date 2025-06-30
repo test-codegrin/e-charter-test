@@ -7,9 +7,14 @@ const Dashboard = () => {
     totalDrivers: 0,
     totalVehicles: 0,
     totalTrips: 0,
+    totalUsers: 0,
     totalRevenue: 0,
+    monthlyRevenue: 0,
     pendingApprovals: 0,
-    activeTrips: 0
+    inProgressTrips: 0,
+    completedTrips: 0,
+    approvedDrivers: 0,
+    approvedVehicles: 0
   })
   const [recentTrips, setRecentTrips] = useState([])
   const [loading, setLoading] = useState(true)
@@ -21,51 +26,30 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      // Fetch multiple data sources
-      const [driversRes, vehiclesRes, tripsRes] = await Promise.all([
-        adminAPI.getAllDrivers(),
-        adminAPI.getAllVehicles(),
-        adminAPI.getAllTrips()
-      ])
-
-      const drivers = driversRes.data.drivers || []
-      const vehicles = vehiclesRes.data.cars || []
-      const trips = tripsRes.data.trips || []
-
-      // Calculate stats with proper number handling
-      const pendingDrivers = drivers.filter(d => d.status === 0).length
-      const pendingVehicles = vehicles.filter(v => v.status === 0).length
-      const activeTrips = trips.filter(t => t.status === 'in_progress').length
-      const completedTrips = trips.filter(t => t.status === 'completed')
       
-      // Safely calculate total revenue with proper number conversion
-      const totalRevenue = completedTrips.reduce((sum, trip) => {
-        const price = parseFloat(trip.total_price) || 0
-        return sum + price
-      }, 0)
+      // Fetch dashboard statistics from the new endpoint
+      const response = await adminAPI.getDashboardStats()
+      const { stats: dashboardStats, recentTrips: trips } = response.data
 
-      setStats({
-        totalDrivers: drivers.length,
-        totalVehicles: vehicles.length,
-        totalTrips: trips.length,
-        totalRevenue: Number(totalRevenue), // Ensure it's a number
-        pendingApprovals: pendingDrivers + pendingVehicles,
-        activeTrips
-      })
-
-      // Set recent trips (last 5)
-      setRecentTrips(trips.slice(0, 5))
+      setStats(dashboardStats)
+      setRecentTrips(trips || [])
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
+      
       // Set default values on error
       setStats({
         totalDrivers: 0,
         totalVehicles: 0,
         totalTrips: 0,
+        totalUsers: 0,
         totalRevenue: 0,
+        monthlyRevenue: 0,
         pendingApprovals: 0,
-        activeTrips: 0
+        inProgressTrips: 0,
+        completedTrips: 0,
+        approvedDrivers: 0,
+        approvedVehicles: 0
       })
     } finally {
       setLoading(false)
@@ -78,13 +62,20 @@ const Dashboard = () => {
     return numValue.toFixed(2)
   }
 
+  // Helper function to calculate percentage change (mock for now)
+  const getPercentageChange = (current, previous = 0) => {
+    if (previous === 0) return '+0%'
+    const change = ((current - previous) / previous * 100).toFixed(1)
+    return change >= 0 ? `+${change}%` : `${change}%`
+  }
+
   const statCards = [
     {
       title: 'Total Drivers',
       value: stats.totalDrivers,
       icon: Users,
       color: 'bg-blue-500',
-      change: '+12%',
+      change: getPercentageChange(stats.totalDrivers, stats.totalDrivers * 0.9),
       trend: 'up'
     },
     {
@@ -92,23 +83,23 @@ const Dashboard = () => {
       value: stats.totalVehicles,
       icon: Car,
       color: 'bg-green-500',
-      change: '+8%',
+      change: getPercentageChange(stats.totalVehicles, stats.totalVehicles * 0.95),
       trend: 'up'
     },
     {
       title: 'Active Trips',
-      value: stats.activeTrips,
+      value: stats.inProgressTrips,
       icon: MapPin,
       color: 'bg-purple-500',
-      change: '+15%',
+      change: getPercentageChange(stats.inProgressTrips, stats.inProgressTrips * 0.8),
       trend: 'up'
     },
     {
       title: 'Total Revenue',
-      value: `$${formatCurrency(stats.totalRevenue)}`, // Use helper function
+      value: `$${formatCurrency(stats.totalRevenue)}`,
       icon: DollarSign,
       color: 'bg-yellow-500',
-      change: '+23%',
+      change: getPercentageChange(stats.totalRevenue, stats.totalRevenue * 0.85),
       trend: 'up'
     }
   ]
@@ -166,7 +157,7 @@ const Dashboard = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-warning-50 rounded-lg">
               <div>
-                <p className="font-medium text-warning-800">Driver Applications</p>
+                <p className="font-medium text-warning-800">Driver & Vehicle Applications</p>
                 <p className="text-sm text-warning-600">Requires review</p>
               </div>
               <span className="bg-warning-200 text-warning-800 px-2 py-1 rounded-full text-sm font-medium">
@@ -179,53 +170,46 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* System Overview */}
         <div className="card">
-          <h3 className="text-lg font-semibold text-secondary-900 mb-4">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-secondary-900 mb-4">System Overview</h3>
           <div className="space-y-3">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-secondary-900">New trip completed</p>
-                <p className="text-xs text-secondary-500">2 minutes ago</p>
-              </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-secondary-600">Total Users</span>
+              <span className="font-bold text-blue-600">{stats.totalUsers}</span>
             </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-secondary-900">Driver registered</p>
-                <p className="text-xs text-secondary-500">15 minutes ago</p>
-              </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-secondary-600">Approved Drivers</span>
+              <span className="font-bold text-green-600">{stats.approvedDrivers}</span>
             </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-secondary-900">Vehicle approved</p>
-                <p className="text-xs text-secondary-500">1 hour ago</p>
-              </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-secondary-600">Approved Vehicles</span>
+              <span className="font-bold text-green-600">{stats.approvedVehicles}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-secondary-600">Completed Trips</span>
+              <span className="font-bold text-purple-600">{stats.completedTrips}</span>
             </div>
           </div>
         </div>
 
-        {/* System Status */}
+        {/* Revenue Overview */}
         <div className="card">
-          <h3 className="text-lg font-semibold text-secondary-900 mb-4">System Status</h3>
+          <h3 className="text-lg font-semibold text-secondary-900 mb-4">Revenue Overview</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-secondary-600">API Status</span>
-              <span className="status-badge status-approved">Online</span>
+              <span className="text-sm text-secondary-600">Total Revenue</span>
+              <span className="font-bold text-green-600">${formatCurrency(stats.totalRevenue)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-secondary-600">Payment Gateway</span>
-              <span className="status-badge status-approved">Connected</span>
+              <span className="text-sm text-secondary-600">This Month</span>
+              <span className="font-bold text-blue-600">${formatCurrency(stats.monthlyRevenue)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-secondary-600">SMS Service</span>
-              <span className="status-badge status-approved">Active</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-secondary-600">Email Service</span>
-              <span className="status-badge status-approved">Active</span>
+              <span className="text-sm text-secondary-600">Avg per Trip</span>
+              <span className="font-bold text-purple-600">
+                ${stats.completedTrips > 0 ? formatCurrency(stats.totalRevenue / stats.completedTrips) : '0.00'}
+              </span>
             </div>
           </div>
         </div>
