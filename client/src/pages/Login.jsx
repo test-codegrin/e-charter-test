@@ -41,7 +41,7 @@ const Login = () => {
       console.log('Login result:', result)
       
       if (result.success) {
-        toast.success('Login successful!')
+        toast.success(`Welcome ${result.user.name || 'back'}!`)
         // Don't manually redirect - let App.jsx handle it based on auth state
       } else {
         toast.error(result.error || 'Login failed')
@@ -94,11 +94,12 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'admin' })}
+                  disabled={loading}
                   className={`flex items-center justify-center space-x-2 p-3 rounded-lg border-2 transition-colors duration-200 ${
                     formData.role === 'admin'
                       ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-secondary-200 text-secondary-600 hover:border-secondary-300'
-                  }`}
+                  } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <Shield className="w-5 h-5" />
                   <span className="font-medium">Admin</span>
@@ -106,11 +107,12 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'driver' })}
+                  disabled={loading}
                   className={`flex items-center justify-center space-x-2 p-3 rounded-lg border-2 transition-colors duration-200 ${
                     formData.role === 'driver'
                       ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-secondary-200 text-secondary-600 hover:border-secondary-300'
-                  }`}
+                  } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <User className="w-5 h-5" />
                   <span className="font-medium">Driver</span>
@@ -176,7 +178,7 @@ const Login = () => {
                   <span>Signing in...</span>
                 </div>
               ) : (
-                'Sign In'
+                `Sign In as ${formData.role === 'admin' ? 'Admin' : 'Driver'}`
               )}
             </button>
           </form>

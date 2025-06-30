@@ -19,9 +19,13 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token')
     const userData = localStorage.getItem('user')
     
+    console.log('AuthProvider init - Token exists:', !!token, 'UserData exists:', !!userData)
+    
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData)
+        console.log('Parsed user from localStorage:', parsedUser)
+        
         // Add role to user object if not present
         if (!parsedUser.role) {
           // Determine role based on user properties
@@ -33,7 +37,14 @@ export const AuthProvider = ({ children }) => {
             parsedUser.role = 'customer'
           }
         }
+        
+        // Ensure consistent name field
+        if (!parsedUser.name) {
+          parsedUser.name = parsedUser.adminName || parsedUser.driverName || `${parsedUser.firstName} ${parsedUser.lastName}` || 'User'
+        }
+        
         setUser(parsedUser)
+        console.log('User set from localStorage:', parsedUser)
       } catch (error) {
         console.error('Error parsing user data:', error)
         localStorage.removeItem('token')
@@ -56,12 +67,16 @@ export const AuthProvider = ({ children }) => {
         throw new Error('No token received from server')
       }
 
-      // Ensure user object has role
+      if (!userData) {
+        throw new Error('No user data received from server')
+      }
+
+      // Ensure user object has role and consistent format
       const userWithRole = {
         ...userData,
         role: role,
         // Map different user types to consistent format
-        name: userData.adminName || userData.driverName || `${userData.firstName} ${userData.lastName}` || userData.name,
+        name: userData.adminName || userData.driverName || `${userData.firstName} ${userData.lastName}` || userData.name || 'User',
         email: userData.email
       }
       
@@ -88,11 +103,12 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
+    console.log('Logging out user')
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setUser(null)
     // Force page reload to clear any cached state
-    window.location.href = '/login'
+    window.location.href = '/'
   }
 
   const value = {

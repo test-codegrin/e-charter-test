@@ -83,6 +83,10 @@ const loginDriver = asyncHandler(async (req, res) => {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
+  // Get full driver details for response
+  const [driverDetails] = await db.query(driverAuthQueries.driverMailCheck, [email]);
+  const driverData = driverDetails[0];
+
   const token = jwt.sign(
     {
       driver_id: driver[0].driver_id,
@@ -93,11 +97,7 @@ const loginDriver = asyncHandler(async (req, res) => {
     { expiresIn: "1d" }
   );
 
-  // Get full driver details for response
-  const [driverDetails] = await db.query(driverAuthQueries.driverMailCheck, [email]);
-  const driverData = driverDetails[0];
-
-  // Return consistent user object
+  // Return consistent user object matching admin login format
   const user = {
     driver_id: driverData.driver_id,
     driverName: driverData.driverName,
