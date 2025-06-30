@@ -1,0 +1,97 @@
+import axios from 'axios'
+
+// Create axios instance
+const api = axios.create({
+  baseURL: '/api',
+  timeout: 10000,
+})
+
+// Add auth token to requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+// Handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
+// Auth API
+export const authAPI = {
+  login: (email, password, role) => {
+    const endpoint = role === 'admin' ? '/admin/login' : '/driver/login'
+    return api.post(endpoint, { email, password })
+  }
+}
+
+// Admin API
+export const adminAPI = {
+  // Dashboard
+  getDashboardStats: () => api.get('/admin/dashboard/stats'),
+  
+  // Drivers
+  getAllDrivers: () => api.get('/admin/alldrivers'),
+  approveDriver: (driverId, status) => api.post(`/verification/approvedriver/${driverId}`, { status }),
+  
+  // Vehicles
+  getAllVehicles: () => api.get('/admin/allcars'),
+  approveVehicle: (carId, status) => api.post(`/verification/approvecar/${carId}`, { status }),
+  
+  // Trips
+  getAllTrips: () => api.get('/trips/admin/all'),
+  getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
+  updateTripStatus: (tripId, status) => api.put(`/trips/${tripId}/status`, { status }),
+  
+  // Invoices
+  getAllInvoices: () => api.get('/invoices/admin/all'),
+  updateInvoiceStatus: (invoiceId, status) => api.put(`/invoices/${invoiceId}/status`, { status }),
+  
+  // Notifications
+  getNotifications: () => api.get('/notifications/admin'),
+  markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
+  markAllAsRead: () => api.put('/notifications/mark-all-read')
+}
+
+// Driver API
+export const driverAPI = {
+  // Dashboard
+  getDashboardStats: () => api.get('/driver/dashboard/stats'),
+  
+  // Trips
+  getTrips: () => api.get('/trips/driver'),
+  getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
+  startTrip: (tripId) => api.post(`/trips/${tripId}/start`),
+  completeTrip: (tripId) => api.post(`/trips/${tripId}/complete`),
+  updateLocation: (tripId, location) => api.put(`/trips/${tripId}/location`, location),
+  
+  // Vehicles
+  getVehicles: () => api.get('/driver/getdrivercar'),
+  addVehicle: (vehicleData) => api.post('/driver/addcar', vehicleData),
+  
+  // Profile
+  getProfile: () => api.get('/driver/profile'),
+  updateProfile: (profileData) => api.put('/driver/profile', profileData),
+  
+  // Notifications
+  getNotifications: () => api.get('/notifications/driver'),
+  markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`)
+}
+
+export default api
