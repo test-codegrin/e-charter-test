@@ -20,16 +20,24 @@ api.interceptors.request.use(
   }
 )
 
-// Handle auth errors
+// Handle auth errors - FIXED to prevent redirect loops
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.data || error.message)
     
-    // Only handle 401 errors if not on login page and not during login
-    if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
-      // Check if this is not a login request
-      if (!error.config?.url?.includes('/login')) {
+    // Only handle 401 errors if:
+    // 1. Not on login page
+    // 2. Not during login request
+    // 3. User is actually logged in (has token)
+    if (error.response?.status === 401) {
+      const isLoginPage = window.location.pathname === '/' || window.location.pathname.includes('/login')
+      const isLoginRequest = error.config?.url?.includes('/login')
+      const hasToken = localStorage.getItem('token')
+      
+      // Only redirect if user was logged in and this isn't a login-related request
+      if (!isLoginPage && !isLoginRequest && hasToken) {
+        console.log('401 error - clearing auth and redirecting to login')
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         window.location.href = '/'
