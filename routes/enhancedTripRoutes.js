@@ -15,7 +15,7 @@ router.post("/book", authenticationToken, bookTripWithPricing);
 router.get("/user-trips", authenticationToken, getUserTrips);
 router.get("/:trip_id", authenticationToken, getTripDetails);
 
-// Driver routes
+// Driver routes  
 router.post("/:trip_id/start", authenticationToken, startTrip);
 router.put("/:trip_id/location", authenticationToken, updateTripLocation);
 router.post("/:trip_id/complete", authenticationToken, completeTrip);
