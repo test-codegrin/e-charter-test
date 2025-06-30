@@ -36,7 +36,7 @@ app.get("/health", (req, res) => {
     });
 });
 
-// API Routes
+// API Routes - Fixed route definitions
 app.use("/api/user", userAuthRoutes)
 app.use("/api/admin", adminAuthRoutes)
 app.use("/api/driver", driverRoutes)
