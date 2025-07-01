@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Filter, Eye, MapPin, Calendar, Clock, DollarSign } from 'lucide-react'
+import { Search, Filter, Eye, MapPin, Calendar, Clock, DollarSign, X } from 'lucide-react'
 import { adminAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
@@ -24,10 +24,23 @@ const Trips = () => {
     try {
       setLoading(true)
       const response = await adminAPI.getAllTrips()
-      setTrips(response.data.trips || [])
+      console.log('Trips API response:', response.data)
+      
+      // Ensure all trips have proper numeric values
+      const tripsData = (response.data.trips || []).map(trip => ({
+        ...trip,
+        total_price: parseFloat(trip.total_price) || 0,
+        base_price: parseFloat(trip.base_price) || 0,
+        tax_amount: parseFloat(trip.tax_amount) || 0,
+        distance_km: parseFloat(trip.distance_km) || 0,
+        durationHours: parseFloat(trip.durationHours) || 0
+      }))
+      
+      setTrips(tripsData)
     } catch (error) {
       console.error('Error fetching trips:', error)
       toast.error('Failed to fetch trips')
+      setTrips([]) // Set empty array on error
     } finally {
       setLoading(false)
     }
@@ -43,7 +56,7 @@ const Trips = () => {
         trip.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         trip.pickupLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         trip.dropLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        trip.trip_id.toString().includes(searchTerm)
+        trip.trip_id?.toString().includes(searchTerm)
       )
     }
 
@@ -74,6 +87,20 @@ const Trips = () => {
   const openTripModal = (trip) => {
     setSelectedTrip(trip)
     setShowModal(true)
+  }
+
+  // Safe formatting function
+  const formatCurrency = (value) => {
+    const numValue = parseFloat(value) || 0
+    return numValue.toFixed(2)
+  }
+
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString()
+    } catch {
+      return 'Invalid Date'
+    }
   }
 
   if (loading) {
@@ -208,7 +235,7 @@ const Trips = () => {
                       <div className="flex items-center space-x-2">
                         <Calendar className="w-4 h-4 text-secondary-400" />
                         <span className="text-sm">
-                          {new Date(trip.tripStartDate).toLocaleDateString()}
+                          {formatDate(trip.tripStartDate)}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -230,7 +257,7 @@ const Trips = () => {
                     <div className="flex items-center space-x-1">
                       <DollarSign className="w-4 h-4 text-secondary-400" />
                       <span className="font-medium">
-                        {trip.total_price ? trip.total_price.toFixed(2) : '0.00'}
+                        {formatCurrency(trip.total_price)}
                       </span>
                     </div>
                   </td>
@@ -250,7 +277,9 @@ const Trips = () => {
 
           {filteredTrips.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-secondary-500">No trips found matching your criteria.</p>
+              <p className="text-secondary-500">
+                {trips.length === 0 ? 'No trips found.' : 'No trips found matching your criteria.'}
+              </p>
             </div>
           )}
         </div>
@@ -311,7 +340,7 @@ const Trips = () => {
                       <div>
                         <label className="block text-sm font-medium text-secondary-700">Date</label>
                         <p className="text-secondary-900">
-                          {new Date(selectedTrip.tripStartDate).toLocaleDateString()}
+                          {formatDate(selectedTrip.tripStartDate)}
                         </p>
                       </div>
                       <div>
@@ -322,11 +351,11 @@ const Trips = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-secondary-700">Distance</label>
-                        <p className="text-secondary-900">{selectedTrip.distance_km} km</p>
+                        <p className="text-secondary-900">{formatCurrency(selectedTrip.distance_km)} km</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-secondary-700">Duration</label>
-                        <p className="text-secondary-900">{selectedTrip.durationHours} hours</p>
+                        <p className="text-secondary-900">{formatCurrency(selectedTrip.durationHours)} hours</p>
                       </div>
                     </div>
                   </div>
@@ -362,19 +391,19 @@ const Trips = () => {
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Base Price</label>
                       <p className="text-secondary-900">
-                        ${selectedTrip.base_price?.toFixed(2) || '0.00'}
+                        ${formatCurrency(selectedTrip.base_price)}
                       </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Tax Amount</label>
                       <p className="text-secondary-900">
-                        ${selectedTrip.tax_amount?.toFixed(2) || '0.00'}
+                        ${formatCurrency(selectedTrip.tax_amount)}
                       </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Total Amount</label>
                       <p className="text-lg font-bold text-secondary-900">
-                        ${selectedTrip.total_price?.toFixed(2) || '0.00'}
+                        ${formatCurrency(selectedTrip.total_price)}
                       </p>
                     </div>
                     <div>

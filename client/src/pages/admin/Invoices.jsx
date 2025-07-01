@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Filter, Eye, Download, DollarSign, Calendar } from 'lucide-react'
+import { Search, Filter, Eye, Download, DollarSign, Calendar, X } from 'lucide-react'
 import { adminAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
@@ -24,10 +24,21 @@ const Invoices = () => {
     try {
       setLoading(true)
       const response = await adminAPI.getAllInvoices()
-      setInvoices(response.data.invoices || [])
+      console.log('Invoices API response:', response.data)
+      
+      // Ensure all invoices have proper numeric values
+      const invoicesData = (response.data.invoices || []).map(invoice => ({
+        ...invoice,
+        total_amount: parseFloat(invoice.total_amount) || 0,
+        subtotal: parseFloat(invoice.subtotal) || 0,
+        tax_amount: parseFloat(invoice.tax_amount) || 0
+      }))
+      
+      setInvoices(invoicesData)
     } catch (error) {
       console.error('Error fetching invoices:', error)
       toast.error('Failed to fetch invoices')
+      setInvoices([]) // Set empty array on error
     } finally {
       setLoading(false)
     }
@@ -85,13 +96,28 @@ const Invoices = () => {
     setShowModal(true)
   }
 
+  // Safe formatting functions
+  const formatCurrency = (value) => {
+    const numValue = parseFloat(value) || 0
+    return numValue.toFixed(2)
+  }
+
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString()
+    } catch {
+      return 'Invalid Date'
+    }
+  }
+
+  // Calculate totals safely
   const totalRevenue = filteredInvoices
     .filter(inv => inv.status === 'paid')
-    .reduce((sum, inv) => sum + (inv.total_amount || 0), 0)
+    .reduce((sum, inv) => sum + (parseFloat(inv.total_amount) || 0), 0)
 
   const pendingAmount = filteredInvoices
     .filter(inv => inv.status === 'pending')
-    .reduce((sum, inv) => sum + (inv.total_amount || 0), 0)
+    .reduce((sum, inv) => sum + (parseFloat(inv.total_amount) || 0), 0)
 
   if (loading) {
     return (
@@ -118,13 +144,13 @@ const Invoices = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="card text-center">
           <div className="text-2xl font-bold text-green-600">
-            ${totalRevenue.toFixed(2)}
+            ${formatCurrency(totalRevenue)}
           </div>
           <div className="text-sm text-secondary-600">Total Revenue</div>
         </div>
         <div className="card text-center">
           <div className="text-2xl font-bold text-warning-600">
-            ${pendingAmount.toFixed(2)}
+            ${formatCurrency(pendingAmount)}
           </div>
           <div className="text-sm text-secondary-600">Pending Amount</div>
         </div>
@@ -219,11 +245,11 @@ const Invoices = () => {
                       <div className="flex items-center space-x-1">
                         <DollarSign className="w-4 h-4 text-secondary-400" />
                         <span className="font-bold text-lg">
-                          {invoice.total_amount?.toFixed(2) || '0.00'}
+                          {formatCurrency(invoice.total_amount)}
                         </span>
                       </div>
                       <p className="text-xs text-secondary-500">
-                        Tax: ${invoice.tax_amount?.toFixed(2) || '0.00'}
+                        Tax: ${formatCurrency(invoice.tax_amount)}
                       </p>
                     </div>
                   </td>
@@ -234,7 +260,7 @@ const Invoices = () => {
                     <div className="flex items-center space-x-2">
                       <Calendar className="w-4 h-4 text-secondary-400" />
                       <span className="text-sm">
-                        {new Date(invoice.created_at).toLocaleDateString()}
+                        {formatDate(invoice.created_at)}
                       </span>
                     </div>
                   </td>
@@ -262,7 +288,9 @@ const Invoices = () => {
 
           {filteredInvoices.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-secondary-500">No invoices found matching your criteria.</p>
+              <p className="text-secondary-500">
+                {invoices.length === 0 ? 'No invoices found.' : 'No invoices found matching your criteria.'}
+              </p>
             </div>
           )}
         </div>
@@ -298,7 +326,7 @@ const Invoices = () => {
                     <div className="text-right">
                       {getStatusBadge(selectedInvoice.status)}
                       <p className="text-sm text-secondary-500 mt-1">
-                        {new Date(selectedInvoice.created_at).toLocaleDateString()}
+                        {formatDate(selectedInvoice.created_at)}
                       </p>
                     </div>
                   </div>
@@ -337,20 +365,20 @@ const Invoices = () => {
                     <div className="flex justify-between">
                       <span className="text-secondary-600">Subtotal:</span>
                       <span className="text-secondary-900">
-                        ${selectedInvoice.subtotal?.toFixed(2) || '0.00'}
+                        ${formatCurrency(selectedInvoice.subtotal)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-secondary-600">Tax (13%):</span>
                       <span className="text-secondary-900">
-                        ${selectedInvoice.tax_amount?.toFixed(2) || '0.00'}
+                        ${formatCurrency(selectedInvoice.tax_amount)}
                       </span>
                     </div>
                     <div className="border-t border-secondary-200 pt-2">
                       <div className="flex justify-between font-bold text-lg">
                         <span className="text-secondary-900">Total:</span>
                         <span className="text-secondary-900">
-                          ${selectedInvoice.total_amount?.toFixed(2) || '0.00'}
+                          ${formatCurrency(selectedInvoice.total_amount)}
                         </span>
                       </div>
                     </div>
