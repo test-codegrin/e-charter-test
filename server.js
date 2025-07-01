@@ -177,6 +177,7 @@ app.listen(PORT, async () => {
     console.log("   ⚙️ System Settings:");
     console.log("     - GET /api/admin/settings");
     console.log("     - PUT /api/admin/settings");
+    console.log("     - GET /api/admin/settings/audit/log");
     
     console.log("\n🎯 Server ready for requests!");
 })
