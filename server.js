@@ -19,6 +19,7 @@ const enhancedTripRoutes = require("./routes/enhancedTripRoutes")
 const invoiceRoutes = require("./routes/invoiceRoutes")
 const notificationRoutes = require("./routes/notificationRoutes")
 const fleetPartnerRoutes = require("./routes/fleetPartnerRoutes")
+const settingsRoutes = require("./routes/settingsRoutes")
 
 const app = express();
 const PORT = process.env.PORT || 3000
@@ -90,6 +91,10 @@ try {
     
     app.use("/api/notifications", notificationRoutes)
     console.log("✓ Notification routes registered");
+
+    // Settings routes
+    app.use("/api/admin/settings", settingsRoutes)
+    console.log("✓ Settings routes registered");
     
     console.log("🎉 All routes registered successfully!");
 } catch (routeError) {
@@ -145,6 +150,7 @@ app.listen(PORT, async () => {
     console.log("   - Trips: /api/trips/*");
     console.log("   - Invoices: /api/invoices/*");
     console.log("   - Notifications: /api/notifications/*");
+    console.log("   - Settings: /api/admin/settings/*");
     
     console.log("\n📋 Key routes available:");
     console.log("   🔐 Authentication:");
@@ -153,7 +159,7 @@ app.listen(PORT, async () => {
     console.log("     - POST /api/user/login");
     console.log("   🏢 Fleet Partners:");
     console.log("     - POST /api/fleet/register");
-    console.log("     - GET /api/fleet/admin/all");
+    console.log("     - GET /api/admin/fleet-partners");
     console.log("   📊 Admin Dashboard:");
     console.log("     - GET /api/admin/dashboard/stats");
     console.log("     - GET /api/admin/alldrivers");
@@ -168,6 +174,9 @@ app.listen(PORT, async () => {
     console.log("     - POST /api/pricing/quote");
     console.log("     - GET /api/invoices/admin/all");
     console.log("     - GET /api/notifications/admin");
+    console.log("   ⚙️ System Settings:");
+    console.log("     - GET /api/admin/settings");
+    console.log("     - PUT /api/admin/settings");
     
     console.log("\n🎯 Server ready for requests!");
 })

@@ -12,7 +12,8 @@ import {
   LogOut,
   Truck,
   Building,
-  DollarSign
+  DollarSign,
+  Settings
 } from 'lucide-react'
 
 const Sidebar = () => {
@@ -28,6 +29,7 @@ const Sidebar = () => {
     { icon: DollarSign, label: 'Payouts', path: '/admin/payouts' },
     { icon: FileText, label: 'Invoices', path: '/admin/invoices' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
+    { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ]
 
   const driverMenuItems = [
