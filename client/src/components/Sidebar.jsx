@@ -11,7 +11,8 @@ import {
   User,
   LogOut,
   Truck,
-  Building
+  Building,
+  DollarSign
 } from 'lucide-react'
 
 const Sidebar = () => {
@@ -24,6 +25,7 @@ const Sidebar = () => {
     { icon: Building, label: 'Fleet Partners', path: '/admin/fleet-partners' },
     { icon: Car, label: 'Vehicles', path: '/admin/vehicles' },
     { icon: MapPin, label: 'Trips', path: '/admin/trips' },
+    { icon: DollarSign, label: 'Payouts', path: '/admin/payouts' },
     { icon: FileText, label: 'Invoices', path: '/admin/invoices' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
   ]

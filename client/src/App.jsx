@@ -12,6 +12,7 @@ import AdminTrips from './pages/admin/Trips'
 import AdminInvoices from './pages/admin/Invoices'
 import AdminNotifications from './pages/admin/Notifications'
 import FleetPartners from './pages/admin/FleetPartners'
+import Payouts from './pages/admin/Payouts'
 
 // Driver Pages
 import DriverDashboard from './pages/driver/Dashboard'
@@ -63,6 +64,7 @@ function App() {
             <Route path="/admin/invoices" element={<AdminInvoices />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/fleet-partners" element={<FleetPartners />} />
+            <Route path="/admin/payouts" element={<Payouts />} />
           </>
         )}
 

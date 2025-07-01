@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Filter, Check, X, Eye, Building, Users, Car } from 'lucide-react'
+import { Search, Filter, Check, X, Eye, Building, Users, Car, DollarSign } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const FleetPartners = () => {
@@ -23,7 +23,7 @@ const FleetPartners = () => {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
-      const response = await fetch('/api/fleet/admin/all', {
+      const response = await fetch('/api/admin/fleet-partners', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -31,8 +31,11 @@ const FleetPartners = () => {
       
       if (response.ok) {
         const data = await response.json()
+        console.log('Fleet partners data:', data)
         setFleetPartners(data.fleetPartners || [])
       } else {
+        const errorData = await response.json()
+        console.error('Failed to fetch fleet partners:', errorData)
         toast.error('Failed to fetch fleet partners')
       }
     } catch (error) {
@@ -68,7 +71,7 @@ const FleetPartners = () => {
   const handleApproval = async (driverId, status) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/verification/approvedriver/${driverId}`, {
+      const response = await fetch(`/api/admin/approve-driver/${driverId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -78,10 +81,12 @@ const FleetPartners = () => {
       })
 
       if (response.ok) {
-        toast.success(`Fleet partner ${status === 1 ? 'approved' : 'rejected'} successfully`)
+        const result = await response.json()
+        toast.success(result.message)
         fetchFleetPartners()
       } else {
-        toast.error('Failed to update fleet partner status')
+        const errorData = await response.json()
+        toast.error(errorData.message || 'Failed to update fleet partner status')
       }
     } catch (error) {
       console.error('Error updating fleet partner status:', error)
@@ -214,8 +219,12 @@ const FleetPartners = () => {
                         <Building className="w-5 h-5 text-primary-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-secondary-900">{partner.company_name}</p>
-                        <p className="text-sm text-secondary-500">{partner.legal_entity_type}</p>
+                        <p className="font-medium text-secondary-900">
+                          {partner.company_name || 'Company Name Not Set'}
+                        </p>
+                        <p className="text-sm text-secondary-500">
+                          {partner.legal_entity_type || 'Entity type not specified'}
+                        </p>
                       </div>
                     </div>
                   </td>
@@ -312,20 +321,20 @@ const FleetPartners = () => {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Company Name</label>
-                      <p className="text-secondary-900">{selectedPartner.company_name}</p>
+                      <p className="text-secondary-900">{selectedPartner.company_name || 'Not provided'}</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Legal Entity Type</label>
-                      <p className="text-secondary-900">{selectedPartner.legal_entity_type}</p>
+                      <p className="text-secondary-900">{selectedPartner.legal_entity_type || 'Not provided'}</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Business Address</label>
-                      <p className="text-secondary-900">{selectedPartner.business_address}</p>
+                      <p className="text-secondary-900">{selectedPartner.business_address || 'Not provided'}</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Contact Person</label>
-                      <p className="text-secondary-900">{selectedPartner.contact_person_name}</p>
-                      <p className="text-sm text-secondary-500">{selectedPartner.contact_person_position}</p>
+                      <p className="text-secondary-900">{selectedPartner.contact_person_name || 'Not provided'}</p>
+                      <p className="text-sm text-secondary-500">{selectedPartner.contact_person_position || ''}</p>
                     </div>
                   </div>
                 </div>
@@ -336,15 +345,15 @@ const FleetPartners = () => {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Fleet Size</label>
-                      <p className="text-secondary-900">{selectedPartner.fleet_size} vehicles</p>
+                      <p className="text-secondary-900">{selectedPartner.fleet_size || 0} vehicles</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Years of Experience</label>
-                      <p className="text-secondary-900">{selectedPartner.years_experience} years</p>
+                      <p className="text-secondary-900">{selectedPartner.years_experience || 0} years</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Operating Hours</label>
-                      <p className="text-secondary-900">{selectedPartner.operating_hours}</p>
+                      <p className="text-secondary-900">{selectedPartner.operating_hours || 'Not provided'}</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Status</label>
