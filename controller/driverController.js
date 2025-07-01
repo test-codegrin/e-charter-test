@@ -2,6 +2,7 @@ const { db } = require("../config/db");
 const asyncHandler = require("express-async-handler");
 const driverGetQueries = require("../config/driverQueries/driverGetQueries");
 const settingsService = require("../services/settingsService");
+const driverSettingsQueries = require("../config/driverQueries/driverSettingsQueries");
 
 // Get driver dashboard statistics
 const getDashboardStats = asyncHandler(async (req, res) => {
@@ -213,7 +214,8 @@ const getDriverProfile = asyncHandler(async (req, res) => {
 
   try {
     const [drivers] = await db.query(
-      `SELECT driver_id, driverName, email, address, cityName, zipCord, phoneNo, status 
+      `SELECT driver_id, driverName, email, address, cityName, zipCord, phoneNo, status, 
+              company_name, registration_type, fleet_size, years_experience
        FROM drivers WHERE driver_id = ?`,
       [driver_id]
     );
@@ -279,11 +281,11 @@ const getDriverNotificationSettings = asyncHandler(async (req, res) => {
   }
 
   try {
+    // Ensure settings table exists
+    await db.query(driverSettingsQueries.createSettingsTable);
+    
     // Try to get from database first
-    const [settings] = await db.query(
-      `SELECT * FROM driver_settings WHERE driver_id = ? AND category = 'notifications'`,
-      [driver_id]
-    );
+    const [settings] = await db.query(driverSettingsQueries.getNotificationSettings, [driver_id]);
 
     if (settings.length > 0) {
       // Parse the settings JSON
@@ -327,12 +329,13 @@ const updateDriverNotificationSettings = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "Invalid settings format" });
     }
 
+    // Ensure settings table exists
+    await db.query(driverSettingsQueries.createSettingsTable);
+
     // Store settings in database
-    await db.query(`
-      INSERT INTO driver_settings (driver_id, category, settings_data)
-      VALUES (?, 'notifications', ?)
-      ON DUPLICATE KEY UPDATE settings_data = VALUES(settings_data)
-    `, [driver_id, JSON.stringify(settings)]);
+    await db.query(driverSettingsQueries.updateNotificationSettings, 
+      [driver_id, JSON.stringify(settings)]
+    );
 
     res.status(200).json({
       message: "Notification settings updated successfully"
@@ -340,6 +343,162 @@ const updateDriverNotificationSettings = asyncHandler(async (req, res) => {
 
   } catch (error) {
     console.error("Error updating driver notification settings:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+// Get driver fleet settings
+const getDriverFleetSettings = asyncHandler(async (req, res) => {
+  const driver_id = req.user?.driver_id;
+
+  if (!driver_id) {
+    return res.status(401).json({ message: "Driver authentication required" });
+  }
+
+  try {
+    // Ensure settings table exists
+    await db.query(driverSettingsQueries.createSettingsTable);
+    
+    // Try to get from database first
+    const [settings] = await db.query(driverSettingsQueries.getFleetSettings, [driver_id]);
+
+    if (settings.length > 0) {
+      // Parse the settings JSON
+      let fleetSettings;
+      try {
+        fleetSettings = JSON.parse(settings[0].settings_data);
+      } catch (e) {
+        fleetSettings = getDefaultFleetSettings();
+      }
+
+      return res.status(200).json({
+        message: "Fleet settings fetched successfully",
+        settings: fleetSettings
+      });
+    }
+
+    // If no settings found, return defaults
+    res.status(200).json({
+      message: "Using default fleet settings",
+      settings: getDefaultFleetSettings()
+    });
+
+  } catch (error) {
+    console.error("Error fetching driver fleet settings:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+// Update driver fleet settings
+const updateDriverFleetSettings = asyncHandler(async (req, res) => {
+  const driver_id = req.user?.driver_id;
+  const settings = req.body;
+
+  if (!driver_id) {
+    return res.status(401).json({ message: "Driver authentication required" });
+  }
+
+  try {
+    // Validate settings
+    if (!settings || typeof settings !== 'object') {
+      return res.status(400).json({ message: "Invalid settings format" });
+    }
+
+    // Ensure settings table exists
+    await db.query(driverSettingsQueries.createSettingsTable);
+
+    // Store settings in database
+    await db.query(driverSettingsQueries.updateFleetSettings, 
+      [driver_id, JSON.stringify(settings)]
+    );
+
+    res.status(200).json({
+      message: "Fleet settings updated successfully"
+    });
+
+  } catch (error) {
+    console.error("Error updating driver fleet settings:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+// Get driver payment settings
+const getDriverPaymentSettings = asyncHandler(async (req, res) => {
+  const driver_id = req.user?.driver_id;
+
+  if (!driver_id) {
+    return res.status(401).json({ message: "Driver authentication required" });
+  }
+
+  try {
+    // Ensure settings table exists
+    await db.query(driverSettingsQueries.createSettingsTable);
+    
+    // Try to get from database first
+    const [settings] = await db.query(
+      `SELECT settings_data FROM driver_settings WHERE driver_id = ? AND category = 'payment'`,
+      [driver_id]
+    );
+
+    if (settings.length > 0) {
+      // Parse the settings JSON
+      let paymentSettings;
+      try {
+        paymentSettings = JSON.parse(settings[0].settings_data);
+      } catch (e) {
+        paymentSettings = getDefaultPaymentSettings();
+      }
+
+      return res.status(200).json({
+        message: "Payment settings fetched successfully",
+        settings: paymentSettings
+      });
+    }
+
+    // If no settings found, return defaults
+    res.status(200).json({
+      message: "Using default payment settings",
+      settings: getDefaultPaymentSettings()
+    });
+
+  } catch (error) {
+    console.error("Error fetching driver payment settings:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+// Update driver payment settings
+const updateDriverPaymentSettings = asyncHandler(async (req, res) => {
+  const driver_id = req.user?.driver_id;
+  const settings = req.body;
+
+  if (!driver_id) {
+    return res.status(401).json({ message: "Driver authentication required" });
+  }
+
+  try {
+    // Validate settings
+    if (!settings || typeof settings !== 'object') {
+      return res.status(400).json({ message: "Invalid settings format" });
+    }
+
+    // Ensure settings table exists
+    await db.query(driverSettingsQueries.createSettingsTable);
+
+    // Store settings in database
+    await db.query(
+      `INSERT INTO driver_settings (driver_id, category, settings_data)
+       VALUES (?, 'payment', ?)
+       ON DUPLICATE KEY UPDATE settings_data = VALUES(settings_data)`,
+      [driver_id, JSON.stringify(settings)]
+    );
+
+    res.status(200).json({
+      message: "Payment settings updated successfully"
+    });
+
+  } catch (error) {
+    console.error("Error updating driver payment settings:", error);
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
@@ -355,11 +514,38 @@ const getDefaultNotificationSettings = () => {
   };
 };
 
+// Helper function for default fleet settings
+const getDefaultFleetSettings = () => {
+  return {
+    auto_accept_trips: false,
+    service_radius: 50,
+    operating_hours: '9:00-17:00',
+    availability_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+    max_passengers: 4,
+    preferred_trip_types: ['airport', 'corporate', 'event']
+  };
+};
+
+// Helper function for default payment settings
+const getDefaultPaymentSettings = () => {
+  return {
+    payment_method: 'direct_deposit',
+    bank_name: '',
+    account_number: '',
+    routing_number: '',
+    payment_frequency: 'weekly'
+  };
+};
+
 module.exports = {
   getDashboardStats,
   getDriverTrips,
   getDriverProfile,
   updateDriverProfile,
   getDriverNotificationSettings,
-  updateDriverNotificationSettings
+  updateDriverNotificationSettings,
+  getDriverFleetSettings,
+  updateDriverFleetSettings,
+  getDriverPaymentSettings,
+  updateDriverPaymentSettings
 };

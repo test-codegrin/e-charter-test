@@ -63,11 +63,11 @@ export const adminAPI = {
   
   // Drivers
   getAllDrivers: () => api.get('/admin/alldrivers'),
-  approveDriver: (driverId, status) => api.post(`/verification/approvedriver/${driverId}`, { status }),
+  approveDriver: (driverId, status) => api.post(`/admin/approve-driver/${driverId}`, { status }),
   
   // Vehicles
   getAllVehicles: () => api.get('/admin/allcars'),
-  approveVehicle: (carId, status) => api.post(`/verification/approvecar/${carId}`, { status }),
+  approveVehicle: (carId, status) => api.post(`/admin/approve-car/${carId}`, { status }),
   
   // Trips
   getAllTrips: () => api.get('/admin/alltrips'),
@@ -81,7 +81,19 @@ export const adminAPI = {
   // Notifications
   getNotifications: () => api.get('/notifications/admin'),
   markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
-  markAllAsRead: () => api.put('/notifications/mark-all-read')
+  markAllAsRead: () => api.put('/notifications/mark-all-read'),
+  
+  // Fleet Partners
+  getAllFleetPartners: () => api.get('/admin/fleet-partners'),
+  
+  // Payouts
+  getPayoutSummary: () => api.get('/admin/payouts'),
+  
+  // Settings
+  getSettings: () => api.get('/admin/settings'),
+  updateSettings: (category, settings) => api.put('/admin/settings', { category, settings }),
+  getSettingsByCategory: (category) => api.get(`/admin/settings/category/${category}`),
+  getSettingsAuditLog: (params) => api.get('/admin/settings/audit/log', { params })
 }
 
 // Driver API - Updated with correct endpoints and vehicle CRUD
@@ -110,6 +122,10 @@ export const driverAPI = {
   // Settings
   getNotificationSettings: () => api.get('/driver/settings/notifications'),
   updateNotificationSettings: (settings) => api.put('/driver/settings/notifications', settings),
+  getFleetSettings: () => api.get('/driver/settings/fleet'),
+  updateFleetSettings: (settings) => api.put('/driver/settings/fleet', settings),
+  getPaymentSettings: () => api.get('/driver/settings/payment'),
+  updatePaymentSettings: (settings) => api.put('/driver/settings/payment', settings),
   
   // Notifications
   getNotifications: () => api.get('/notifications/driver'),

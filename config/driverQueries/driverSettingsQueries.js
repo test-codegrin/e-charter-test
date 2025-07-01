@@ -21,6 +21,17 @@ const driverSettingsQueries = {
     ON DUPLICATE KEY UPDATE settings_data = VALUES(settings_data)
   `,
 
+  getPaymentSettings: `
+    SELECT settings_data FROM driver_settings 
+    WHERE driver_id = ? AND category = 'payment'
+  `,
+
+  updatePaymentSettings: `
+    INSERT INTO driver_settings (driver_id, category, settings_data)
+    VALUES (?, 'payment', ?)
+    ON DUPLICATE KEY UPDATE settings_data = VALUES(settings_data)
+  `,
+
   createSettingsTable: `
     CREATE TABLE IF NOT EXISTS driver_settings (
       setting_id INT AUTO_INCREMENT PRIMARY KEY,
