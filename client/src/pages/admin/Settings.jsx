@@ -15,16 +15,177 @@ import {
   EyeOff,
   AlertTriangle,
   CheckCircle,
-  X
+  X,
+  Clock,
+  FileText
 } from 'lucide-react'
+import { adminAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('commission')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [settings, setSettings] = useState({})
+  const [settings, setSettings] = useState({
+    commission: {
+      individual_driver_rate: 20,
+      fleet_partner_rate: 15,
+      tax_rate: 13,
+      currency: 'CAD',
+      payment_processing_fee: 2.9
+    },
+    system: {
+      company_name: 'eCharter',
+      company_email: 'admin@echarter.co',
+      company_phone: '+1-800-CHARTER',
+      support_email: 'support@echarter.co',
+      website_url: 'https://echarter.co',
+      timezone: 'America/Toronto',
+      date_format: 'YYYY-MM-DD',
+      time_format: '24h',
+      maintenance_mode: false
+    },
+    email: {
+      smtp_enabled: true,
+      smtp_host: 'smtp.gmail.com',
+      smtp_port: 587,
+      smtp_user: '',
+      smtp_password: '',
+      from_name: 'eCharter',
+      from_email: 'noreply@echarter.co'
+    },
+    notifications: {
+      email_booking_confirmation: true,
+      email_trip_updates: true,
+      email_payment_receipts: true,
+      sms_booking_confirmation: true,
+      sms_trip_started: true,
+      sms_trip_completed: true,
+      admin_new_bookings: true,
+      admin_driver_registrations: true
+    },
+    security: {
+      jwt_expiry: '24h',
+      password_min_length: 8,
+      require_email_verification: false,
+      max_login_attempts: 5,
+      session_timeout: 30
+    },
+    business: {
+      auto_approve_drivers: false,
+      auto_approve_vehicles: false,
+      require_driver_documents: true,
+      min_trip_amount: 25,
+      max_trip_duration: 24,
+      booking_advance_hours: 2,
+      cancellation_hours: 4
+    },
+    payment: {
+      stripe_enabled: false,
+      stripe_public_key: '',
+      stripe_secret_key: '',
+      require_payment_upfront: false
+    },
+    features: {
+      fleet_partners_enabled: true,
+      multi_stop_trips: true,
+      real_time_tracking: true,
+      driver_ratings: true
+    },
+    pricing: {
+      base_rates: {
+        sedan: {
+          small: 50,
+          medium: 60,
+          large: 70
+        },
+        suv: {
+          small: 70,
+          medium: 80,
+          large: 90
+        },
+        van: {
+          small: 80,
+          medium: 100,
+          large: 120
+        },
+        bus: {
+          small: 150,
+          medium: 200,
+          large: 250
+        }
+      },
+      per_km_rates: {
+        sedan: {
+          small: 2.5,
+          medium: 3.0,
+          large: 3.5
+        },
+        suv: {
+          small: 3.5,
+          medium: 4.0,
+          large: 4.5
+        },
+        van: {
+          small: 4.0,
+          medium: 5.0,
+          large: 6.0
+        },
+        bus: {
+          small: 7.5,
+          medium: 10.0,
+          large: 12.5
+        }
+      },
+      per_hour_rates: {
+        sedan: {
+          small: 25,
+          medium: 30,
+          large: 35
+        },
+        suv: {
+          small: 35,
+          medium: 40,
+          large: 45
+        },
+        van: {
+          small: 40,
+          medium: 50,
+          large: 60
+        },
+        bus: {
+          small: 75,
+          medium: 100,
+          large: 125
+        }
+      },
+      midstop_rates: {
+        sedan: {
+          small: 15,
+          medium: 20,
+          large: 25
+        },
+        suv: {
+          small: 25,
+          medium: 30,
+          large: 35
+        },
+        van: {
+          small: 30,
+          medium: 40,
+          large: 50
+        },
+        bus: {
+          small: 60,
+          medium: 80,
+          large: 100
+        }
+      }
+    }
+  })
   const [showSecrets, setShowSecrets] = useState({})
+  const [auditLogs, setAuditLogs] = useState([])
+  const [showAuditLog, setShowAuditLog] = useState(false)
 
   useEffect(() => {
     fetchSettings()
@@ -33,20 +194,9 @@ const Settings = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/admin/settings', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Settings loaded:', data.settings)
-        setSettings(data.settings)
-      } else {
-        toast.error('Failed to load settings')
-      }
+      const response = await adminAPI.getSettings()
+      console.log('Settings loaded:', response.data.settings)
+      setSettings(response.data.settings)
     } catch (error) {
       console.error('Error fetching settings:', error)
       toast.error('Failed to load settings')
@@ -58,24 +208,10 @@ const Settings = () => {
   const saveSettings = async (category) => {
     try {
       setSaving(true)
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          category,
-          settings: settings[category]
-        })
-      })
+      const response = await adminAPI.updateSettings(category, settings[category])
       
-      if (response.ok) {
+      if (response.data) {
         toast.success(`${category.charAt(0).toUpperCase() + category.slice(1)} settings updated successfully`)
-      } else {
-        const errorData = await response.json()
-        toast.error(errorData.message || 'Failed to update settings')
       }
     } catch (error) {
       console.error('Error updating settings:', error)
@@ -95,11 +231,51 @@ const Settings = () => {
     }))
   }
 
+  const updateNestedSetting = (category, parent, child, value) => {
+    setSettings(prev => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        [parent]: {
+          ...prev[category][parent],
+          [child]: value
+        }
+      }
+    }))
+  }
+
+  const updateVehicleRate = (rateType, vehicleType, vehicleSize, value) => {
+    setSettings(prev => ({
+      ...prev,
+      pricing: {
+        ...prev.pricing,
+        [rateType]: {
+          ...prev.pricing[rateType],
+          [vehicleType]: {
+            ...prev.pricing[rateType][vehicleType],
+            [vehicleSize]: parseFloat(value)
+          }
+        }
+      }
+    }))
+  }
+
   const toggleSecretVisibility = (field) => {
     setShowSecrets(prev => ({
       ...prev,
       [field]: !prev[field]
     }))
+  }
+
+  const fetchAuditLogs = async () => {
+    try {
+      const response = await adminAPI.getSettingsAuditLog()
+      setAuditLogs(response.data.auditLogs || [])
+      setShowAuditLog(true)
+    } catch (error) {
+      console.error('Error fetching audit logs:', error)
+      toast.error('Failed to load audit logs')
+    }
   }
 
   const tabs = [
@@ -110,7 +286,8 @@ const Settings = () => {
     { id: 'business', label: 'Business Rules', icon: Truck },
     { id: 'payment', label: 'Payment', icon: CreditCard },
     { id: 'features', label: 'Features', icon: Flag },
-    { id: 'system', label: 'System', icon: Server }
+    { id: 'system', label: 'System', icon: Server },
+    { id: 'pricing', label: 'Pricing', icon: FileText }
   ]
 
   if (loading) {
@@ -129,13 +306,22 @@ const Settings = () => {
           <h1 className="text-2xl font-bold text-dark-800">System Settings</h1>
           <p className="text-secondary-600">Configure system-wide settings and preferences</p>
         </div>
-        <button
-          onClick={fetchSettings}
-          className="btn-secondary flex items-center space-x-2"
-        >
-          <RefreshCw className="w-4 h-4" />
-          <span>Refresh</span>
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={fetchAuditLogs}
+            className="btn-secondary flex items-center space-x-2"
+          >
+            <Clock className="w-4 h-4" />
+            <span>Audit Log</span>
+          </button>
+          <button
+            onClick={fetchSettings}
+            className="btn-secondary flex items-center space-x-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -247,6 +433,24 @@ const Settings = () => {
                 <option value="CAD">Canadian Dollar (CAD)</option>
                 <option value="USD">US Dollar (USD)</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Payment Processing Fee (%)
+              </label>
+              <input
+                type="number"
+                value={settings.commission.payment_processing_fee}
+                onChange={(e) => updateSetting('commission', 'payment_processing_fee', parseFloat(e.target.value))}
+                min="0"
+                max="100"
+                step="0.1"
+                className="input-field"
+              />
+              <p className="text-xs text-secondary-500 mt-1">
+                Fee charged by payment processor (e.g., Stripe)
+              </p>
             </div>
           </div>
         </div>
@@ -600,6 +804,45 @@ const Settings = () => {
                 Require Email Verification
               </label>
             </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="password_require_uppercase"
+                checked={settings.security.password_require_uppercase}
+                onChange={(e) => updateSetting('security', 'password_require_uppercase', e.target.checked)}
+                className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+              />
+              <label htmlFor="password_require_uppercase" className="text-sm font-medium text-secondary-700">
+                Require Uppercase in Password
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="password_require_numbers"
+                checked={settings.security.password_require_numbers}
+                onChange={(e) => updateSetting('security', 'password_require_numbers', e.target.checked)}
+                className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+              />
+              <label htmlFor="password_require_numbers" className="text-sm font-medium text-secondary-700">
+                Require Numbers in Password
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="password_require_symbols"
+                checked={settings.security.password_require_symbols}
+                onChange={(e) => updateSetting('security', 'password_require_symbols', e.target.checked)}
+                className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+              />
+              <label htmlFor="password_require_symbols" className="text-sm font-medium text-secondary-700">
+                Require Symbols in Password
+              </label>
+            </div>
           </div>
         </div>
       )}
@@ -646,6 +889,32 @@ const Settings = () => {
               />
               <label htmlFor="auto_approve_vehicles" className="text-sm font-medium text-secondary-700">
                 Auto-approve Vehicle Registrations
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="require_driver_documents"
+                checked={settings.business.require_driver_documents}
+                onChange={(e) => updateSetting('business', 'require_driver_documents', e.target.checked)}
+                className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+              />
+              <label htmlFor="require_driver_documents" className="text-sm font-medium text-secondary-700">
+                Require Driver Documents
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="allow_same_day_booking"
+                checked={settings.business.allow_same_day_booking}
+                onChange={(e) => updateSetting('business', 'allow_same_day_booking', e.target.checked)}
+                className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+              />
+              <label htmlFor="allow_same_day_booking" className="text-sm font-medium text-secondary-700">
+                Allow Same-Day Bookings
               </label>
             </div>
 
@@ -706,6 +975,34 @@ const Settings = () => {
               <p className="text-xs text-secondary-500 mt-1">
                 Minimum hours before trip start time that cancellation is allowed without fee
               </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Maximum Passengers
+              </label>
+              <input
+                type="number"
+                value={settings.business.max_passengers}
+                onChange={(e) => updateSetting('business', 'max_passengers', parseInt(e.target.value))}
+                min="1"
+                max="100"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Cancellation Fee ($)
+              </label>
+              <input
+                type="number"
+                value={settings.business.cancellation_fee}
+                onChange={(e) => updateSetting('business', 'cancellation_fee', parseFloat(e.target.value))}
+                min="0"
+                step="0.01"
+                className="input-field"
+              />
             </div>
           </div>
         </div>
@@ -778,6 +1075,28 @@ const Settings = () => {
                   </button>
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Stripe Webhook Secret
+                </label>
+                <div className="relative">
+                  <input
+                    type={showSecrets.stripe_webhook_secret ? 'text' : 'password'}
+                    value={settings.payment.stripe_webhook_secret}
+                    onChange={(e) => updateSetting('payment', 'stripe_webhook_secret', e.target.value)}
+                    className="input-field pr-10"
+                    placeholder="whsec_..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => toggleSecretVisibility('stripe_webhook_secret')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-400 hover:text-secondary-600"
+                  >
+                    {showSecrets.stripe_webhook_secret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center space-x-3">
@@ -791,6 +1110,35 @@ const Settings = () => {
               <label htmlFor="require_payment_upfront" className="text-sm font-medium text-secondary-700">
                 Require Payment Before Trip
               </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Accepted Payment Methods
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {['credit_card', 'debit_card', 'paypal', 'apple_pay', 'google_pay'].map(method => (
+                  <div key={method} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`payment_method_${method}`}
+                      checked={(settings.payment.payment_methods || []).includes(method)}
+                      onChange={(e) => {
+                        const methods = settings.payment.payment_methods || []
+                        if (e.target.checked) {
+                          updateSetting('payment', 'payment_methods', [...methods, method])
+                        } else {
+                          updateSetting('payment', 'payment_methods', methods.filter(m => m !== method))
+                        }
+                      }}
+                      className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+                    />
+                    <label htmlFor={`payment_method_${method}`} className="text-sm text-secondary-700 capitalize">
+                      {method.replace('_', ' ')}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -864,6 +1212,58 @@ const Settings = () => {
               />
               <label htmlFor="driver_ratings" className="text-sm font-medium text-secondary-700">
                 Enable Driver Ratings
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="trip_scheduling"
+                checked={settings.features.trip_scheduling}
+                onChange={(e) => updateSetting('features', 'trip_scheduling', e.target.checked)}
+                className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+              />
+              <label htmlFor="trip_scheduling" className="text-sm font-medium text-secondary-700">
+                Enable Trip Scheduling
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="loyalty_program"
+                checked={settings.features.loyalty_program}
+                onChange={(e) => updateSetting('features', 'loyalty_program', e.target.checked)}
+                className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+              />
+              <label htmlFor="loyalty_program" className="text-sm font-medium text-secondary-700">
+                Enable Loyalty Program
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="referral_program"
+                checked={settings.features.referral_program}
+                onChange={(e) => updateSetting('features', 'referral_program', e.target.checked)}
+                className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+              />
+              <label htmlFor="referral_program" className="text-sm font-medium text-secondary-700">
+                Enable Referral Program
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="corporate_accounts"
+                checked={settings.features.corporate_accounts}
+                onChange={(e) => updateSetting('features', 'corporate_accounts', e.target.checked)}
+                className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+              />
+              <label htmlFor="corporate_accounts" className="text-sm font-medium text-secondary-700">
+                Enable Corporate Accounts
               </label>
             </div>
           </div>
@@ -966,6 +1366,35 @@ const Settings = () => {
               </select>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Date Format
+              </label>
+              <select
+                value={settings.system.date_format}
+                onChange={(e) => updateSetting('system', 'date_format', e.target.value)}
+                className="input-field"
+              >
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Time Format
+              </label>
+              <select
+                value={settings.system.time_format}
+                onChange={(e) => updateSetting('system', 'time_format', e.target.value)}
+                className="input-field"
+              >
+                <option value="12h">12-hour (AM/PM)</option>
+                <option value="24h">24-hour</option>
+              </select>
+            </div>
+
             <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
@@ -994,6 +1423,403 @@ const Settings = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Pricing Settings */}
+      {activeTab === 'pricing' && settings.pricing && (
+        <div className="card slide-in">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-dark-800 flex items-center">
+              <FileText className="w-5 h-5 text-ice-500 mr-2" />
+              Pricing Configuration
+            </h3>
+            <button
+              onClick={() => saveSettings('pricing')}
+              disabled={saving}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+            </button>
+          </div>
+          
+          <div className="space-y-8">
+            {/* Base Rates */}
+            <div>
+              <h4 className="text-md font-medium text-secondary-800 mb-4">Base Rates ($)</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead>
+                    <tr className="border-b border-secondary-200">
+                      <th className="table-header">Vehicle Type</th>
+                      <th className="table-header">Small</th>
+                      <th className="table-header">Medium</th>
+                      <th className="table-header">Large</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-secondary-200">
+                    {Object.keys(settings.pricing.base_rates).map(vehicleType => (
+                      <tr key={`base-${vehicleType}`} className="hover:bg-secondary-50">
+                        <td className="table-cell font-medium capitalize">{vehicleType}</td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.base_rates[vehicleType].small}
+                            onChange={(e) => updateVehicleRate('base_rates', vehicleType, 'small', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.base_rates[vehicleType].medium}
+                            onChange={(e) => updateVehicleRate('base_rates', vehicleType, 'medium', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.base_rates[vehicleType].large}
+                            onChange={(e) => updateVehicleRate('base_rates', vehicleType, 'large', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Per KM Rates */}
+            <div>
+              <h4 className="text-md font-medium text-secondary-800 mb-4">Per Kilometer Rates ($)</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead>
+                    <tr className="border-b border-secondary-200">
+                      <th className="table-header">Vehicle Type</th>
+                      <th className="table-header">Small</th>
+                      <th className="table-header">Medium</th>
+                      <th className="table-header">Large</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-secondary-200">
+                    {Object.keys(settings.pricing.per_km_rates).map(vehicleType => (
+                      <tr key={`km-${vehicleType}`} className="hover:bg-secondary-50">
+                        <td className="table-cell font-medium capitalize">{vehicleType}</td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.per_km_rates[vehicleType].small}
+                            onChange={(e) => updateVehicleRate('per_km_rates', vehicleType, 'small', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.per_km_rates[vehicleType].medium}
+                            onChange={(e) => updateVehicleRate('per_km_rates', vehicleType, 'medium', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.per_km_rates[vehicleType].large}
+                            onChange={(e) => updateVehicleRate('per_km_rates', vehicleType, 'large', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Per Hour Rates */}
+            <div>
+              <h4 className="text-md font-medium text-secondary-800 mb-4">Per Hour Rates ($)</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead>
+                    <tr className="border-b border-secondary-200">
+                      <th className="table-header">Vehicle Type</th>
+                      <th className="table-header">Small</th>
+                      <th className="table-header">Medium</th>
+                      <th className="table-header">Large</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-secondary-200">
+                    {Object.keys(settings.pricing.per_hour_rates).map(vehicleType => (
+                      <tr key={`hour-${vehicleType}`} className="hover:bg-secondary-50">
+                        <td className="table-cell font-medium capitalize">{vehicleType}</td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.per_hour_rates[vehicleType].small}
+                            onChange={(e) => updateVehicleRate('per_hour_rates', vehicleType, 'small', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.per_hour_rates[vehicleType].medium}
+                            onChange={(e) => updateVehicleRate('per_hour_rates', vehicleType, 'medium', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.per_hour_rates[vehicleType].large}
+                            onChange={(e) => updateVehicleRate('per_hour_rates', vehicleType, 'large', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mid-Stop Rates */}
+            <div>
+              <h4 className="text-md font-medium text-secondary-800 mb-4">Mid-Stop Rates ($)</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead>
+                    <tr className="border-b border-secondary-200">
+                      <th className="table-header">Vehicle Type</th>
+                      <th className="table-header">Small</th>
+                      <th className="table-header">Medium</th>
+                      <th className="table-header">Large</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-secondary-200">
+                    {Object.keys(settings.pricing.midstop_rates).map(vehicleType => (
+                      <tr key={`midstop-${vehicleType}`} className="hover:bg-secondary-50">
+                        <td className="table-cell font-medium capitalize">{vehicleType}</td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.midstop_rates[vehicleType].small}
+                            onChange={(e) => updateVehicleRate('midstop_rates', vehicleType, 'small', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.midstop_rates[vehicleType].medium}
+                            onChange={(e) => updateVehicleRate('midstop_rates', vehicleType, 'medium', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                        <td className="table-cell">
+                          <input
+                            type="number"
+                            value={settings.pricing.midstop_rates[vehicleType].large}
+                            onChange={(e) => updateVehicleRate('midstop_rates', vehicleType, 'large', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            className="input-field"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Additional Pricing Settings */}
+            <div>
+              <h4 className="text-md font-medium text-secondary-800 mb-4">Additional Pricing Settings</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="dynamic_pricing"
+                    checked={settings.pricing?.dynamic_pricing}
+                    onChange={(e) => updateSetting('pricing', 'dynamic_pricing', e.target.checked)}
+                    className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+                  />
+                  <label htmlFor="dynamic_pricing" className="text-sm font-medium text-secondary-700">
+                    Enable Dynamic Pricing
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="surge_pricing"
+                    checked={settings.pricing?.surge_pricing}
+                    onChange={(e) => updateSetting('pricing', 'surge_pricing', e.target.checked)}
+                    className="w-4 h-4 text-ice-600 border-secondary-300 rounded focus:ring-ice-500"
+                  />
+                  <label htmlFor="surge_pricing" className="text-sm font-medium text-secondary-700">
+                    Enable Surge Pricing
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Minimum Fare ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.pricing?.minimum_fare || 15}
+                    onChange={(e) => updateSetting('pricing', 'minimum_fare', parseFloat(e.target.value))}
+                    min="0"
+                    step="0.01"
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Cancellation Fee ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.pricing?.cancellation_fee || 10}
+                    onChange={(e) => updateSetting('pricing', 'cancellation_fee', parseFloat(e.target.value))}
+                    min="0"
+                    step="0.01"
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Waiting Time Rate ($ per minute)
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.pricing?.waiting_time_rate || 0.5}
+                    onChange={(e) => updateSetting('pricing', 'waiting_time_rate', parseFloat(e.target.value))}
+                    min="0"
+                    step="0.01"
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Round Prices To Nearest ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.pricing?.round_to_nearest || 0.25}
+                    onChange={(e) => updateSetting('pricing', 'round_to_nearest', parseFloat(e.target.value))}
+                    min="0"
+                    step="0.01"
+                    className="input-field"
+                  />
+                  <p className="text-xs text-secondary-500 mt-1">
+                    e.g., 0.25 will round to nearest quarter
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Audit Log Modal */}
+      {showAuditLog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-secondary-900">Settings Audit Log</h3>
+                <button
+                  onClick={() => setShowAuditLog(false)}
+                  className="p-2 hover:bg-secondary-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead>
+                    <tr className="border-b border-secondary-200">
+                      <th className="table-header">Date & Time</th>
+                      <th className="table-header">Category</th>
+                      <th className="table-header">Setting</th>
+                      <th className="table-header">Changed By</th>
+                      <th className="table-header">Old Value</th>
+                      <th className="table-header">New Value</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-secondary-200">
+                    {auditLogs.map((log) => (
+                      <tr key={log.audit_id} className="hover:bg-secondary-50">
+                        <td className="table-cell">
+                          {new Date(log.created_at).toLocaleString()}
+                        </td>
+                        <td className="table-cell capitalize">
+                          {log.category}
+                        </td>
+                        <td className="table-cell">
+                          {log.setting_key}
+                        </td>
+                        <td className="table-cell">
+                          {log.changed_by_name || 'System'}
+                        </td>
+                        <td className="table-cell">
+                          <div className="max-w-xs truncate">
+                            {log.old_value}
+                          </div>
+                        </td>
+                        <td className="table-cell">
+                          <div className="max-w-xs truncate">
+                            {log.new_value}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {auditLogs.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-secondary-500">No audit logs found.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
