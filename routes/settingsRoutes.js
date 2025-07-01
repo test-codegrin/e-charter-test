@@ -22,7 +22,7 @@ router.get("/category/:category", authenticationToken, getSettingsByCategory);
 // Individual setting routes
 router.get("/:category/:key", authenticationToken, getSetting);
 
-// Reset routes - FIXED: Remove the optional parameter syntax
+// Reset routes
 router.delete("/reset", authenticationToken, resetSettings);
 router.delete("/reset/:category", authenticationToken, resetSettings);
 

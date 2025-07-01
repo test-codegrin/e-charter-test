@@ -18,7 +18,8 @@ import {
   CreditCard,
   Zap,
   Activity,
-  History
+  History,
+  X
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -254,7 +255,7 @@ const Settings = () => {
                   onClick={() => setShowAuditLog(false)}
                   className="p-2 hover:bg-secondary-100 rounded-lg transition-colors"
                 >
-                  ×
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               
@@ -698,9 +699,6 @@ const Settings = () => {
           </div>
         )}
 
-        {/* Add other tab content here following the same pattern... */}
-        {/* For brevity, I'll show the structure for other tabs */}
-        
         {/* Email Settings */}
         {activeTab === 'email' && (
           <div className="card">
@@ -831,7 +829,830 @@ const Settings = () => {
           </div>
         )}
 
-        {/* Continue with other tabs... */}
+        {/* SMS Settings */}
+        {activeTab === 'sms' && (
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-secondary-900">SMS Configuration</h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => resetCategory('sms')}
+                  className="btn-secondary text-sm"
+                >
+                  Reset to Defaults
+                </button>
+                <button
+                  onClick={() => saveSettings('sms')}
+                  disabled={saving}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="sms_enabled"
+                  checked={settings.sms?.enabled || false}
+                  onChange={(e) => updateSetting('sms', 'enabled', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="sms_enabled" className="text-sm font-medium text-secondary-700">
+                  Enable SMS Notifications
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    SMS Provider
+                  </label>
+                  <select
+                    value={settings.sms?.provider || 'twilio'}
+                    onChange={(e) => updateSetting('sms', 'provider', e.target.value)}
+                    className="input-field"
+                    disabled={!settings.sms?.enabled}
+                  >
+                    <option value="twilio">Twilio</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Twilio Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={settings.sms?.twilio_phone || ''}
+                    onChange={(e) => updateSetting('sms', 'twilio_phone', e.target.value)}
+                    className="input-field"
+                    placeholder="+1234567890"
+                    disabled={!settings.sms?.enabled}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Twilio Account SID
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPasswords.twilio_sid ? 'text' : 'password'}
+                      value={settings.sms?.twilio_sid === '***HIDDEN***' ? '' : settings.sms?.twilio_sid || ''}
+                      onChange={(e) => updateSetting('sms', 'twilio_sid', e.target.value)}
+                      className="input-field pr-10"
+                      disabled={!settings.sms?.enabled}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('twilio_sid')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-400 hover:text-secondary-600"
+                    >
+                      {showPasswords.twilio_sid ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Twilio Auth Token
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPasswords.twilio_token ? 'text' : 'password'}
+                      value={settings.sms?.twilio_token === '***HIDDEN***' ? '' : settings.sms?.twilio_token || ''}
+                      onChange={(e) => updateSetting('sms', 'twilio_token', e.target.value)}
+                      className="input-field pr-10"
+                      disabled={!settings.sms?.enabled}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('twilio_token')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-400 hover:text-secondary-600"
+                    >
+                      {showPasswords.twilio_token ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Security Settings */}
+        {activeTab === 'security' && (
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-secondary-900">Security Configuration</h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => resetCategory('security')}
+                  className="btn-secondary text-sm"
+                >
+                  Reset to Defaults
+                </button>
+                <button
+                  onClick={() => saveSettings('security')}
+                  disabled={saving}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  JWT Token Expiry
+                </label>
+                <select
+                  value={settings.security?.jwt_expiry || '24h'}
+                  onChange={(e) => updateSetting('security', 'jwt_expiry', e.target.value)}
+                  className="input-field"
+                >
+                  <option value="1h">1 Hour</option>
+                  <option value="24h">24 Hours</option>
+                  <option value="7d">7 Days</option>
+                  <option value="30d">30 Days</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Minimum Password Length
+                </label>
+                <input
+                  type="number"
+                  min="6"
+                  max="20"
+                  value={settings.security?.password_min_length || 8}
+                  onChange={(e) => updateSetting('security', 'password_min_length', parseInt(e.target.value))}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Max Login Attempts
+                </label>
+                <input
+                  type="number"
+                  min="3"
+                  max="10"
+                  value={settings.security?.max_login_attempts || 5}
+                  onChange={(e) => updateSetting('security', 'max_login_attempts', parseInt(e.target.value))}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-secondary-700 mb-2">
+                  Session Timeout (minutes)
+                </label>
+                <input
+                  type="number"
+                  min="5"
+                  max="120"
+                  value={settings.security?.session_timeout || 30}
+                  onChange={(e) => updateSetting('security', 'session_timeout', parseInt(e.target.value))}
+                  className="input-field"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="require_email_verification"
+                    checked={settings.security?.require_email_verification || false}
+                    onChange={(e) => updateSetting('security', 'require_email_verification', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="require_email_verification" className="text-sm font-medium text-secondary-700">
+                    Require Email Verification
+                  </label>
+                </div>
+                <p className="text-xs text-secondary-500 mt-1">
+                  When enabled, users must verify their email address before accessing the system
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Business Rules */}
+        {activeTab === 'business' && (
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-secondary-900">Business Rules</h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => resetCategory('business')}
+                  className="btn-secondary text-sm"
+                >
+                  Reset to Defaults
+                </button>
+                <button
+                  onClick={() => saveSettings('business')}
+                  disabled={saving}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Minimum Trip Amount ($)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={settings.business?.min_trip_amount || 25}
+                    onChange={(e) => updateSetting('business', 'min_trip_amount', parseFloat(e.target.value))}
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Maximum Trip Duration (hours)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="72"
+                    value={settings.business?.max_trip_duration || 24}
+                    onChange={(e) => updateSetting('business', 'max_trip_duration', parseInt(e.target.value))}
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Booking Advance Notice (hours)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="48"
+                    value={settings.business?.booking_advance_hours || 2}
+                    onChange={(e) => updateSetting('business', 'booking_advance_hours', parseInt(e.target.value))}
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Cancellation Notice (hours)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="48"
+                    value={settings.business?.cancellation_hours || 4}
+                    onChange={(e) => updateSetting('business', 'cancellation_hours', parseInt(e.target.value))}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="auto_approve_drivers"
+                    checked={settings.business?.auto_approve_drivers || false}
+                    onChange={(e) => updateSetting('business', 'auto_approve_drivers', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="auto_approve_drivers" className="text-sm font-medium text-secondary-700">
+                    Auto-approve Driver Registrations
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="auto_approve_vehicles"
+                    checked={settings.business?.auto_approve_vehicles || false}
+                    onChange={(e) => updateSetting('business', 'auto_approve_vehicles', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="auto_approve_vehicles" className="text-sm font-medium text-secondary-700">
+                    Auto-approve Vehicle Registrations
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="require_driver_documents"
+                    checked={settings.business?.require_driver_documents || true}
+                    onChange={(e) => updateSetting('business', 'require_driver_documents', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="require_driver_documents" className="text-sm font-medium text-secondary-700">
+                    Require Driver Documents
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notifications Settings */}
+        {activeTab === 'notifications' && (
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-secondary-900">Notification Settings</h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => resetCategory('notifications')}
+                  className="btn-secondary text-sm"
+                >
+                  Reset to Defaults
+                </button>
+                <button
+                  onClick={() => saveSettings('notifications')}
+                  disabled={saving}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <h4 className="text-md font-medium text-secondary-800">Email Notifications</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="email_booking_confirmation"
+                    checked={settings.notifications?.email_booking_confirmation || true}
+                    onChange={(e) => updateSetting('notifications', 'email_booking_confirmation', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="email_booking_confirmation" className="text-sm font-medium text-secondary-700">
+                    Booking Confirmations
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="email_trip_updates"
+                    checked={settings.notifications?.email_trip_updates || true}
+                    onChange={(e) => updateSetting('notifications', 'email_trip_updates', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="email_trip_updates" className="text-sm font-medium text-secondary-700">
+                    Trip Status Updates
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="email_payment_receipts"
+                    checked={settings.notifications?.email_payment_receipts || true}
+                    onChange={(e) => updateSetting('notifications', 'email_payment_receipts', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="email_payment_receipts" className="text-sm font-medium text-secondary-700">
+                    Payment Receipts
+                  </label>
+                </div>
+              </div>
+
+              <h4 className="text-md font-medium text-secondary-800 mt-6">SMS Notifications</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="sms_booking_confirmation"
+                    checked={settings.notifications?.sms_booking_confirmation || true}
+                    onChange={(e) => updateSetting('notifications', 'sms_booking_confirmation', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="sms_booking_confirmation" className="text-sm font-medium text-secondary-700">
+                    Booking Confirmations
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="sms_trip_started"
+                    checked={settings.notifications?.sms_trip_started || true}
+                    onChange={(e) => updateSetting('notifications', 'sms_trip_started', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="sms_trip_started" className="text-sm font-medium text-secondary-700">
+                    Trip Started Alerts
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="sms_trip_completed"
+                    checked={settings.notifications?.sms_trip_completed || true}
+                    onChange={(e) => updateSetting('notifications', 'sms_trip_completed', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="sms_trip_completed" className="text-sm font-medium text-secondary-700">
+                    Trip Completed Alerts
+                  </label>
+                </div>
+              </div>
+
+              <h4 className="text-md font-medium text-secondary-800 mt-6">Admin Notifications</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="admin_new_bookings"
+                    checked={settings.notifications?.admin_new_bookings || true}
+                    onChange={(e) => updateSetting('notifications', 'admin_new_bookings', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="admin_new_bookings" className="text-sm font-medium text-secondary-700">
+                    New Booking Notifications
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="admin_driver_registrations"
+                    checked={settings.notifications?.admin_driver_registrations || true}
+                    onChange={(e) => updateSetting('notifications', 'admin_driver_registrations', e.target.checked)}
+                    className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="admin_driver_registrations" className="text-sm font-medium text-secondary-700">
+                    Driver Registration Notifications
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Settings */}
+        {activeTab === 'payment' && (
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-secondary-900">Payment Settings</h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => resetCategory('payment')}
+                  className="btn-secondary text-sm"
+                >
+                  Reset to Defaults
+                </button>
+                <button
+                  onClick={() => saveSettings('payment')}
+                  disabled={saving}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="stripe_enabled"
+                  checked={settings.payment?.stripe_enabled || false}
+                  onChange={(e) => updateSetting('payment', 'stripe_enabled', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="stripe_enabled" className="text-sm font-medium text-secondary-700">
+                  Enable Stripe Payments
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Stripe Public Key
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.payment?.stripe_public_key || ''}
+                    onChange={(e) => updateSetting('payment', 'stripe_public_key', e.target.value)}
+                    className="input-field"
+                    placeholder="pk_test_..."
+                    disabled={!settings.payment?.stripe_enabled}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Stripe Secret Key
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPasswords.stripe_secret_key ? 'text' : 'password'}
+                      value={settings.payment?.stripe_secret_key === '***HIDDEN***' ? '' : settings.payment?.stripe_secret_key || ''}
+                      onChange={(e) => updateSetting('payment', 'stripe_secret_key', e.target.value)}
+                      className="input-field pr-10"
+                      placeholder="sk_test_..."
+                      disabled={!settings.payment?.stripe_enabled}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('stripe_secret_key')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-400 hover:text-secondary-600"
+                    >
+                      {showPasswords.stripe_secret_key ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3 mt-4">
+                <input
+                  type="checkbox"
+                  id="require_payment_upfront"
+                  checked={settings.payment?.require_payment_upfront || false}
+                  onChange={(e) => updateSetting('payment', 'require_payment_upfront', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="require_payment_upfront" className="text-sm font-medium text-secondary-700">
+                  Require Payment Upfront
+                </label>
+              </div>
+              <p className="text-xs text-secondary-500 mt-1">
+                When enabled, customers must pay for trips at the time of booking
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Feature Flags */}
+        {activeTab === 'features' && (
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-secondary-900">Feature Flags</h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => resetCategory('features')}
+                  className="btn-secondary text-sm"
+                >
+                  Reset to Defaults
+                </button>
+                <button
+                  onClick={() => saveSettings('features')}
+                  disabled={saving}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="fleet_partners_enabled"
+                  checked={settings.features?.fleet_partners_enabled || true}
+                  onChange={(e) => updateSetting('features', 'fleet_partners_enabled', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="fleet_partners_enabled" className="text-sm font-medium text-secondary-700">
+                  Fleet Partners
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="multi_stop_trips"
+                  checked={settings.features?.multi_stop_trips || true}
+                  onChange={(e) => updateSetting('features', 'multi_stop_trips', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="multi_stop_trips" className="text-sm font-medium text-secondary-700">
+                  Multi-Stop Trips
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="real_time_tracking"
+                  checked={settings.features?.real_time_tracking || true}
+                  onChange={(e) => updateSetting('features', 'real_time_tracking', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="real_time_tracking" className="text-sm font-medium text-secondary-700">
+                  Real-Time Tracking
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="driver_ratings"
+                  checked={settings.features?.driver_ratings || true}
+                  onChange={(e) => updateSetting('features', 'driver_ratings', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="driver_ratings" className="text-sm font-medium text-secondary-700">
+                  Driver Ratings
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="trip_scheduling"
+                  checked={settings.features?.trip_scheduling || true}
+                  onChange={(e) => updateSetting('features', 'trip_scheduling', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="trip_scheduling" className="text-sm font-medium text-secondary-700">
+                  Trip Scheduling
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="loyalty_program"
+                  checked={settings.features?.loyalty_program || false}
+                  onChange={(e) => updateSetting('features', 'loyalty_program', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="loyalty_program" className="text-sm font-medium text-secondary-700">
+                  Loyalty Program
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="referral_program"
+                  checked={settings.features?.referral_program || false}
+                  onChange={(e) => updateSetting('features', 'referral_program', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="referral_program" className="text-sm font-medium text-secondary-700">
+                  Referral Program
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="corporate_accounts"
+                  checked={settings.features?.corporate_accounts || false}
+                  onChange={(e) => updateSetting('features', 'corporate_accounts', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="corporate_accounts" className="text-sm font-medium text-secondary-700">
+                  Corporate Accounts
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Maintenance Settings */}
+        {activeTab === 'maintenance' && (
+          <div className="card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-secondary-900">Maintenance Settings</h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => resetCategory('maintenance')}
+                  className="btn-secondary text-sm"
+                >
+                  Reset to Defaults
+                </button>
+                <button
+                  onClick={() => saveSettings('maintenance')}
+                  disabled={saving}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="backup_enabled"
+                  checked={settings.maintenance?.backup_enabled || true}
+                  onChange={(e) => updateSetting('maintenance', 'backup_enabled', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="backup_enabled" className="text-sm font-medium text-secondary-700">
+                  Enable Automatic Backups
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Backup Frequency
+                  </label>
+                  <select
+                    value={settings.maintenance?.backup_frequency || 'daily'}
+                    onChange={(e) => updateSetting('maintenance', 'backup_frequency', e.target.value)}
+                    className="input-field"
+                    disabled={!settings.maintenance?.backup_enabled}
+                  >
+                    <option value="hourly">Hourly</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Log Level
+                  </label>
+                  <select
+                    value={settings.maintenance?.log_level || 'info'}
+                    onChange={(e) => updateSetting('maintenance', 'log_level', e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="error">Error</option>
+                    <option value="warn">Warning</option>
+                    <option value="info">Info</option>
+                    <option value="debug">Debug</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Backup Retention (days)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={settings.maintenance?.backup_retention_days || 30}
+                    onChange={(e) => updateSetting('maintenance', 'backup_retention_days', parseInt(e.target.value))}
+                    className="input-field"
+                    disabled={!settings.maintenance?.backup_enabled}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Log Retention (days)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={settings.maintenance?.log_retention_days || 7}
+                    onChange={(e) => updateSetting('maintenance', 'log_retention_days', parseInt(e.target.value))}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3 mt-4">
+                <input
+                  type="checkbox"
+                  id="health_check_enabled"
+                  checked={settings.maintenance?.health_check_enabled || true}
+                  onChange={(e) => updateSetting('maintenance', 'health_check_enabled', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="health_check_enabled" className="text-sm font-medium text-secondary-700">
+                  Enable Health Checks
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

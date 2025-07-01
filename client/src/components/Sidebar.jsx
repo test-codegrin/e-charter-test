@@ -37,6 +37,7 @@ const Sidebar = () => {
     { icon: MapPin, label: 'My Trips', path: '/driver/trips' },
     { icon: Truck, label: 'My Vehicles', path: '/driver/vehicles' },
     { icon: User, label: 'Profile', path: '/driver/profile' },
+    { icon: Settings, label: 'Settings', path: '/driver/settings' },
   ]
 
   const menuItems = user?.role === 'admin' ? adminMenuItems : driverMenuItems

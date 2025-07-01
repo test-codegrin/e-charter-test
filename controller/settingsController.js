@@ -129,6 +129,11 @@ const fetchSettingsFromDB = async () => {
       console.log("Could not fetch pricing data:", pricingError.message);
     }
 
+    // If no settings exist, return defaults
+    if (Object.keys(settings).length === 0) {
+      return getDefaultSettings();
+    }
+
     return settings;
 
   } catch (error) {
@@ -520,8 +525,106 @@ const ensureSettingsTableExists = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Insert default settings if none exist
+    const [existingSettings] = await db.query(`SELECT COUNT(*) as count FROM system_settings`);
+    if (existingSettings[0].count === 0) {
+      await insertDefaultSettings();
+    }
   } catch (error) {
     console.error("Error ensuring settings tables exist:", error);
+  }
+};
+
+// Insert default settings
+const insertDefaultSettings = async () => {
+  try {
+    const defaultSettings = [
+      // Commission Settings
+      ['commission', 'individual_driver_rate', '20', 'number', 'Commission rate for individual drivers (%)', false],
+      ['commission', 'fleet_partner_rate', '15', 'number', 'Commission rate for fleet partners (%)', false],
+      ['commission', 'tax_rate', '13', 'number', 'Tax rate (HST) (%)', false],
+      ['commission', 'currency', 'CAD', 'string', 'Default currency', false],
+      ['commission', 'payment_processing_fee', '2.9', 'number', 'Payment processing fee (%)', false],
+
+      // System Settings
+      ['system', 'company_name', 'eCharter', 'string', 'Company name', false],
+      ['system', 'company_email', 'admin@echarter.co', 'string', 'Company email address', false],
+      ['system', 'company_phone', '+1-800-CHARTER', 'string', 'Company phone number', false],
+      ['system', 'support_email', 'support@echarter.co', 'string', 'Support email address', false],
+      ['system', 'website_url', 'https://echarter.co', 'string', 'Company website URL', false],
+      ['system', 'timezone', 'America/Toronto', 'string', 'Default timezone', false],
+      ['system', 'date_format', 'YYYY-MM-DD', 'string', 'Date format', false],
+      ['system', 'time_format', '24h', 'string', 'Time format (12h/24h)', false],
+      ['system', 'maintenance_mode', 'false', 'boolean', 'Maintenance mode status', false],
+
+      // Email Settings
+      ['email', 'smtp_enabled', 'true', 'boolean', 'Enable SMTP email', false],
+      ['email', 'smtp_host', 'smtp.gmail.com', 'string', 'SMTP server host', false],
+      ['email', 'smtp_port', '587', 'number', 'SMTP server port', false],
+      ['email', 'smtp_user', '', 'string', 'SMTP username', true],
+      ['email', 'smtp_password', '', 'string', 'SMTP password', true],
+      ['email', 'from_name', 'eCharter', 'string', 'Email sender name', false],
+      ['email', 'from_email', 'noreply@echarter.co', 'string', 'Email sender address', false],
+
+      // SMS Settings
+      ['sms', 'enabled', 'false', 'boolean', 'Enable SMS notifications', false],
+      ['sms', 'provider', 'twilio', 'string', 'SMS provider (twilio)', false],
+      ['sms', 'twilio_sid', '', 'string', 'Twilio Account SID', true],
+      ['sms', 'twilio_token', '', 'string', 'Twilio Auth Token', true],
+      ['sms', 'twilio_phone', '', 'string', 'Twilio phone number', false],
+
+      // Security Settings
+      ['security', 'jwt_expiry', '24h', 'string', 'JWT token expiry time', false],
+      ['security', 'password_min_length', '8', 'number', 'Minimum password length', false],
+      ['security', 'require_email_verification', 'false', 'boolean', 'Require email verification', false],
+      ['security', 'max_login_attempts', '5', 'number', 'Maximum login attempts', false],
+      ['security', 'session_timeout', '30', 'number', 'Session timeout (minutes)', false],
+
+      // Business Rules
+      ['business', 'auto_approve_drivers', 'false', 'boolean', 'Auto-approve driver registrations', false],
+      ['business', 'auto_approve_vehicles', 'false', 'boolean', 'Auto-approve vehicle registrations', false],
+      ['business', 'require_driver_documents', 'true', 'boolean', 'Require driver documents', false],
+      ['business', 'min_trip_amount', '25', 'number', 'Minimum trip amount ($)', false],
+      ['business', 'max_trip_duration', '24', 'number', 'Maximum trip duration (hours)', false],
+      ['business', 'booking_advance_hours', '2', 'number', 'Minimum booking advance notice (hours)', false],
+      ['business', 'cancellation_hours', '4', 'number', 'Cancellation notice required (hours)', false],
+
+      // Notification Settings
+      ['notifications', 'email_booking_confirmation', 'true', 'boolean', 'Email booking confirmations', false],
+      ['notifications', 'email_trip_updates', 'true', 'boolean', 'Email trip status updates', false],
+      ['notifications', 'sms_booking_confirmation', 'true', 'boolean', 'SMS booking confirmations', false],
+      ['notifications', 'sms_trip_started', 'true', 'boolean', 'SMS when trip starts', false],
+      ['notifications', 'admin_new_bookings', 'true', 'boolean', 'Notify admin of new bookings', false],
+
+      // Payment Settings
+      ['payment', 'stripe_enabled', 'false', 'boolean', 'Enable Stripe payments', false],
+      ['payment', 'stripe_public_key', '', 'string', 'Stripe publishable key', false],
+      ['payment', 'stripe_secret_key', '', 'string', 'Stripe secret key', true],
+      ['payment', 'require_payment_upfront', 'false', 'boolean', 'Require payment before trip', false],
+
+      // Feature Flags
+      ['features', 'fleet_partners_enabled', 'true', 'boolean', 'Enable fleet partner features', false],
+      ['features', 'multi_stop_trips', 'true', 'boolean', 'Enable multi-stop trips', false],
+      ['features', 'real_time_tracking', 'true', 'boolean', 'Enable real-time tracking', false],
+      ['features', 'driver_ratings', 'true', 'boolean', 'Enable driver ratings', false],
+
+      // Maintenance Settings
+      ['maintenance', 'backup_enabled', 'true', 'boolean', 'Enable automatic backups', false],
+      ['maintenance', 'log_level', 'info', 'string', 'Application log level', false],
+      ['maintenance', 'health_check_enabled', 'true', 'boolean', 'Enable health checks', false]
+    ];
+
+    for (const [category, key, value, type, description, is_sensitive] of defaultSettings) {
+      await db.query(`
+        INSERT IGNORE INTO system_settings (category, setting_key, setting_value, setting_type, description, is_sensitive)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `, [category, key, value, type, description, is_sensitive]);
+    }
+
+    console.log("Default settings inserted successfully");
+  } catch (error) {
+    console.error("Error inserting default settings:", error);
   }
 };
 
@@ -544,7 +647,8 @@ const getDefaultSettings = () => {
       individual_driver_rate: 20,
       fleet_partner_rate: 15,
       tax_rate: 13,
-      currency: 'CAD'
+      currency: 'CAD',
+      payment_processing_fee: 2.9
     },
     system: {
       company_name: 'eCharter',
@@ -554,7 +658,8 @@ const getDefaultSettings = () => {
       website_url: 'https://echarter.co',
       timezone: 'America/Toronto',
       date_format: 'YYYY-MM-DD',
-      time_format: '24h'
+      time_format: '24h',
+      maintenance_mode: false
     },
     email: {
       smtp_enabled: true,
@@ -587,6 +692,30 @@ const getDefaultSettings = () => {
       max_trip_duration: 24,
       booking_advance_hours: 2,
       cancellation_hours: 4
+    },
+    notifications: {
+      email_booking_confirmation: true,
+      email_trip_updates: true,
+      sms_booking_confirmation: true,
+      sms_trip_started: true,
+      admin_new_bookings: true
+    },
+    payment: {
+      stripe_enabled: false,
+      stripe_public_key: '',
+      stripe_secret_key: '***HIDDEN***',
+      require_payment_upfront: false
+    },
+    features: {
+      fleet_partners_enabled: true,
+      multi_stop_trips: true,
+      real_time_tracking: true,
+      driver_ratings: true
+    },
+    maintenance: {
+      backup_enabled: true,
+      log_level: 'info',
+      health_check_enabled: true
     }
   };
 };

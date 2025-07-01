@@ -20,6 +20,7 @@ import DriverDashboard from './pages/driver/Dashboard'
 import DriverTrips from './pages/driver/Trips'
 import DriverVehicles from './pages/driver/Vehicles'
 import DriverProfile from './pages/driver/Profile'
+import DriverSettings from './pages/driver/Settings'
 
 // Public Pages
 import FleetPartnerRegistration from './pages/FleetPartnerRegistration'
@@ -78,6 +79,7 @@ function App() {
             <Route path="/driver/trips" element={<DriverTrips />} />
             <Route path="/driver/vehicles" element={<DriverVehicles />} />
             <Route path="/driver/profile" element={<DriverProfile />} />
+            <Route path="/driver/settings" element={<DriverSettings />} />
           </>
         )}
 

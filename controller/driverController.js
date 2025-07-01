@@ -1,6 +1,7 @@
 const { db } = require("../config/db");
 const asyncHandler = require("express-async-handler");
 const driverGetQueries = require("../config/driverQueries/driverGetQueries");
+const settingsService = require("../services/settingsService");
 
 // Get driver dashboard statistics
 const getDashboardStats = asyncHandler(async (req, res) => {
@@ -269,9 +270,96 @@ const updateDriverProfile = asyncHandler(async (req, res) => {
   }
 });
 
+// Get driver notification settings
+const getDriverNotificationSettings = asyncHandler(async (req, res) => {
+  const driver_id = req.user?.driver_id;
+
+  if (!driver_id) {
+    return res.status(401).json({ message: "Driver authentication required" });
+  }
+
+  try {
+    // Try to get from database first
+    const [settings] = await db.query(
+      `SELECT * FROM driver_settings WHERE driver_id = ? AND category = 'notifications'`,
+      [driver_id]
+    );
+
+    if (settings.length > 0) {
+      // Parse the settings JSON
+      let notificationSettings;
+      try {
+        notificationSettings = JSON.parse(settings[0].settings_data);
+      } catch (e) {
+        notificationSettings = getDefaultNotificationSettings();
+      }
+
+      return res.status(200).json({
+        message: "Notification settings fetched successfully",
+        settings: notificationSettings
+      });
+    }
+
+    // If no settings found, return defaults
+    res.status(200).json({
+      message: "Using default notification settings",
+      settings: getDefaultNotificationSettings()
+    });
+
+  } catch (error) {
+    console.error("Error fetching driver notification settings:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+// Update driver notification settings
+const updateDriverNotificationSettings = asyncHandler(async (req, res) => {
+  const driver_id = req.user?.driver_id;
+  const settings = req.body;
+
+  if (!driver_id) {
+    return res.status(401).json({ message: "Driver authentication required" });
+  }
+
+  try {
+    // Validate settings
+    if (!settings || typeof settings !== 'object') {
+      return res.status(400).json({ message: "Invalid settings format" });
+    }
+
+    // Store settings in database
+    await db.query(`
+      INSERT INTO driver_settings (driver_id, category, settings_data)
+      VALUES (?, 'notifications', ?)
+      ON DUPLICATE KEY UPDATE settings_data = VALUES(settings_data)
+    `, [driver_id, JSON.stringify(settings)]);
+
+    res.status(200).json({
+      message: "Notification settings updated successfully"
+    });
+
+  } catch (error) {
+    console.error("Error updating driver notification settings:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+// Helper function for default notification settings
+const getDefaultNotificationSettings = () => {
+  return {
+    email_trip_assignments: true,
+    email_trip_updates: true,
+    sms_trip_assignments: true,
+    sms_trip_updates: true,
+    app_notifications: true
+  };
+};
+
 module.exports = {
   getDashboardStats,
   getDriverTrips,
   getDriverProfile,
-  updateDriverProfile
+  updateDriverProfile,
+  getDriverNotificationSettings,
+  updateDriverNotificationSettings
 };
