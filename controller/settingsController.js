@@ -391,10 +391,10 @@ const getSettingsByCategory = asyncHandler(async (req, res) => {
   }
 });
 
-// Reset settings to defaults
+// Reset settings to defaults - FIXED: Handle both cases properly
 const resetSettings = asyncHandler(async (req, res) => {
   try {
-    const { category } = req.params;
+    const { category } = req.params; // This will be undefined for /reset route
     const adminId = req.user?.admin_id;
 
     if (category) {
