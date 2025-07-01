@@ -84,7 +84,7 @@ export const adminAPI = {
   markAllAsRead: () => api.put('/notifications/mark-all-read')
 }
 
-// Driver API - Updated with correct endpoints
+// Driver API - Updated with correct endpoints and vehicle CRUD
 export const driverAPI = {
   // Dashboard
   getDashboardStats: () => api.get('/driver/dashboard/stats'),
@@ -96,13 +96,20 @@ export const driverAPI = {
   completeTrip: (tripId) => api.post(`/trips/${tripId}/complete`),
   updateLocation: (tripId, location) => api.put(`/trips/${tripId}/location`, location),
   
-  // Vehicles
+  // Vehicles - ENHANCED CRUD operations
   getVehicles: () => api.get('/driver/getdrivercar'),
   addVehicle: (vehicleData) => api.post('/driver/addcar', vehicleData),
+  getVehicleDetails: (carId) => api.get(`/driver/car/${carId}`),
+  updateVehicle: (carId, vehicleData) => api.put(`/driver/car/${carId}`, vehicleData),
+  deleteVehicle: (carId) => api.delete(`/driver/car/${carId}`),
   
   // Profile
   getProfile: () => api.get('/driver/profile'),
   updateProfile: (profileData) => api.put('/driver/profile', profileData),
+  
+  // Settings
+  getNotificationSettings: () => api.get('/driver/settings/notifications'),
+  updateNotificationSettings: (settings) => api.put('/driver/settings/notifications', settings),
   
   // Notifications
   getNotifications: () => api.get('/notifications/driver'),
