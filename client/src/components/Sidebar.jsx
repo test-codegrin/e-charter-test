@@ -46,42 +46,45 @@ const Sidebar = () => {
   }
 
   return (
-    <div className="bg-white w-64 min-h-screen shadow-lg border-r border-secondary-200 flex flex-col">
+    <div className="bg-dark-800 w-64 min-h-screen shadow-lg flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-secondary-200">
+      <div className="p-6 border-b border-dark-700">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-            <Car className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 bg-ice-500 rounded-lg flex items-center justify-center shadow-glow">
+            <Car className="w-6 h-6 text-white animated-icon" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-secondary-900">eCharter</h1>
-            <p className="text-sm text-secondary-500 capitalize">{user?.role || 'User'} Panel</p>
+            <h1 className="text-xl font-bold text-white">eCharter</h1>
+            <p className="text-sm text-ice-400 capitalize">{user?.role || 'User'} Panel</p>
           </div>
         </div>
       </div>
 
       {/* Navigation - Takes up remaining space */}
-      <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item) => {
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        {menuItems.map((item, index) => {
           const Icon = item.icon
+          const isActiveRoute = isActive(item.path)
+          
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
+              className={`sidebar-link ${isActiveRoute ? 'active' : ''}`}
+              style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <Icon className="w-5 h-5" />
-              <span>{item.label}</span>
+              <Icon className={`w-5 h-5 ${isActiveRoute ? 'text-ice-500' : 'text-ice-300'}`} />
+              <span className={isActiveRoute ? 'text-white' : 'text-gray-300'}>{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
       {/* Footer - Simple branding only */}
-      <div className="p-4 border-t border-secondary-200 bg-white">
+      <div className="p-4 border-t border-dark-700 bg-dark-800">
         <div className="text-center">
-          <p className="text-xs text-secondary-400">© 2024 eCharter</p>
-          <p className="text-xs text-secondary-400">All rights reserved</p>
+          <p className="text-xs text-gray-400">© 2024 eCharter</p>
+          <p className="text-xs text-gray-400">All rights reserved</p>
         </div>
       </div>
     </div>

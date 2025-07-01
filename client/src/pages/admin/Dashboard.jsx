@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Users, Car, MapPin, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
+import { Users, Car, MapPin, DollarSign, TrendingUp, TrendingDown, Clock, Calendar, CheckCircle, AlertTriangle } from 'lucide-react'
 import { adminAPI } from '../../services/api'
+import toast from 'react-hot-toast'
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -74,7 +75,7 @@ const Dashboard = () => {
       title: 'Total Drivers',
       value: stats.totalDrivers,
       icon: Users,
-      color: 'bg-blue-500',
+      color: 'bg-ice-500',
       change: getPercentageChange(stats.totalDrivers, stats.totalDrivers * 0.9),
       trend: 'up'
     },
@@ -82,7 +83,7 @@ const Dashboard = () => {
       title: 'Total Vehicles',
       value: stats.totalVehicles,
       icon: Car,
-      color: 'bg-green-500',
+      color: 'bg-ice-600',
       change: getPercentageChange(stats.totalVehicles, stats.totalVehicles * 0.95),
       trend: 'up'
     },
@@ -90,7 +91,7 @@ const Dashboard = () => {
       title: 'Active Trips',
       value: stats.inProgressTrips,
       icon: MapPin,
-      color: 'bg-purple-500',
+      color: 'bg-ice-700',
       change: getPercentageChange(stats.inProgressTrips, stats.inProgressTrips * 0.8),
       trend: 'up'
     },
@@ -98,7 +99,7 @@ const Dashboard = () => {
       title: 'Total Revenue',
       value: `$${formatCurrency(stats.totalRevenue)}`,
       icon: DollarSign,
-      color: 'bg-yellow-500',
+      color: 'bg-ice-800',
       change: getPercentageChange(stats.totalRevenue, stats.totalRevenue * 0.85),
       trend: 'up'
     }
@@ -107,7 +108,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-ice-600"></div>
       </div>
     )
   }
@@ -115,8 +116,8 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-secondary-900">Admin Dashboard</h1>
+      <div className="bounce-in">
+        <h1 className="text-2xl font-bold text-dark-800">Admin Dashboard</h1>
         <p className="text-secondary-600">Welcome back! Here's what's happening with your platform.</p>
       </div>
 
@@ -127,20 +128,20 @@ const Dashboard = () => {
           const TrendIcon = stat.trend === 'up' ? TrendingUp : TrendingDown
           
           return (
-            <div key={index} className="card">
+            <div key={index} className="stat-card" style={{ animationDelay: `${index * 0.1}s` }}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-secondary-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-secondary-900 mt-1">{stat.value}</p>
+                  <p className="text-2xl font-bold text-dark-800 mt-1">{stat.value}</p>
                   <div className="flex items-center mt-2">
-                    <TrendIcon className={`w-4 h-4 ${stat.trend === 'up' ? 'text-green-500' : 'text-red-500'}`} />
-                    <span className={`text-sm ml-1 ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                    <TrendIcon className={`w-4 h-4 ${stat.trend === 'up' ? 'text-ice-600' : 'text-red-500'}`} />
+                    <span className={`text-sm ml-1 ${stat.trend === 'up' ? 'text-ice-600' : 'text-red-600'}`}>
                       {stat.change}
                     </span>
                     <span className="text-sm text-secondary-500 ml-1">vs last month</span>
                   </div>
                 </div>
-                <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
+                <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center shadow-glow floating-icon`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -152,8 +153,11 @@ const Dashboard = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pending Approvals */}
-        <div className="card">
-          <h3 className="text-lg font-semibold text-secondary-900 mb-4">Pending Approvals</h3>
+        <div className="card slide-in">
+          <h3 className="text-lg font-semibold text-dark-800 mb-4 flex items-center">
+            <AlertTriangle className="w-5 h-5 text-warning-500 mr-2" />
+            Pending Approvals
+          </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-warning-50 rounded-lg">
               <div>
@@ -171,43 +175,49 @@ const Dashboard = () => {
         </div>
 
         {/* System Overview */}
-        <div className="card">
-          <h3 className="text-lg font-semibold text-secondary-900 mb-4">System Overview</h3>
+        <div className="card slide-in" style={{ animationDelay: '0.1s' }}>
+          <h3 className="text-lg font-semibold text-dark-800 mb-4 flex items-center">
+            <CheckCircle className="w-5 h-5 text-ice-500 mr-2" />
+            System Overview
+          </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">Total Users</span>
-              <span className="font-bold text-blue-600">{stats.totalUsers}</span>
+              <span className="font-bold text-ice-600">{stats.totalUsers}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">Approved Drivers</span>
-              <span className="font-bold text-green-600">{stats.approvedDrivers}</span>
+              <span className="font-bold text-ice-600">{stats.approvedDrivers}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">Approved Vehicles</span>
-              <span className="font-bold text-green-600">{stats.approvedVehicles}</span>
+              <span className="font-bold text-ice-600">{stats.approvedVehicles}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">Completed Trips</span>
-              <span className="font-bold text-purple-600">{stats.completedTrips}</span>
+              <span className="font-bold text-ice-600">{stats.completedTrips}</span>
             </div>
           </div>
         </div>
 
         {/* Revenue Overview */}
-        <div className="card">
-          <h3 className="text-lg font-semibold text-secondary-900 mb-4">Revenue Overview</h3>
+        <div className="card slide-in" style={{ animationDelay: '0.2s' }}>
+          <h3 className="text-lg font-semibold text-dark-800 mb-4 flex items-center">
+            <DollarSign className="w-5 h-5 text-ice-500 mr-2" />
+            Revenue Overview
+          </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">Total Revenue</span>
-              <span className="font-bold text-green-600">${formatCurrency(stats.totalRevenue)}</span>
+              <span className="font-bold text-ice-600">${formatCurrency(stats.totalRevenue)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">This Month</span>
-              <span className="font-bold text-blue-600">${formatCurrency(stats.monthlyRevenue)}</span>
+              <span className="font-bold text-ice-600">${formatCurrency(stats.monthlyRevenue)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-secondary-600">Avg per Trip</span>
-              <span className="font-bold text-purple-600">
+              <span className="font-bold text-ice-600">
                 ${stats.completedTrips > 0 ? formatCurrency(stats.totalRevenue / stats.completedTrips) : '0.00'}
               </span>
             </div>
@@ -216,9 +226,12 @@ const Dashboard = () => {
       </div>
 
       {/* Recent Trips */}
-      <div className="card">
+      <div className="card fade-in">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-secondary-900">Recent Trips</h3>
+          <h3 className="text-lg font-semibold text-dark-800 flex items-center">
+            <Clock className="w-5 h-5 text-ice-500 mr-2" />
+            Recent Trips
+          </h3>
           <button className="btn-secondary text-sm">View All</button>
         </div>
         
@@ -235,8 +248,8 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-secondary-200">
-              {recentTrips.map((trip) => (
-                <tr key={trip.trip_id} className="hover:bg-secondary-50">
+              {recentTrips.map((trip, index) => (
+                <tr key={trip.trip_id} className="hover:bg-ice-50" style={{ animationDelay: `${index * 0.05}s` }}>
                   <td className="table-cell font-medium">#{trip.trip_id}</td>
                   <td className="table-cell">
                     {trip.firstName} {trip.lastName}

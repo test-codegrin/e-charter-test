@@ -8,16 +8,16 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+          50: '#e6f7f4',
+          100: '#ccefe9',
+          200: '#99dfd3',
+          300: '#66cfbd',
+          400: '#33bfa7',
+          500: '#00af91',
+          600: '#008c74',
+          700: '#006957',
+          800: '#00463a',
+          900: '#00231d',
         },
         secondary: {
           50: '#f8fafc',
@@ -66,6 +66,30 @@ export default {
           700: '#b91c1c',
           800: '#991b1b',
           900: '#7f1d1d',
+        },
+        ice: {
+          50: '#f0fafa',
+          100: '#e0f5f5',
+          200: '#c1ebeb',
+          300: '#a3e0e0',
+          400: '#84d6d6',
+          500: '#65cccc',
+          600: '#51a3a3',
+          700: '#3d7a7a',
+          800: '#295252',
+          900: '#142929',
+        },
+        dark: {
+          50: '#f6f6f6',
+          100: '#e7e7e7',
+          200: '#d1d1d1',
+          300: '#b0b0b0',
+          400: '#909090',
+          500: '#6d6d6d',
+          600: '#5d5d5d',
+          700: '#4f4f4f',
+          800: '#2d2d2d',
+          900: '#1a1a1a',
         }
       },
       fontFamily: {
@@ -73,7 +97,40 @@ export default {
       },
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-      }
+        'glow': '0 0 15px rgba(101, 204, 204, 0.5)',
+        'ice': '0 4px 20px -2px rgba(81, 163, 163, 0.25)',
+      },
+      animation: {
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'slide-in': 'slideIn 0.5s ease-out',
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'scale-in': 'scaleIn 0.3s ease-out',
+        'bounce-in': 'bounceIn 0.5s ease-out',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        slideIn: {
+          '0%': { transform: 'translateX(-10px)', opacity: 0 },
+          '100%': { transform: 'translateX(0)', opacity: 1 },
+        },
+        fadeIn: {
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
+        scaleIn: {
+          '0%': { transform: 'scale(0.9)', opacity: 0 },
+          '100%': { transform: 'scale(1)', opacity: 1 },
+        },
+        bounceIn: {
+          '0%': { transform: 'scale(0.8)', opacity: 0 },
+          '70%': { transform: 'scale(1.05)', opacity: 1 },
+          '100%': { transform: 'scale(1)', opacity: 1 },
+        },
+      },
     },
   },
   plugins: [],

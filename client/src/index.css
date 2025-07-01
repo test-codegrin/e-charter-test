@@ -13,7 +13,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply bg-ice-600 hover:bg-ice-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ice-500 focus:ring-offset-2 shadow-ice;
   }
   
   .btn-secondary {
@@ -33,11 +33,11 @@
   }
 
   .input-field {
-    @apply w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200;
+    @apply w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ice-500 focus:border-transparent transition-colors duration-200;
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-soft p-6 border border-secondary-100;
+    @apply bg-white rounded-xl shadow-soft p-6 border border-secondary-100 hover:shadow-ice transition-shadow duration-300;
   }
 
   .status-badge {
@@ -61,7 +61,7 @@
   }
 
   .status-in-progress {
-    @apply bg-primary-100 text-primary-800;
+    @apply bg-ice-100 text-ice-800;
   }
 
   .status-confirmed {
@@ -73,11 +73,11 @@
   }
 
   .sidebar-link {
-    @apply flex items-center space-x-3 px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors duration-200;
+    @apply flex items-center space-x-3 px-4 py-3 text-secondary-700 hover:bg-ice-50 hover:text-ice-700 rounded-lg transition-colors duration-200;
   }
 
   .sidebar-link.active {
-    @apply bg-primary-100 text-primary-700 font-medium;
+    @apply bg-ice-100 text-ice-700 font-medium;
   }
 
   .table-header {
@@ -86,6 +86,50 @@
 
   .table-cell {
     @apply px-6 py-4 whitespace-nowrap text-sm text-secondary-900;
+  }
+  
+  .stat-card {
+    @apply card relative overflow-hidden;
+  }
+  
+  .stat-card::after {
+    @apply content-[''] absolute bottom-0 left-0 right-0 h-1 bg-ice-500 transform scale-x-0 origin-left transition-transform duration-300;
+  }
+  
+  .stat-card:hover::after {
+    @apply scale-x-100;
+  }
+  
+  .animated-icon {
+    @apply transition-transform duration-300 ease-in-out;
+  }
+  
+  .card:hover .animated-icon {
+    @apply transform -translate-y-1;
+  }
+  
+  .pulse-dot {
+    @apply absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full animate-pulse;
+  }
+  
+  .floating-icon {
+    @apply animate-float;
+  }
+  
+  .slide-in {
+    @apply animate-slide-in;
+  }
+  
+  .fade-in {
+    @apply animate-fade-in;
+  }
+  
+  .scale-in {
+    @apply animate-scale-in;
+  }
+  
+  .bounce-in {
+    @apply animate-bounce-in;
   }
 }
 
@@ -99,12 +143,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #65cccc;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #51a3a3;
 }
 
 /* Loading animation */
@@ -132,4 +176,70 @@
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Slide in animation */
+@keyframes slideIn {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-out;
+}
+
+/* Scale in animation */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* Bounce in animation */
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.5s ease-out;
 }
