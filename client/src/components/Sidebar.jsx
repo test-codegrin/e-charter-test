@@ -9,7 +9,6 @@ import {
   FileText,
   Bell,
   User,
-  LogOut,
   Truck,
   Building,
   DollarSign,
@@ -17,7 +16,7 @@ import {
 } from 'lucide-react'
 
 const Sidebar = () => {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const location = useLocation()
 
   const adminMenuItems = [
@@ -46,17 +45,8 @@ const Sidebar = () => {
     return location.pathname === path || (path === '/' && location.pathname === '/')
   }
 
-  // Get user display name
-  const getUserDisplayName = () => {
-    if (user?.name) return user.name
-    if (user?.adminName) return user.adminName
-    if (user?.driverName) return user.driverName
-    if (user?.firstName && user?.lastName) return `${user.firstName} ${user.lastName}`
-    return 'User'
-  }
-
   return (
-    <div className="bg-white w-64 min-h-screen shadow-lg border-r border-secondary-200">
+    <div className="bg-white w-64 min-h-screen shadow-lg border-r border-secondary-200 flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-secondary-200">
         <div className="flex items-center space-x-3">
@@ -70,8 +60,8 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="p-4 space-y-2">
+      {/* Navigation - Takes up remaining space */}
+      <nav className="flex-1 p-4 space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon
           return (
@@ -87,26 +77,12 @@ const Sidebar = () => {
         })}
       </nav>
 
-      {/* User Info & Logout */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-secondary-200 bg-white">
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="w-10 h-10 bg-secondary-200 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-secondary-600" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-secondary-900 truncate">
-              {getUserDisplayName()}
-            </p>
-            <p className="text-xs text-secondary-500 truncate">{user?.email}</p>
-          </div>
+      {/* Footer - Simple branding only */}
+      <div className="p-4 border-t border-secondary-200 bg-white">
+        <div className="text-center">
+          <p className="text-xs text-secondary-400">© 2024 eCharter</p>
+          <p className="text-xs text-secondary-400">All rights reserved</p>
         </div>
-        <button
-          onClick={logout}
-          className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-danger-600 hover:bg-danger-50 rounded-lg transition-colors duration-200"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Logout</span>
-        </button>
       </div>
     </div>
   )
