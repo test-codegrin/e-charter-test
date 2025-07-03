@@ -1,7 +1,6 @@
 const { db } = require("../config/db");
 const asyncHandler = require("express-async-handler");
-const driverCarQueries = require("../config/driverQueries/driverPostQueries");
-const driverGetQueries = require("../config/driverQueries/driverGetQueries");
+const driverCarQueries = require("../config/driverQueries/driverCarQueries");
 
 // Add new car - ENHANCED with validation
 const addCar = asyncHandler(async (req, res) => {
@@ -21,8 +20,7 @@ const addCar = asyncHandler(async (req, res) => {
 
   try {
     // Check if license plate already exists
-    const [existingCar] = await db.query(
-      `SELECT car_id FROM car WHERE carNumber = ?`,
+    const [existingCar] = await db.query(driverCarQueries.checkExistingCarNumber,
       [carNumber]
     );
 
@@ -32,7 +30,7 @@ const addCar = asyncHandler(async (req, res) => {
 
     // Check if driver exists and is approved
     const [driverCheck] = await db.query(
-      `SELECT driver_id, status FROM drivers WHERE driver_id = ?`,
+      driverCarQueries.getDriverStatusById,
       [driver_id]
     );
 
@@ -45,13 +43,9 @@ const addCar = asyncHandler(async (req, res) => {
     }
 
     // Insert the new car with enhanced fields
-    const [result] = await db.query(`
-      INSERT INTO car (
-        driver_id, carName, carNumber, carSize, carType, bus_capacity,
-        vehicle_age, vehicle_condition, specialized_services, wheelchair_accessible,
-        vehicle_features, maintenance_schedule, insurance_expiry, license_plate_expiry, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
+    const [result] = await db.query(
+     driverCarQueries.insertNewCar
+    , [
       driver_id, carName, carNumber, carSize, carType, 
       bus_capacity || null,
       vehicle_age || null,
@@ -92,16 +86,9 @@ const getCarsByDriver = asyncHandler(async (req, res) => {
 
   try {
     // Enhanced query to get all car details
-    const [cars] = await db.query(`
-      SELECT 
-        car_id, carName, carNumber, carSize, carType, status,
-        bus_capacity, vehicle_age, vehicle_condition, specialized_services,
-        wheelchair_accessible, vehicle_features, maintenance_schedule,
-        insurance_expiry, license_plate_expiry, created_at
-      FROM car 
-      WHERE driver_id = ?
-      ORDER BY created_at DESC
-    `, [driver_id]);
+    const [cars] = await db.query(
+      driverCarQueries.getCarsByDriver
+      , [driver_id]);
 
     // Parse JSON fields
     const formattedCars = cars.map(car => ({
@@ -136,15 +123,9 @@ const getCarDetails = asyncHandler(async (req, res) => {
   }
 
   try {
-    const [cars] = await db.query(`
-      SELECT 
-        car_id, carName, carNumber, carSize, carType, status,
-        bus_capacity, vehicle_age, vehicle_condition, specialized_services,
-        wheelchair_accessible, vehicle_features, maintenance_schedule,
-        insurance_expiry, license_plate_expiry, created_at
-      FROM car 
-      WHERE car_id = ? AND driver_id = ?
-    `, [car_id, driver_id]);
+    const [cars] = await db.query(
+      driverCarQueries.getCarById
+    , [car_id, driver_id]);
 
     if (cars.length === 0) {
       return res.status(404).json({ message: "Car not found or access denied" });
@@ -185,7 +166,7 @@ const updateCar = asyncHandler(async (req, res) => {
   try {
     // Check if car exists and belongs to driver
     const [existingCar] = await db.query(
-      `SELECT car_id, status FROM car WHERE car_id = ? AND driver_id = ?`,
+      driverCarQueries.getExistingCarById,
       [car_id, driver_id]
     );
 
@@ -196,7 +177,7 @@ const updateCar = asyncHandler(async (req, res) => {
     // Check if license plate is being changed and if it already exists
     if (updateData.carNumber) {
       const [duplicateCheck] = await db.query(
-        `SELECT car_id FROM car WHERE carNumber = ? AND car_id != ?`,
+        driverCarQueries.checkDuplicateCarNumber,
         [updateData.carNumber, car_id]
       );
 
@@ -257,15 +238,9 @@ const updateCar = asyncHandler(async (req, res) => {
     console.log('Car updated successfully:', car_id);
 
     // Fetch updated car details
-    const [updatedCar] = await db.query(`
-      SELECT 
-        car_id, carName, carNumber, carSize, carType, status,
-        bus_capacity, vehicle_age, vehicle_condition, specialized_services,
-        wheelchair_accessible, vehicle_features, maintenance_schedule,
-        insurance_expiry, license_plate_expiry
-      FROM car 
-      WHERE car_id = ?
-    `, [car_id]);
+    const [updatedCar] = await db.query(
+     driverCarQueries.getUpdatedCarById
+    , [car_id]);
 
     const car = updatedCar[0];
     const formattedCar = {
@@ -301,7 +276,7 @@ const deleteCar = asyncHandler(async (req, res) => {
   try {
     // Check if car exists and belongs to driver
     const [existingCar] = await db.query(
-      `SELECT car_id, carName, carNumber FROM car WHERE car_id = ? AND driver_id = ?`,
+      driverCarQueries.getCarForDelete,
       [car_id, driver_id]
     );
 
@@ -311,7 +286,7 @@ const deleteCar = asyncHandler(async (req, res) => {
 
     // Check if car is currently assigned to any active trips
     const [activeTrips] = await db.query(
-      `SELECT trip_id FROM trips WHERE car_id = ? AND status IN ('confirmed', 'in_progress')`,
+      driverCarQueries.checkActiveTrips,
       [car_id]
     );
 
@@ -323,7 +298,7 @@ const deleteCar = asyncHandler(async (req, res) => {
     }
 
     // Delete the car
-    const [result] = await db.query(`DELETE FROM car WHERE car_id = ?`, [car_id]);
+    const [result] = await db.query(driverCarQueries.deleteCar, [car_id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Car not found" });

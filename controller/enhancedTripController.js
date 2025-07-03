@@ -47,7 +47,7 @@ const bookTripWithPricing = asyncHandler(async (req, res) => {
   if (!user_id || !pickupLocation || !dropLocation || !tripStartDate || !tripTime || !selectedCarId) {
     return res.status(400).json({ message: "Required fields missing" });
   }
-
+  
   try {
     // Get car details
     const [carDetails] = await db.query(

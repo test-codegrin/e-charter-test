@@ -1,6 +1,6 @@
 const { db } = require("../config/db");
 const asyncHandler = require("express-async-handler");
-const driverGetQueries = require("../config/driverQueries/driverGetQueries");
+const driverDashboardQueries = require("../config/driverQueries/driverDashboardQueries");
 const settingsService = require("../services/settingsService");
 const driverSettingsQueries = require("../config/driverQueries/driverSettingsQueries");
 
@@ -16,34 +16,17 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
   try {
     // Get driver's vehicles
-    const [vehicles] = await db.query(driverGetQueries.getCarsByDriverId, [driver_id]);
+    const [vehicles] = await db.query(driverDashboardQueries.getCarsByDriverId, [driver_id]);
     
     // Get driver's trips with enhanced query
     let trips = [];
     try {
-      const [tripsResult] = await db.query(`
-        SELECT 
-          t.*,
-          u.firstName,
-          u.lastName,
-          u.email as userEmail,
-          u.phoneNo as userPhone
-        FROM trips t
-        JOIN users u ON t.user_id = u.user_id
-        JOIN car c ON t.car_id = c.car_id
-        WHERE c.driver_id = ?
-        ORDER BY t.created_at DESC
-      `, [driver_id]);
+      const [tripsResult] = await db.query(driverDashboardQueries.getTripsEnhanced, [driver_id]);
       trips = tripsResult;
     } catch (tripsError) {
       console.log('Enhanced trips query failed, using basic query:', tripsError.message);
       // Fallback to basic query if enhanced fails
-      const [basicTrips] = await db.query(`
-        SELECT t.* FROM trips t
-        JOIN car c ON t.car_id = c.car_id
-        WHERE c.driver_id = ?
-        ORDER BY t.created_at DESC
-      `, [driver_id]);
+      const [basicTrips] = await db.query(driverDashboardQueries.getTripsBasic, [driver_id]);
       trips = basicTrips;
     }
 
@@ -122,20 +105,7 @@ const getDriverTrips = asyncHandler(async (req, res) => {
     
     // Try enhanced query first
     try {
-      let query = `
-        SELECT 
-          t.*,
-          u.firstName,
-          u.lastName,
-          u.email as userEmail,
-          u.phoneNo as userPhone,
-          c.carName,
-          c.carType
-        FROM trips t
-        JOIN users u ON t.user_id = u.user_id
-        JOIN car c ON t.car_id = c.car_id
-        WHERE c.driver_id = ?
-      `;
+      let query = driverDashboardQueries.getTripsWithStatusEnhanced;
       
       let params = [driver_id];
 
@@ -152,11 +122,7 @@ const getDriverTrips = asyncHandler(async (req, res) => {
       console.log('Enhanced trips query failed, using basic query:', enhancedError.message);
       
       // Fallback to basic query
-      let basicQuery = `
-        SELECT t.* FROM trips t
-        JOIN car c ON t.car_id = c.car_id
-        WHERE c.driver_id = ?
-      `;
+      let basicQuery = driverDashboardQueries.getTripsWithStatusBasic;
       
       let params = [driver_id];
 
@@ -175,7 +141,7 @@ const getDriverTrips = asyncHandler(async (req, res) => {
     for (let trip of trips) {
       try {
         const [midStops] = await db.query(
-          `SELECT * FROM trip_midstops WHERE trip_id = ? ORDER BY stopOrder`,
+          driverDashboardQueries.getMidStopsByTripId,
           [trip.trip_id]
         );
         trip.midStops = midStops;
@@ -214,9 +180,7 @@ const getDriverProfile = asyncHandler(async (req, res) => {
 
   try {
     const [drivers] = await db.query(
-      `SELECT driver_id, driverName, email, address, cityName, zipCord, phoneNo, status, 
-              company_name, registration_type, fleet_size, years_experience
-       FROM drivers WHERE driver_id = ?`,
+      driverDashboardQueries.getDriverProfile,
       [driver_id]
     );
 
@@ -250,9 +214,7 @@ const updateDriverProfile = asyncHandler(async (req, res) => {
 
   try {
     const [result] = await db.query(
-      `UPDATE drivers 
-       SET driverName = ?, email = ?, phoneNo = ?, address = ?, cityName = ?, zipCord = ?
-       WHERE driver_id = ?`,
+      driverDashboardQueries.updateDriverProfile,
       [driverName, email, phoneNo, address, cityName, zipCord, driver_id]
     );
 
@@ -436,7 +398,7 @@ const getDriverPaymentSettings = asyncHandler(async (req, res) => {
     
     // Try to get from database first
     const [settings] = await db.query(
-      `SELECT settings_data FROM driver_settings WHERE driver_id = ? AND category = 'payment'`,
+      driverSettingsQueries.getPaymentSettings,
       [driver_id]
     );
 
@@ -487,9 +449,7 @@ const updateDriverPaymentSettings = asyncHandler(async (req, res) => {
 
     // Store settings in database
     await db.query(
-      `INSERT INTO driver_settings (driver_id, category, settings_data)
-       VALUES (?, 'payment', ?)
-       ON DUPLICATE KEY UPDATE settings_data = VALUES(settings_data)`,
+      driverSettingsQueries.updatePaymentSettings,
       [driver_id, JSON.stringify(settings)]
     );
 
