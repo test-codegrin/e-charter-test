@@ -133,7 +133,7 @@ async function testConnection() {
 
 app.listen(PORT, async () => {
     console.log(`🚀 eCharter API Server running on port ${PORT}`);
-    console.log(`📍 Health check: http://localhost:${PORT}/health`);
+    // console.log(`📍 Health check: http://localhost:${PORT}/health`);
     
     const dbConnected = await testConnection();
     if (!dbConnected) {
