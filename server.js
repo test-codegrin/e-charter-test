@@ -31,13 +31,13 @@ app.use(cors({
 app.use(express.json())
 
 // Health check endpoint
-// app.get("/health", (req, res) => {
-//     res.status(200).json({ 
-//         status: "OK", 
-//         message: "eCharter API is running",
-//         timestamp: new Date().toISOString()
-//     });
-// });
+app.get("/health", (req, res) => {
+    res.status(200).json({ 
+        status: "OK", 
+        message: "eCharter API is running",
+        timestamp: new Date().toISOString()
+    });
+});
 
 console.log("🔧 Registering API routes...");
 
@@ -133,7 +133,7 @@ async function testConnection() {
 
 app.listen(PORT, async () => {
     console.log(`🚀 eCharter API Server running on port ${PORT}`);
-    // console.log(`📍 Health check: http://localhost:${PORT}/health`);
+    console.log(`📍 Health check: http://localhost:${PORT}/health`);
     
     const dbConnected = await testConnection();
     if (!dbConnected) {
