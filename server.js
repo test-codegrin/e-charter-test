@@ -31,7 +31,8 @@ app.use(cors({
 app.use(express.json())
 
 // Health check endpoint
-app.get("/health", (req, res) => {
+app.get("/", (req, res) => {
+     res.redirect("/health");
     res.status(200).json({ 
         status: "OK", 
         message: "eCharter API is running",
