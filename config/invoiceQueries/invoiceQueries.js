@@ -1,12 +1,5 @@
 const invoiceQueries = {
-  createInvoice: `
-    INSERT INTO invoices (
-      trip_id, user_id, invoice_number, subtotal, 
-      tax_amount, total_amount, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-  `,
-
-  getInvoicesByUserId: `
+  getUserInvoices: `
     SELECT 
       i.*,
       t.pickupLocation,
@@ -18,7 +11,7 @@ const invoiceQueries = {
     ORDER BY i.created_at DESC
   `,
 
-  getInvoiceById: `
+  getInvoiceDetails: `
     SELECT 
       i.*,
       t.*,
@@ -35,13 +28,7 @@ const invoiceQueries = {
     WHERE i.invoice_id = ?
   `,
 
-  updateInvoiceStatus: `
-    UPDATE invoices 
-    SET status = ?, paid_at = CURRENT_TIMESTAMP 
-    WHERE invoice_id = ?
-  `,
-
-  getAllInvoicesForAdmin: `
+  getAllInvoices: `
     SELECT 
       i.*,
       u.firstName,
@@ -53,6 +40,10 @@ const invoiceQueries = {
     JOIN users u ON i.user_id = u.user_id
     JOIN trips t ON i.trip_id = t.trip_id
     ORDER BY i.created_at DESC
+  `,
+
+  updateInvoiceStatus: `
+    UPDATE invoices SET status = ?, paid_at = CURRENT_TIMESTAMP WHERE invoice_id = ?
   `
 };
 

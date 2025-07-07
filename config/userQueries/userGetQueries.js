@@ -16,6 +16,9 @@ getApprovedCars : `
   WHERE car.status = 1
 `,
 
+ getAllUsers : `SELECT user_id, firstName, lastName, email, address, cityName, zipCord, phoneNo, profileImage, created_at FROM users ORDER BY created_at DESC`,
+
+
 
 };
 

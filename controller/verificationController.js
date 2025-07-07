@@ -19,7 +19,7 @@ const approveDriver = asyncHandler(async (req, res) => {
   try {
     // Check if driver exists first
     const [driverCheck] = await db.query(
-      `SELECT driver_id, driverName, email, registration_type FROM drivers WHERE driver_id = ?`, 
+      verificationQueries.checkDriverExists
       [driver_id]
     );
 
@@ -74,10 +74,7 @@ const approveCar = asyncHandler(async (req, res) => {
   try {
     // Check if car exists first
     const [carCheck] = await db.query(
-      `SELECT c.car_id, c.carName, c.carNumber, d.driverName, d.email 
-       FROM car c 
-       JOIN drivers d ON c.driver_id = d.driver_id 
-       WHERE c.car_id = ?`, 
+      verificationQueries.checkCarExists, 
       [car_id]
     );
 
@@ -120,38 +117,14 @@ const approveCar = asyncHandler(async (req, res) => {
 const getPendingApprovals = asyncHandler(async (req, res) => {
   try {
     // Get pending drivers
-    const [pendingDrivers] = await db.query(`
-      SELECT 
-        driver_id,
-        driverName,
-        email,
-        phoneNo,
-        cityName,
-        registration_type,
-        company_name,
-        created_at
-      FROM drivers 
-      WHERE status = 0
-      ORDER BY created_at DESC
-    `);
+    const [pendingDrivers] = await db.query(
+      verificationQueries.getPendingDrivers
+    );
 
     // Get pending vehicles
-    const [pendingVehicles] = await db.query(`
-      SELECT 
-        c.car_id,
-        c.carName,
-        c.carNumber,
-        c.carType,
-        c.carSize,
-        d.driverName,
-        d.email,
-        d.registration_type,
-        c.created_at
-      FROM car c
-      JOIN drivers d ON c.driver_id = d.driver_id
-      WHERE c.status = 0
-      ORDER BY c.created_at DESC
-    `);
+    const [pendingVehicles] = await db.query(
+      verificationQueries.getPendingVehicles
+    );
 
     res.status(200).json({
       message: "Pending approvals fetched successfully",

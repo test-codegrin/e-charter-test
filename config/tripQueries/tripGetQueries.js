@@ -74,6 +74,13 @@ const tripGetQueries = {
     JOIN car c ON t.car_id = c.car_id
     WHERE c.driver_id = ?
     ORDER BY t.created_at DESC
+  `,
+    getTripDetailsForDriver: `
+    SELECT t.*, c.driver_id, u.firstName, u.lastName, u.email, u.phoneNo 
+    FROM trips t 
+    JOIN car c ON t.car_id = c.car_id 
+    JOIN users u ON t.user_id = u.user_id 
+    WHERE t.trip_id = ? AND c.driver_id = ?
   `
 };
 

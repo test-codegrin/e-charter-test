@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const { db } = require("../config/db");
-
+const invoiceQueries = require("../config/invoiceQueries/invoiceQueries");
 // Mock invoice data since the table might not exist
 const mockInvoices = [
   {
@@ -33,15 +33,7 @@ const getUserInvoices = asyncHandler(async (req, res) => {
     // Check if invoices table exists
     try {
       const [invoices] = await db.query(
-        `SELECT 
-          i.*,
-          t.pickupLocation,
-          t.dropLocation,
-          t.tripStartDate
-        FROM invoices i
-        JOIN trips t ON i.trip_id = t.trip_id
-        WHERE i.user_id = ?
-        ORDER BY i.created_at DESC`,
+       invoiceQueries.getUserInvoices,
         [user_id]
       );
 
@@ -75,20 +67,7 @@ const getInvoiceDetails = asyncHandler(async (req, res) => {
     // Check if invoices table exists
     try {
       const [invoiceDetails] = await db.query(
-        `SELECT 
-          i.*,
-          t.*,
-          u.firstName,
-          u.lastName,
-          u.email,
-          u.address,
-          u.cityName,
-          u.zipCord,
-          u.phoneNo
-        FROM invoices i
-        JOIN trips t ON i.trip_id = t.trip_id
-        JOIN users u ON i.user_id = u.user_id
-        WHERE i.invoice_id = ?`,
+        invoiceQueries.getInvoiceDetails,
         [invoice_id]
       );
 
@@ -132,17 +111,7 @@ const getAllInvoices = asyncHandler(async (req, res) => {
     // Check if invoices table exists
     try {
       const [invoices] = await db.query(
-        `SELECT 
-          i.*,
-          u.firstName,
-          u.lastName,
-          u.email,
-          t.pickupLocation,
-          t.dropLocation
-        FROM invoices i
-        JOIN users u ON i.user_id = u.user_id
-        JOIN trips t ON i.trip_id = t.trip_id
-        ORDER BY i.created_at DESC`
+      invoiceQueries.getAllInvoices
       );
 
       res.status(200).json({
@@ -178,7 +147,7 @@ const updateInvoiceStatus = asyncHandler(async (req, res) => {
     // Check if invoices table exists
     try {
       const [result] = await db.query(
-        `UPDATE invoices SET status = ?, paid_at = CURRENT_TIMESTAMP WHERE invoice_id = ?`,
+        invoiceQueries.updateInvoiceStatus,
         [status, invoice_id]
       );
 

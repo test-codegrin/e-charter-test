@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const { db } = require("../config/db");
+const notificationQueries = require("../config/notificationQueries/notificationQueries");
 
 // Mock notification queries since the table might not exist
 const mockNotifications = [
@@ -33,7 +34,7 @@ const getUserNotifications = asyncHandler(async (req, res) => {
     // Check if notifications table exists
     try {
       const [notifications] = await db.query(
-        `SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC`,
+        notificationQueries.getUserNotifications,
         [user_id]
       );
       
@@ -69,7 +70,7 @@ const getDriverNotifications = asyncHandler(async (req, res) => {
     // Check if notifications table exists
     try {
       const [notifications] = await db.query(
-        `SELECT * FROM notifications WHERE driver_id = ? ORDER BY created_at DESC`,
+        notificationQueries.getDriverNotifications,
         [driver_id]
       );
       
@@ -99,7 +100,7 @@ const getAdminNotifications = asyncHandler(async (req, res) => {
     // Check if notifications table exists
     try {
       const [notifications] = await db.query(
-        `SELECT * FROM notifications WHERE admin_id IS NOT NULL ORDER BY created_at DESC`
+        notificationQueries.getAdminNotifications
       );
       
       res.status(200).json({
@@ -130,7 +131,7 @@ const markAsRead = asyncHandler(async (req, res) => {
     // Check if notifications table exists
     try {
       const [result] = await db.query(
-        `UPDATE notifications SET is_read = 1 WHERE notification_id = ?`,
+        notificationQueries.markAsRead,
         [notification_id]
       );
 
@@ -164,7 +165,7 @@ const markAllAsRead = asyncHandler(async (req, res) => {
     // Check if notifications table exists
     try {
       await db.query(
-        `UPDATE notifications SET is_read = 1 WHERE user_id = ? OR driver_id = ? OR admin_id = ?`,
+        notificationQueries.markAllAsRead,
         [user_id || null, driver_id || null, admin_id || null]
       );
 

@@ -1,5 +1,6 @@
 const { db } = require("../config/db");
 const asyncHandler = require("express-async-handler");
+const settingsQueries = require("../config/settingsQueries/settingsQueries");
 
 // Cache for settings to improve performance
 let settingsCache = {};
@@ -45,11 +46,9 @@ const fetchSettingsFromDB = async () => {
     await ensureSettingsTableExists();
 
     // Get all settings
-    const [settingsRows] = await db.query(`
-      SELECT category, setting_key, setting_value, setting_type, is_sensitive 
-      FROM system_settings 
-      ORDER BY category, setting_key
-    `);
+    const [settingsRows] = await db.query(
+      settingsQueries.getAllSettings
+    );
 
     // Organize settings by category
     const settings = {};
@@ -92,11 +91,9 @@ const fetchSettingsFromDB = async () => {
 
     // Get current pricing from vehicle_pricing table
     try {
-      const [pricingRows] = await db.query(`
-        SELECT carType, carSize, base_rate, per_km_rate, per_hour_rate, midstop_rate
-        FROM vehicle_pricing
-        ORDER BY carType, carSize
-      `);
+      const [pricingRows] = await db.query(
+        settingsQueries.selectPricingData
+      );
 
       if (pricingRows.length > 0) {
         const pricing = {
@@ -169,10 +166,9 @@ const updateSettings = asyncHandler(async (req, res) => {
       }
 
       // Get current value for audit log
-      const [currentSetting] = await db.query(`
-        SELECT setting_id, setting_value FROM system_settings 
-        WHERE category = ? AND setting_key = ?
-      `, [category, key]);
+      const [currentSetting] = await db.query(
+        settingsQueries.selectSettingRowForUpdate,
+         [category, key]);
 
       // Determine setting type and convert value
       let settingValue;
@@ -192,14 +188,8 @@ const updateSettings = asyncHandler(async (req, res) => {
       }
 
       // Update or insert setting
-      const [result] = await db.query(`
-        INSERT INTO system_settings (category, setting_key, setting_value, setting_type)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE 
-          setting_value = VALUES(setting_value),
-          setting_type = VALUES(setting_type),
-          updated_at = CURRENT_TIMESTAMP
-      `, [category, key, settingValue, settingType]);
+      const [result] = await db.query(
+        settingsQueries.insertOrUpdateSetting, [category, key, settingValue, settingType]);
 
       // Log the change for audit
       if (currentSetting.length > 0) {
@@ -234,20 +224,9 @@ const updateSettings = asyncHandler(async (req, res) => {
 const updatePricingSettings = async (pricingSettings) => {
   try {
     // Ensure vehicle_pricing table exists
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS vehicle_pricing (
-        pricing_id INT AUTO_INCREMENT PRIMARY KEY,
-        carType VARCHAR(50) NOT NULL,
-        carSize VARCHAR(50) NOT NULL,
-        base_rate DECIMAL(8,2) NOT NULL DEFAULT 0,
-        per_km_rate DECIMAL(8,2) NOT NULL DEFAULT 0,
-        per_hour_rate DECIMAL(8,2) NOT NULL DEFAULT 0,
-        midstop_rate DECIMAL(8,2) NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_vehicle_type (carType, carSize)
-      )
-    `);
+    await db.query(
+      settingsQueries.createVehiclePricingTable
+    );
 
     // Update pricing for each vehicle type and size
     const { base_rates, per_km_rates, per_hour_rates, midstop_rates } = pricingSettings;
@@ -260,16 +239,9 @@ const updatePricingSettings = async (pricingSettings) => {
           const perHourRate = per_hour_rates?.[vehicleType]?.[vehicleSize] || 0;
           const midstopRate = midstop_rates?.[vehicleType]?.[vehicleSize] || 0;
 
-          await db.query(`
-            INSERT INTO vehicle_pricing (carType, carSize, base_rate, per_km_rate, per_hour_rate, midstop_rate)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-              base_rate = VALUES(base_rate),
-              per_km_rate = VALUES(per_km_rate),
-              per_hour_rate = VALUES(per_hour_rate),
-              midstop_rate = VALUES(midstop_rate),
-              updated_at = CURRENT_TIMESTAMP
-          `, [vehicleType, vehicleSize, baseRate, perKmRate, perHourRate, midstopRate]);
+          await db.query(
+            settingsQueries.upsertPricing
+            , [vehicleType, vehicleSize, baseRate, perKmRate, perHourRate, midstopRate]);
         }
       }
     }
@@ -286,10 +258,9 @@ const getSetting = asyncHandler(async (req, res) => {
   try {
     const { category, key } = req.params;
 
-    const [rows] = await db.query(`
-      SELECT setting_value, setting_type, is_sensitive FROM system_settings 
-      WHERE category = ? AND setting_key = ?
-    `, [category, key]);
+    const [rows] = await db.query(
+      settingsQueries.selectSettingByKey
+     , [category, key]);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: "Setting not found" });
@@ -341,12 +312,8 @@ const getSettingsByCategory = asyncHandler(async (req, res) => {
   try {
     const { category } = req.params;
 
-    const [rows] = await db.query(`
-      SELECT setting_key, setting_value, setting_type, is_sensitive, description
-      FROM system_settings 
-      WHERE category = ?
-      ORDER BY setting_key
-    `, [category]);
+    const [rows] = await db.query(
+      settingsQueries.selectSettingsByCategory, [category]);
 
     const settings = {};
     
@@ -407,19 +374,17 @@ const resetSettings = asyncHandler(async (req, res) => {
       await db.query(`DELETE FROM system_settings WHERE category = ?`, [category]);
       
       // Log the reset
-      await db.query(`
-        INSERT INTO settings_audit_log (setting_id, category, setting_key, old_value, new_value, changed_by, change_reason, ip_address, user_agent)
-        VALUES (0, ?, 'CATEGORY_RESET', 'ALL_SETTINGS', 'RESET_TO_DEFAULTS', ?, 'Category reset to defaults', ?, ?)
-      `, [category, adminId, req.ip, req.get('User-Agent')]);
+      await db.query(
+        settingsQueries.insertCategoryResetLog
+      , [category, adminId, req.ip, req.get('User-Agent')]);
     } else {
       // Reset all settings
       await db.query(`DELETE FROM system_settings`);
       
       // Log the reset
-      await db.query(`
-        INSERT INTO settings_audit_log (setting_id, category, setting_key, old_value, new_value, changed_by, change_reason, ip_address, user_agent)
-        VALUES (0, 'ALL', 'FULL_RESET', 'ALL_SETTINGS', 'RESET_TO_DEFAULTS', ?, 'Full system reset to defaults', ?, ?)
-      `, [adminId, req.ip, req.get('User-Agent')]);
+      await db.query(
+        settingsQueries.insertFullResetLog
+      , [adminId, req.ip, req.get('User-Agent')]);
     }
 
     // Clear cache
@@ -441,15 +406,7 @@ const getSettingsAuditLog = asyncHandler(async (req, res) => {
   try {
     const { limit = 50, offset = 0, category } = req.query;
 
-    let query = `
-      SELECT 
-        sal.*,
-        a.adminName as changed_by_name,
-        ss.description
-      FROM settings_audit_log sal
-      LEFT JOIN admin a ON sal.changed_by = a.admin_id
-      LEFT JOIN system_settings ss ON sal.setting_id = ss.setting_id
-    `;
+    let query = settingsQueries.getAuditLog;
     
     const params = [];
     
@@ -464,7 +421,7 @@ const getSettingsAuditLog = asyncHandler(async (req, res) => {
     const [auditLogs] = await db.query(query, params);
 
     // Get total count
-    let countQuery = `SELECT COUNT(*) as total FROM settings_audit_log`;
+    let countQuery = settingsQueries.countAuditLog;
     const countParams = [];
     
     if (category) {
@@ -510,21 +467,9 @@ const ensureSettingsTableExists = async () => {
       )
     `);
 
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS settings_audit_log (
-        audit_id INT AUTO_INCREMENT PRIMARY KEY,
-        setting_id INT NOT NULL,
-        category VARCHAR(50) NOT NULL,
-        setting_key VARCHAR(100) NOT NULL,
-        old_value TEXT,
-        new_value TEXT NOT NULL,
-        changed_by INT DEFAULT NULL,
-        change_reason VARCHAR(255) DEFAULT NULL,
-        ip_address VARCHAR(45) DEFAULT NULL,
-        user_agent TEXT DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+    await db.query(
+      settingsQueries.createAuditLogTable
+    );
 
     // Insert default settings if none exist
     const [existingSettings] = await db.query(`SELECT COUNT(*) as count FROM system_settings`);

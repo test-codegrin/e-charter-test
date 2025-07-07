@@ -51,10 +51,7 @@ const bookTripWithPricing = asyncHandler(async (req, res) => {
   try {
     // Get car details
     const [carDetails] = await db.query(
-      `SELECT c.*, d.driverName, d.email as driverEmail, d.phoneNo as driverPhone 
-       FROM car c 
-       JOIN drivers d ON c.driver_id = d.driver_id 
-       WHERE c.car_id = ? AND c.status = 1`,
+      tripBookingPostQueries.getCarDetails,
       [selectedCarId]
     );
 
@@ -126,8 +123,7 @@ const bookTripWithPricing = asyncHandler(async (req, res) => {
     const trip_id = tripResult.insertId;
 
     // Update trip with car assignment and pricing
-    await db.query(
-      `UPDATE trips SET car_id = ?, total_price = ?, base_price = ?, tax_amount = ? WHERE trip_id = ?`,
+    await db.query(tripBookingPostQueries.updateTripWithCarAndPricing, 
       [selectedCarId, pricing.totalPrice, pricing.subtotal, pricing.taxAmount, trip_id]
     );
 
@@ -264,11 +260,7 @@ const startTrip = asyncHandler(async (req, res) => {
   try {
     // Verify driver is assigned to this trip
     const [tripDetails] = await db.query(
-      `SELECT t.*, c.driver_id, u.firstName, u.lastName, u.email, u.phoneNo 
-       FROM trips t 
-       JOIN car c ON t.car_id = c.car_id 
-       JOIN users u ON t.user_id = u.user_id 
-       WHERE t.trip_id = ? AND c.driver_id = ?`,
+    tripGetQueries.getTripDetailsForDriver,
       [trip_id, driver_id]
     );
 
@@ -303,9 +295,7 @@ const updateTripLocation = asyncHandler(async (req, res) => {
   try {
     // Verify driver is assigned to this trip
     const [tripCheck] = await db.query(
-      `SELECT t.trip_id FROM trips t 
-       JOIN car c ON t.car_id = c.car_id 
-       WHERE t.trip_id = ? AND c.driver_id = ? AND t.status = 'in_progress'`,
+      tripUpdateQueries.checkInProgressTrip,
       [trip_id, driver_id]
     );
 
@@ -338,11 +328,7 @@ const completeTrip = asyncHandler(async (req, res) => {
   try {
     // Verify and get trip details
     const [tripDetails] = await db.query(
-      `SELECT t.*, u.firstName, u.lastName, u.phoneNo 
-       FROM trips t 
-       JOIN car c ON t.car_id = c.car_id 
-       JOIN users u ON t.user_id = u.user_id 
-       WHERE t.trip_id = ? AND c.driver_id = ?`,
+      tripUpdateQueries.getTripDetailsForCompletion,
       [trip_id, driver_id]
     );
 

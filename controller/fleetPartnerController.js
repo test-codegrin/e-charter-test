@@ -2,6 +2,7 @@ const { db } = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
+const fleetPartnerQueries = require("../config/fleetPartnerQueries/fleetPartnerQueries");
 const imagekit = require("../config/imagekit");
 require("dotenv").config();
 
@@ -66,7 +67,7 @@ const registerFleetPartner = asyncHandler(async (req, res) => {
   try {
     // Check if email already exists
     const [existingDriver] = await db.query(
-      `SELECT * FROM drivers WHERE email = ?`, 
+      fleetPartnerQueries.checkExistingEmail, 
       [email]
     );
     
@@ -77,17 +78,9 @@ const registerFleetPartner = asyncHandler(async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert fleet partner with all required information - FIXED column name
-    const [result] = await db.query(`
-      INSERT INTO drivers (
-        driverName, email, password, address, cityName, zipCord, phoneNo,
-        company_name, legal_entity_type, business_address, contact_person_name, 
-        contact_person_position, fleet_size, service_areas, operating_hours,
-        years_experience, safety_protocols, insurance_policy_number, 
-        business_license_number, certifications, client_references, additional_services,
-        sustainability_practices, special_offers, communication_channels,
-        terms_accepted, technology_agreement, registration_type, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
+    const [result] = await db.query(
+    fleetPartnerQueries.insertFleetPartner
+    , [
       driverName, email, hashedPassword, address, cityName, zipCord, phoneNo,
       company_name, legal_entity_type, business_address, contact_person_name,
       contact_person_position, fleet_size, JSON.stringify(service_areas), operating_hours,
@@ -103,32 +96,27 @@ const registerFleetPartner = asyncHandler(async (req, res) => {
     // Insert service areas if provided
     if (service_areas && Array.isArray(service_areas)) {
       for (const area of service_areas) {
-        await db.query(`
-          INSERT INTO fleet_service_areas (driver_id, city, province, coverage_radius, is_primary)
-          VALUES (?, ?, ?, ?, ?)
-        `, [driver_id, area.city, area.province, area.radius || 50, area.is_primary || false]);
+        await db.query(
+          fleetPartnerQueries.insertServiceArea
+          , [driver_id, area.city, area.province, area.radius || 50, area.is_primary || false]);
       }
     }
 
     // Insert certifications if provided
     if (certifications && Array.isArray(certifications)) {
       for (const cert of certifications) {
-        await db.query(`
-          INSERT INTO fleet_certifications (driver_id, certification_name, issuing_authority, 
-                                          certification_number, issue_date, expiry_date)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `, [driver_id, cert.name, cert.authority, cert.number, cert.issue_date, cert.expiry_date]);
+        await db.query(
+          fleetPartnerQueries.insertCertification
+        , [driver_id, cert.name, cert.authority, cert.number, cert.issue_date, cert.expiry_date]);
       }
     }
 
     // Insert references if provided
     if (references && Array.isArray(references)) {
       for (const ref of references) {
-        await db.query(`
-          INSERT INTO fleet_references (driver_id, client_name, client_contact, client_email, 
-                                      client_phone, service_period, service_description)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [driver_id, ref.name, ref.contact, ref.email, ref.phone, ref.period, ref.description]);
+        await db.query(
+          fleetPartnerQueries.insertReference
+          , [driver_id, ref.name, ref.contact, ref.email, ref.phone, ref.period, ref.description]);
       }
     }
 
@@ -169,13 +157,9 @@ const addFleetVehicle = asyncHandler(async (req, res) => {
   }
 
   try {
-    await db.query(`
-      INSERT INTO car (
-        driver_id, carName, carNumber, carSize, carType, bus_capacity,
-        vehicle_age, vehicle_condition, specialized_services, wheelchair_accessible,
-        vehicle_features, maintenance_schedule, insurance_expiry, license_plate_expiry, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
+    await db.query(
+     fleetPartnerQueries.insertFleetVehicle
+    , [
       driver_id, carName, carNumber, carSize, carType, bus_capacity,
       vehicle_age, vehicle_condition, JSON.stringify(specialized_services),
       wheelchair_accessible, JSON.stringify(vehicle_features), maintenance_schedule,
@@ -212,10 +196,9 @@ const uploadFleetDocument = asyncHandler(async (req, res) => {
     });
 
     // Save document info to database
-    await db.query(`
-      INSERT INTO fleet_documents (driver_id, document_type, document_name, document_url, expiry_date)
-      VALUES (?, ?, ?, ?, ?)
-    `, [driver_id, document_type, document_name, uploadedDocument.url, expiry_date]);
+    await db.query(
+    fleetPartnerQueries.insertFleetDocument
+    , [driver_id, document_type, document_name, uploadedDocument.url, expiry_date]);
 
     res.status(201).json({
       message: "Document uploaded successfully",
@@ -243,9 +226,9 @@ const getFleetPartnerProfile = asyncHandler(async (req, res) => {
 
   try {
     // Get fleet partner details
-    const [fleetPartner] = await db.query(`
-      SELECT * FROM drivers WHERE driver_id = ? AND registration_type = 'fleet_partner'
-    `, [driver_id]);
+    const [fleetPartner] = await db.query(
+    fleetPartnerQueries.getFleetPartnerById
+      , [driver_id]);
 
     if (fleetPartner.length === 0) {
       return res.status(404).json({ message: "Fleet partner not found" });
@@ -254,29 +237,29 @@ const getFleetPartnerProfile = asyncHandler(async (req, res) => {
     const partner = fleetPartner[0];
 
     // Get service areas
-    const [serviceAreas] = await db.query(`
-      SELECT * FROM fleet_service_areas WHERE driver_id = ?
-    `, [driver_id]);
+    const [serviceAreas] = await db.query(
+      fleetPartnerQueries.getServiceAreasByDriver
+    , [driver_id]);
 
     // Get certifications
-    const [certifications] = await db.query(`
-      SELECT * FROM fleet_certifications WHERE driver_id = ?
-    `, [driver_id]);
+    const [certifications] = await db.query(
+      fleetPartnerQueries.getCertificationsByDriver,
+       [driver_id]);
 
     // Get references
-    const [references] = await db.query(`
-      SELECT * FROM fleet_references WHERE driver_id = ?
-    `, [driver_id]);
+    const [references] = await db.query(
+      fleetPartnerQueries.getReferencesByDriver
+    , [driver_id]);
 
     // Get documents
-    const [documents] = await db.query(`
-      SELECT * FROM fleet_documents WHERE driver_id = ?
-    `, [driver_id]);
+    const [documents] = await db.query(
+      fleetPartnerQueries.getDocumentsByDriver
+    , [driver_id]);
 
     // Get vehicles
-    const [vehicles] = await db.query(`
-      SELECT * FROM car WHERE driver_id = ?
-    `, [driver_id]);
+    const [vehicles] = await db.query(
+      fleetPartnerQueries.getVehiclesByDriver
+    , [driver_id]);
 
     res.status(200).json({
       message: "Fleet partner profile retrieved successfully",
@@ -304,15 +287,9 @@ const getFleetPartnerProfile = asyncHandler(async (req, res) => {
 // Admin: Get All Fleet Partners
 const getAllFleetPartners = asyncHandler(async (req, res) => {
   try {
-    const [fleetPartners] = await db.query(`
-      SELECT 
-        driver_id, company_name, driverName, email, phoneNo, cityName,
-        legal_entity_type, fleet_size, years_experience, status,
-        registration_completed, created_at
-      FROM drivers 
-      WHERE registration_type = 'fleet_partner'
-      ORDER BY created_at DESC
-    `);
+    const [fleetPartners] = await db.query(
+      fleetPartnerQueries.getAllFleetPartners
+    );
 
     res.status(200).json({
       message: "Fleet partners retrieved successfully",
