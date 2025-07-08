@@ -15,7 +15,6 @@ const {
 } = require("../controller/verificationController")
 const { authenticationToken } = require("../middleware/authMiddleware")
 
-console.log("Setting up admin routes...");
 
 // Dashboard stats
 router.get("/dashboard/stats", authenticationToken, getDashboardStats);
@@ -36,6 +35,5 @@ router.get("/pending-approvals", authenticationToken, getPendingApprovals);
 router.post("/approve-driver/:driver_id", authenticationToken, approveDriver);
 router.post("/approve-car/:car_id", authenticationToken, approveCar);
 
-console.log("Admin routes configured successfully");
 
 module.exports = router;

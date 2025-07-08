@@ -10,7 +10,6 @@ const {
 } = require("../controller/enhancedTripController");
 const { authenticationToken } = require("../middleware/authMiddleware");
 
-console.log("Setting up enhanced trip routes...");
 
 // Customer routes - Fixed parameter syntax
 router.post("/book", authenticationToken, bookTripWithPricing);
