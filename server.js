@@ -89,9 +89,17 @@ app.use((err, req, res, next) => {
     });
 });
 
+// Root route to avoid 404 on GET /
+app.get("/", (req, res) => {
+    res.status(200).json({
+        message: "Welcome to the eCharter API!",
+        health: "https://e-charter-test.onrender.com/health",
+        timestamp: new Date().toISOString()
+    });
+});
+
 // 404 handler
 app.use((req, res) => {
-    console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
     res.status(404).json({
         error: "Route not found",
         message: `The requested route ${req.originalUrl} does not exist`

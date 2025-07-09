@@ -63,7 +63,7 @@ const adminRegister = asyncHandler(async (req, res) => {
 const adminLogin = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    console.log('Admin login attempt:', { email });
+    // console.log('Admin login attempt:', { email });
 
     if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required" });
@@ -103,8 +103,6 @@ const adminLogin = asyncHandler(async (req, res) => {
             role: 'admin'
         };
 
-        console.log('Admin login successful:', { admin_id: admin.admin_id, email: admin.email });
-
         res.status(200).json({
             message: "Login successful",
             token,
@@ -112,7 +110,7 @@ const adminLogin = asyncHandler(async (req, res) => {
         });
 
     } catch (err) {
-        console.error("Admin Login Error:", err);
+        // console.error("Admin Login Error:", err);
         res.status(500).json({ error: "Server error", details: err.message });
     }
 });
