@@ -64,7 +64,7 @@ const getAllTrips = asyncHandler(async (req, res) => {
 
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
-    const [users] = await db.query(userGetQueries.getAllUsers);
+    const [users] = await db.query(adminGetQueries.getAllUsers);
 
     res.status(200).json({
       message: "Users fetched successfully",
