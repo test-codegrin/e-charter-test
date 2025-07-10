@@ -5,14 +5,6 @@ const tripGetQueries = require("../config/tripQueries/tripGetQueries");
 const tripUpdateQueries = require("../config/tripQueries/tripUpdateQueries");
 const pricingService = require("../services/pricingService");
 
-// Helper function to format date as DD-MM-YYYY
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
-};
 
 // Mock data for development
 const mockTrips = [
@@ -56,15 +48,21 @@ const bookTripWithPricing = asyncHandler(async (req, res) => {
   if (!user_id || !pickupLocation || !dropLocation || !tripStartDate || !tripTime || !selectedCarId) {
     return res.status(400).json({ message: "Required fields missing" });
   }
-
+  
   try {
-    const [carDetails] = await db.query(tripBookingPostQueries.getCarDetails, [selectedCarId]);
+    // Get car details
+    const [carDetails] = await db.query(
+      tripBookingPostQueries.getCarDetails,
+      [selectedCarId]
+    );
+
     if (carDetails.length === 0) {
       return res.status(400).json({ message: "Selected vehicle not available" });
     }
 
     const selectedCar = carDetails[0];
 
+    // Calculate distance and duration
     const haversineDistance = (lat1, lon1, lat2, lon2) => {
       const R = 6371;
       const toRad = angle => (angle * Math.PI) / 180;
@@ -96,6 +94,7 @@ const bookTripWithPricing = asyncHandler(async (req, res) => {
     const travelHours = totalDistance / 40;
     const durationHours = travelHours + totalStayHours;
 
+    // Calculate pricing
     const pricing = pricingService.calculateTripPrice({
       carType: selectedCar.carType,
       carSize: selectedCar.carSize,
@@ -105,6 +104,7 @@ const bookTripWithPricing = asyncHandler(async (req, res) => {
       serviceType
     });
 
+    // Insert trip
     const [tripResult] = await db.query(tripBookingPostQueries.createTrip, [
       user_id,
       pickupLocation,
@@ -118,15 +118,17 @@ const bookTripWithPricing = asyncHandler(async (req, res) => {
       tripTime,
       parseFloat(durationHours.toFixed(2)),
       parseFloat(totalDistance.toFixed(2)),
-      'confirmed'
+      'confirmed' // Status is confirmed since car is selected
     ]);
 
     const trip_id = tripResult.insertId;
 
-    await db.query(tripBookingPostQueries.updateTripWithCarAndPricing,
+    // Update trip with car assignment and pricing
+    await db.query(tripBookingPostQueries.updateTripWithCarAndPricing, 
       [selectedCarId, pricing.totalPrice, pricing.subtotal, pricing.taxAmount, trip_id]
     );
 
+    // Insert mid stops
     if (mid_stops.length > 0) {
       const midStopValues = mid_stops.map((stop, index) => [
         trip_id,
@@ -156,7 +158,7 @@ const bookTripWithPricing = asyncHandler(async (req, res) => {
   }
 });
 
-// Get user trips
+// Get user trips with enhanced details
 const getUserTrips = asyncHandler(async (req, res) => {
   const user_id = req.user?.user_id;
   const { status } = req.query;
@@ -166,51 +168,50 @@ const getUserTrips = asyncHandler(async (req, res) => {
   }
 
   try {
-    let query = tripGetQueries.getTripsByUserId;
-    let params = [user_id];
+    // Check if trips table exists and has the required structure
+    try {
+      let query = tripGetQueries.getTripsByUserId;
+      let params = [user_id];
 
-    if (status) {
-      query += ` AND t.status = ?`;
-      params.push(status);
-    }
-
-    const [trips] = await db.query(query, params);
-
-    for (let trip of trips) {
-      try {
-        const [midStops] = await db.query(tripGetQueries.getTripMidStops, [trip.trip_id]);
-        trip.midStops = midStops;
-      } catch {
-        trip.midStops = [];
+      if (status) {
+        query += ` AND t.status = ?`;
+        params.push(status);
       }
 
-      // Format dates
-      if (trip.tripStartDate) trip.tripStartDate = formatDate(trip.tripStartDate);
-      if (trip.tripEndDate) trip.tripEndDate = formatDate(trip.tripEndDate);
-      if (trip.created_at) trip.created_at = formatDate(trip.created_at);
+      const [trips] = await db.query(query, params);
+
+      // Get mid stops for each trip
+      for (let trip of trips) {
+        try {
+          const [midStops] = await db.query(tripGetQueries.getTripMidStops, [trip.trip_id]);
+          trip.midStops = midStops;
+        } catch (midStopError) {
+          trip.midStops = [];
+        }
+      }
+
+      res.status(200).json({
+        message: "Trips fetched successfully",
+        count: trips.length,
+        trips
+      });
+    } catch (tableError) {
+      // If table structure is different, return mock data
+      const userTrips = mockTrips.filter(trip => trip.user_id === user_id);
+      res.status(200).json({
+        message: "Trips fetched successfully",
+        count: userTrips.length,
+        trips: userTrips
+      });
     }
 
-    res.status(200).json({
-      message: "Trips fetched successfully",
-      count: trips.length,
-      trips
-    });
-
-  } catch (tableError) {
-    const userTrips = mockTrips.filter(trip => trip.user_id === user_id).map(trip => ({
-      ...trip,
-      tripStartDate: formatDate(trip.tripStartDate),
-      created_at: formatDate(trip.created_at)
-    }));
-    res.status(200).json({
-      message: "Trips fetched successfully",
-      count: userTrips.length,
-      trips: userTrips
-    });
+  } catch (error) {
+    console.error("Error fetching user trips:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
 
-// Get trip details
+// Get trip details by ID
 const getTripDetails = asyncHandler(async (req, res) => {
   const { trip_id } = req.params;
   const user_id = req.user?.user_id;
@@ -224,17 +225,18 @@ const getTripDetails = asyncHandler(async (req, res) => {
 
     const trip = tripDetails[0];
 
+    // Check if user owns this trip (for customers) or is assigned driver
     if (req.user.user_id && trip.user_id !== user_id) {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const [midStops] = await db.query(tripGetQueries.getTripMidStops, [trip_id]);
-    trip.midStops = midStops || [];
-
-    // Format dates
-    if (trip.tripStartDate) trip.tripStartDate = formatDate(trip.tripStartDate);
-    if (trip.tripEndDate) trip.tripEndDate = formatDate(trip.tripEndDate);
-    if (trip.created_at) trip.created_at = formatDate(trip.created_at);
+    // Get mid stops
+    try {
+      const [midStops] = await db.query(tripGetQueries.getTripMidStops, [trip_id]);
+      trip.midStops = midStops;
+    } catch (midStopError) {
+      trip.midStops = [];
+    }
 
     res.status(200).json({
       message: "Trip details fetched successfully",
@@ -247,7 +249,7 @@ const getTripDetails = asyncHandler(async (req, res) => {
   }
 });
 
-// Start trip
+// Start trip (for drivers)
 const startTrip = asyncHandler(async (req, res) => {
   const { trip_id } = req.params;
   const driver_id = req.user?.driver_id;
@@ -257,12 +259,17 @@ const startTrip = asyncHandler(async (req, res) => {
   }
 
   try {
-    const [tripDetails] = await db.query(tripGetQueries.getTripDetailsForDriver, [trip_id, driver_id]);
+    // Verify driver is assigned to this trip
+    const [tripDetails] = await db.query(
+    tripGetQueries.getTripDetailsForDriver,
+      [trip_id, driver_id]
+    );
 
     if (tripDetails.length === 0) {
       return res.status(403).json({ message: "Trip not found or not assigned to you" });
     }
 
+    // Update trip status to in_progress
     await db.query(tripUpdateQueries.startTrip, [trip_id]);
 
     res.status(200).json({
@@ -276,7 +283,7 @@ const startTrip = asyncHandler(async (req, res) => {
   }
 });
 
-// Update trip location
+// Update trip location (for live tracking)
 const updateTripLocation = asyncHandler(async (req, res) => {
   const { trip_id } = req.params;
   const { latitude, longitude } = req.body;
@@ -287,12 +294,17 @@ const updateTripLocation = asyncHandler(async (req, res) => {
   }
 
   try {
-    const [tripCheck] = await db.query(tripUpdateQueries.checkInProgressTrip, [trip_id, driver_id]);
+    // Verify driver is assigned to this trip
+    const [tripCheck] = await db.query(
+      tripUpdateQueries.checkInProgressTrip,
+      [trip_id, driver_id]
+    );
 
     if (tripCheck.length === 0) {
       return res.status(403).json({ message: "Trip not found or not in progress" });
     }
 
+    // Update location
     await db.query(tripUpdateQueries.updateTripLocation, [latitude, longitude, trip_id]);
 
     res.status(200).json({
@@ -315,12 +327,17 @@ const completeTrip = asyncHandler(async (req, res) => {
   }
 
   try {
-    const [tripDetails] = await db.query(tripUpdateQueries.getTripDetailsForCompletion, [trip_id, driver_id]);
+    // Verify and get trip details
+    const [tripDetails] = await db.query(
+      tripUpdateQueries.getTripDetailsForCompletion,
+      [trip_id, driver_id]
+    );
 
     if (tripDetails.length === 0) {
       return res.status(403).json({ message: "Trip not found or not assigned to you" });
     }
 
+    // Update trip status to completed
     await db.query(tripUpdateQueries.completeTrip, [trip_id]);
 
     res.status(200).json({
