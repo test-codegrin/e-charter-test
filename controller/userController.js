@@ -16,20 +16,7 @@ const getApprovedCars = asyncHandler(async (req, res) => {
   }
 });
 
-const getAllUsers = asyncHandler(async (req, res) => {
-  try {
-    const [users] = await db.query(userGetQueries.getAllUsers);
-
-    res.status(200).json({
-      message: "Users fetched successfully",
-      count: users.length,
-      users,
-    });
-  } catch (err) {
-    console.error("Error fetching users:", err);
-    res.status(500).json({ error: "Server error", details: err.message });
-  }
-});
 
 
-module.exports = { getApprovedCars , getAllUsers };
+
+module.exports = { getApprovedCars };

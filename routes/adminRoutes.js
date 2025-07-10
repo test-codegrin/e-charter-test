@@ -6,7 +6,8 @@ const {
   getAllTrips, 
   getDashboardStats,
   getAllFleetPartners,
-  getPayoutSummary
+  getPayoutSummary,
+  getAllUsers
 } = require("../controller/adminController")
 const { 
   approveDriver, 
@@ -23,6 +24,8 @@ router.get("/dashboard/stats", authenticationToken, getDashboardStats);
 router.get("/alldrivers", authenticationToken, getAllDrivers);
 router.get("/allcars", authenticationToken, getAllCars);
 router.get("/alltrips", authenticationToken, getAllTrips);
+router.get("/allusers",authenticationToken,getAllUsers);
+
 
 // Fleet partner management
 router.get("/fleet-partners", authenticationToken, getAllFleetPartners);

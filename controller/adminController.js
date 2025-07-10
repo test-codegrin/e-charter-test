@@ -62,6 +62,21 @@ const getAllTrips = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllUsers = asyncHandler(async (req, res) => {
+  try {
+    const [users] = await db.query(userGetQueries.getAllUsers);
+
+    res.status(200).json({
+      message: "Users fetched successfully",
+      count: users.length,
+      users,
+    });
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
+  }
+});
+
 // Get dashboard statistics for admin - ENHANCED with proper data formatting
 const getDashboardStats = asyncHandler(async (req, res) => {
   try {
@@ -265,6 +280,7 @@ module.exports = {
     getAllDrivers,
     getAllCars,
     getAllTrips,
+    getAllUsers,
     getDashboardStats,
     getAllFleetPartners,
     getPayoutSummary
