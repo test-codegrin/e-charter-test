@@ -110,19 +110,34 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
 });
 
+
 const editUser = asyncHandler(async (req, res) => {
   const { user_id } = req.params;
-  const { firstName, lastName, email, phoneNo } = req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    address,
+    cityName,
+    zipCord,
+    phoneNo
+  } = req.body;
 
-  if (!user_id || !firstName || !lastName || !email || !phoneNo) {
-    return res.status(400).json({ message: "All fields are required" });
+  if (!firstName || !lastName || !email || !phoneNo) {
+    return res.status(400).json({ message: "Required fields are missing" });
   }
 
   try {
-    const [result] = await db.query(
-      adminUpdateQueries.updateUserById,
-      [firstName, lastName, email, phoneNo, user_id]
-    );
+    const [result] = await db.query(adminUpdateQueries.updateUserDetails, [
+      firstName,
+      lastName,
+      email,
+      address,
+      cityName,
+      zipCord,
+      phoneNo,
+      user_id
+    ]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "User not found" });
@@ -131,14 +146,19 @@ const editUser = asyncHandler(async (req, res) => {
     res.status(200).json({
       message: "User details updated successfully",
       user_id,
-      updatedFields: { firstName, lastName, email, phoneNo }
+      updatedFields: {
+        firstName,
+        lastName,
+        email,
+        address,
+        cityName,
+        zipCord,
+        phoneNo
+      }
     });
   } catch (error) {
     console.error("Error updating user:", error);
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message
-    });
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
 

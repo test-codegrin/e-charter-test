@@ -1,8 +1,14 @@
 const adminUpdateQueries = {
-    
-  updateUserById: `
-    UPDATE users 
-    SET firstName = ?, lastName = ?, email = ?, phoneNo = ?
+
+   updateUserDetails: `
+    UPDATE users SET 
+      firstName = ?, 
+      lastName = ?, 
+      email = ?, 
+      address = ?, 
+      cityName = ?, 
+      zipCord = ?, 
+      phoneNo = ?
     WHERE user_id = ?
   `
 };
