@@ -8,6 +8,7 @@ const {
   getAllFleetPartners,
   getPayoutSummary,
   getAllUsers,
+  editUser,
   deleteUser
 } = require("../controller/adminController")
 const { 
@@ -27,6 +28,8 @@ router.get("/allcars", authenticationToken, getAllCars);
 router.get("/alltrips", authenticationToken, getAllTrips);
 router.get("/allusers",authenticationToken,getAllUsers);
 router.delete("/deleteuser/:user_id", authenticationToken,deleteUser);
+router.put("/edituser/:user_id", editUser);
+
 
 
 // Fleet partner management

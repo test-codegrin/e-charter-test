@@ -2,6 +2,7 @@ const {db} = require("../config/db");
 const asyncHandler = require("express-async-handler");
 const adminGetQueries = require("../config/adminQueries/adminGetQueries");
 const adminDeleteQueries = require("../config/adminQueries/adminDeleteQueries");
+const adminUpdateQueries = require("../config/adminQueries/adminUpdateQueries");
 
 const getAllDrivers = asyncHandler(async (req, res) => {
     try {
@@ -109,7 +110,37 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
 });
 
+const editUser = asyncHandler(async (req, res) => {
+  const { user_id } = req.params;
+  const { firstName, lastName, email, phoneNo } = req.body;
 
+  if (!user_id || !firstName || !lastName || !email || !phoneNo) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    const [result] = await db.query(
+      adminUpdateQueries.updateUserById,
+      [firstName, lastName, email, phoneNo, user_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User details updated successfully",
+      user_id,
+      updatedFields: { firstName, lastName, email, phoneNo }
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+});
 
 // Get dashboard statistics for admin - ENHANCED with proper data formatting
 const getDashboardStats = asyncHandler(async (req, res) => {
@@ -316,6 +347,7 @@ module.exports = {
     getAllTrips,
     getAllUsers,
     deleteUser,
+    editUser,
     getDashboardStats,
     getAllFleetPartners,
     getPayoutSummary
