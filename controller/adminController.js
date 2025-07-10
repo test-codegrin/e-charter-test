@@ -1,6 +1,7 @@
 const {db} = require("../config/db");
 const asyncHandler = require("express-async-handler");
 const adminGetQueries = require("../config/adminQueries/adminGetQueries");
+const adminDeleteQueries = require("../config/adminQueries/adminDeleteQueries");
 
 const getAllDrivers = asyncHandler(async (req, res) => {
     try {
@@ -76,6 +77,39 @@ const getAllUsers = asyncHandler(async (req, res) => {
     res.status(500).json({ error: "Server error", details: err.message });
   }
 });
+
+const deleteUser = asyncHandler(async (req, res) => {
+  const { user_id } = req.params;
+
+  if (!user_id) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  try {
+    // First delete all trips for the user
+    await db.query(adminDeleteQueries.deleteTripsById, [user_id]);
+
+    // Then delete the user
+    const [result] = await db.query(adminDeleteQueries.deleteUserById, [user_id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User and related trips deleted successfully",
+      user_id,
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
+
+
 
 // Get dashboard statistics for admin - ENHANCED with proper data formatting
 const getDashboardStats = asyncHandler(async (req, res) => {
@@ -281,6 +315,7 @@ module.exports = {
     getAllCars,
     getAllTrips,
     getAllUsers,
+    deleteUser,
     getDashboardStats,
     getAllFleetPartners,
     getPayoutSummary

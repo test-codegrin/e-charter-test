@@ -9,7 +9,7 @@ const adminGetQueries = {
 
   getAllUsers: ` SELECT 
     user_id, firstName, lastName, email, phoneNo, created_at 
-  FROM users`,
+  FROM users WHERE is_deleted = 0`,
 
   getAllTrips: `
     SELECT 
