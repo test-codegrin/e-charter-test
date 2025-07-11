@@ -17,6 +17,8 @@ createTrip: `
     status
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `,
+getUserDetails: `SELECT user_id, firstName, lastName, email, phoneNo, address, cityName, profileImage FROM users WHERE user_id = ?`,
+
  getCarDetails: `
     SELECT c.*, d.driverName, d.email as driverEmail, d.phoneNo as driverPhone 
     FROM car c 
