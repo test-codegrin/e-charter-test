@@ -190,7 +190,16 @@ const getUserTrips = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Check if trips table exists and has the required structure
+    // Fetch user details
+    const [userDetailsResult] = await db.query(tripGetQueries.getUserDetailsById, [user_id]);
+
+    if (userDetailsResult.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const userDetails = userDetailsResult[0];
+
+    // Fetch trips
     try {
       let query = tripGetQueries.getTripsByUserId;
       let params = [user_id];
@@ -215,14 +224,16 @@ const getUserTrips = asyncHandler(async (req, res) => {
       res.status(200).json({
         message: "Trips fetched successfully",
         count: trips.length,
+        user: userDetails,
         trips
       });
     } catch (tableError) {
-      // If table structure is different, return mock data
+      // If trips table has an issue, fallback to mock
       const userTrips = mockTrips.filter(trip => trip.user_id === user_id);
       res.status(200).json({
-        message: "Trips fetched successfully",
+        message: "Trips fetched successfully (mock)",
         count: userTrips.length,
+        user: userDetails,
         trips: userTrips
       });
     }

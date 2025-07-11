@@ -75,6 +75,8 @@ const tripGetQueries = {
     WHERE c.driver_id = ?
     ORDER BY t.created_at DESC
   `,
+  getUserDetailsById: `SELECT user_id, firstName, lastName, email, phoneNo, cityName FROM users WHERE user_id = ?`,
+
     getTripDetailsForDriver: `
     SELECT t.*, c.driver_id, u.firstName, u.lastName, u.email, u.phoneNo 
     FROM trips t 

@@ -13,7 +13,7 @@ const { authenticationToken } = require("../middleware/authMiddleware");
 
 // Customer routes - Fixed parameter syntax
 router.post("/book", authenticationToken, bookTripWithPricing);
-router.get("/user-trips", authenticationToken, getUserTrips);
+router.get("/usertrips", authenticationToken, getUserTrips);
 router.get("/:trip_id", authenticationToken, getTripDetails);
 
 // Driver routes - Fixed parameter syntax  
