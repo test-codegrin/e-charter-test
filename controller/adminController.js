@@ -3,6 +3,7 @@ const asyncHandler = require("express-async-handler");
 const adminGetQueries = require("../config/adminQueries/adminGetQueries");
 const adminDeleteQueries = require("../config/adminQueries/adminDeleteQueries");
 const adminUpdateQueries = require("../config/adminQueries/adminUpdateQueries");
+const fleetPartnerQueries = require("../config/fleetPartnerQueries/fleetPartnerQueries");
 
 const getAllDrivers = asyncHandler(async (req, res) => {
     try {
@@ -288,6 +289,98 @@ const getAllFleetPartners = asyncHandler(async (req, res) => {
   }
 });
 
+// Admin: Edit Fleet Partner
+// Admin: Edit Fleet Partner
+const editFleetPartnerByAdmin = asyncHandler(async (req, res) => {
+  const { driver_id } = req.params;
+
+  const {
+    driverName,
+    email,
+    phoneNo,
+    address,
+    cityName,
+    zipCord,
+    company_name,
+    legal_entity_type,
+    business_address,
+    contact_person_name,
+    contact_person_position,
+    fleet_size,
+    service_areas,
+    operating_hours,
+    safety_protocols,
+    insurance_policy_number,
+    business_license_number,
+    years_experience,
+    certifications,
+    references,
+    additional_services,
+    sustainability_practices,
+    special_offers,
+    communication_channels,
+    status
+  } = req.body;
+
+  if (!driver_id) {
+    return res.status(400).json({ message: "Driver ID is required" });
+  }
+
+  // Helper to safely stringify optional fields
+  const safeStringify = (value) => JSON.stringify(value || []);
+
+  try {
+    // Check if the fleet partner exists
+    const [existing] = await db.query(fleetPartnerQueries.getFleetPartnerById, [driver_id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ message: "Fleet partner not found" });
+    }
+
+    // Update fleet partner data
+    await db.query(fleetPartnerQueries.updateFleetPartnerByAdmin, [
+      driverName || "",
+      email || "",
+      phoneNo || "",
+      address || "",
+      cityName || "",
+      zipCord || "",
+      company_name || "",
+      legal_entity_type || "",
+      business_address || "",
+      contact_person_name || "",
+      contact_person_position || "",
+      fleet_size || 0,
+      safeStringify(service_areas),
+      operating_hours || "",
+      years_experience || 0,
+      safety_protocols || "",
+      insurance_policy_number || "",
+      business_license_number || "",
+      safeStringify(certifications),
+      safeStringify(references),
+      safeStringify(additional_services),
+      sustainability_practices || "",
+      special_offers || "",
+      safeStringify(communication_channels),
+      status ?? 0, // use 0 as default if undefined
+      driver_id
+    ]);
+
+    res.status(200).json({
+      message: "Fleet partner profile updated successfully",
+      driver_id,
+      status
+    });
+
+  } catch (error) {
+    console.error("Error updating fleet partner:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+
+
+
 // Get payout summary for admin - FIXED with proper data formatting
 const getPayoutSummary = asyncHandler(async (req, res) => {
   try {
@@ -370,5 +463,6 @@ module.exports = {
     editUser,
     getDashboardStats,
     getAllFleetPartners,
+    editFleetPartnerByAdmin,
     getPayoutSummary
 }

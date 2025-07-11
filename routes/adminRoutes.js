@@ -6,6 +6,7 @@ const {
   getAllTrips, 
   getDashboardStats,
   getAllFleetPartners,
+  editFleetPartnerByAdmin,
   getPayoutSummary,
   getAllUsers,
   editUser,
@@ -33,7 +34,9 @@ router.put("/edituser/:user_id", editUser);
 
 
 // Fleet partner management
-router.get("/fleet-partners", authenticationToken, getAllFleetPartners);
+router.get("/fleetpartners", authenticationToken, getAllFleetPartners);
+router.put("/editfleetpartner/:driver_id", authenticationToken, editFleetPartnerByAdmin);
+
 
 // Payout management
 router.get("/payouts", authenticationToken, getPayoutSummary);

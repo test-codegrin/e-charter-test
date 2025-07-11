@@ -61,7 +61,37 @@ const fleetPartnerQueries = {
     FROM drivers 
     WHERE registration_type = 'fleet_partner'
     ORDER BY created_at DESC
-  `
+  `,
+  updateFleetPartnerByAdmin: `
+  UPDATE drivers SET
+    driverName = ?,
+    email = ?,
+    phoneNo = ?,
+    address = ?,
+    cityName = ?,
+    zipCord = ?,
+    company_name = ?,
+    legal_entity_type = ?,
+    business_address = ?,
+    contact_person_name = ?,
+    contact_person_position = ?,
+    fleet_size = ?,
+    service_areas = ?,
+    operating_hours = ?,
+    years_experience = ?,
+    safety_protocols = ?,
+    insurance_policy_number = ?,
+    business_license_number = ?,
+    certifications = ?,
+    client_references = ?,
+    additional_services = ?,
+    sustainability_practices = ?,
+    special_offers = ?,
+    communication_channels = ?,
+    status = ?
+  WHERE driver_id = ?
+`
+
 };
 
 module.exports = fleetPartnerQueries;
