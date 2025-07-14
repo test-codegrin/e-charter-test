@@ -63,14 +63,7 @@ const fleetPartnerQueries = {
     ORDER BY created_at DESC
   `,
 
-    getFleetCompanyById: `SELECT * FROM fleet_companies WHERE company_id = ?`,
-  getDriversByCompanyId: `SELECT driver_id FROM drivers WHERE fleet_company_id = ?`,
-  deleteFleetCertifications: `DELETE FROM fleet_certifications WHERE driver_id = ?`,
-  deleteFleetDocuments: `DELETE FROM fleet_documents WHERE driver_id = ?`,
-  deleteFleetReferences: `DELETE FROM fleet_references WHERE driver_id = ?`,
-  deleteFleetServiceAreas: `DELETE FROM fleet_service_areas WHERE driver_id = ?`,
-  deleteDriver: `DELETE FROM drivers WHERE driver_id = ?`,
-  deleteFleetCompany: `DELETE FROM fleet_companies WHERE company_id = ?`,
+
 
   updateFleetPartnerByAdmin: `
   UPDATE drivers SET

@@ -378,50 +378,7 @@ const editFleetPartnerByAdmin = asyncHandler(async (req, res) => {
   }
 });
 
-const deleteFleetPartnerByAdmin = asyncHandler(async (req, res) => {
-  const { company_id } = req.params;
 
-  if (!company_id) {
-    return res.status(400).json({ message: "Company ID is required" });
-  }
-
-  try {
-    // Step 1: Check if fleet partner exists
-    const [company] = await db.query(fleetPartnerQueries.getFleetCompanyById, [company_id]);
-    if (company.length === 0) {
-      return res.status(404).json({ message: "Fleet partner not found" });
-    }
-
-    // Step 2: Get all driver_ids linked to this fleet_company_id
-    const [drivers] = await db.query(fleetPartnerQueries.getDriversByCompanyId, [company_id]);
-    const driverIds = drivers.map((d) => d.driver_id);
-
-    // Step 3: Delete all related data per driver
-    for (const driver_id of driverIds) {
-      await db.query(fleetPartnerQueries.deleteFleetCertifications, [driver_id]);
-      await db.query(fleetPartnerQueries.deleteFleetDocuments, [driver_id]);
-      await db.query(fleetPartnerQueries.deleteFleetReferences, [driver_id]);
-      await db.query(fleetPartnerQueries.deleteFleetServiceAreas, [driver_id]);
-      await db.query(fleetPartnerQueries.deleteDriver, [driver_id]);
-    }
-
-    // Step 4: Delete the fleet company record
-    await db.query(fleetPartnerQueries.deleteFleetCompany, [company_id]);
-
-    res.status(200).json({
-      message: "Fleet partner and all associated drivers and data deleted successfully.",
-      company_id,
-      deleted_drivers: driverIds,
-    });
-
-  } catch (error) {
-    console.error("Error deleting fleet partner:", error);
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
-  }
-});
 
 // Get payout summary for admin - FIXED with proper data formatting
 const getPayoutSummary = asyncHandler(async (req, res) => {
@@ -506,6 +463,5 @@ module.exports = {
     getDashboardStats,
     getAllFleetPartners,
     editFleetPartnerByAdmin,
-    deleteFleetPartnerByAdmin,
     getPayoutSummary
 }
