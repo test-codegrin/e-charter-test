@@ -22,11 +22,11 @@ const transport = nodemailer.createTransport({
 const generateResetCode = () => Math.floor(1000 + Math.random() * 900000).toString(); 
 // Create User
 const registerUser = asyncHandler(async (req, res) => {
-    const { firstName, lastName, email, password, address, cityName, zipCord, phoneNo } = req.body;
+    const { firstName, lastName, email, password, address, cityName, zipCode, phoneNo } = req.body;
     const profileImage = req.file;
 
     // Validation
-    if (!firstName || !lastName || !email || !password || !address || !cityName || !zipCord || !phoneNo) {
+    if (!firstName || !lastName || !email || !password || !address || !cityName || !zipCode || !phoneNo) {
         return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -54,7 +54,7 @@ const registerUser = asyncHandler(async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const userValues = [firstName,lastName, email,hashedPassword, address, cityName, zipCord, phoneNo, imageURL];
+        const userValues = [firstName,lastName, email,hashedPassword, address, cityName, zipCode, phoneNo, imageURL];
 
         const [result] = await db
             .query(userAuthQueries.userInsert,
