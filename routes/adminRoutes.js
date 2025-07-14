@@ -7,6 +7,7 @@ const {
   getDashboardStats,
   getAllFleetPartners,
   editFleetPartnerByAdmin,
+  deleteFleetPartnerByAdmin,
   getPayoutSummary,
   getAllUsers,
   editUser,
@@ -36,6 +37,7 @@ router.put("/edituser/:user_id", editUser);
 // Fleet partner management
 router.get("/fleetpartners", authenticationToken, getAllFleetPartners);
 router.put("/editfleetpartner/:driver_id", authenticationToken, editFleetPartnerByAdmin);
+router.delete( "/deletefleetpartner/:company_id",authenticationToken, deleteFleetPartnerByAdmin);
 
 
 // Payout management
