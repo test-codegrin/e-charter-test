@@ -165,9 +165,7 @@ const editUser = asyncHandler(async (req, res) => {
 
 // Get dashboard statistics for admin - ENHANCED with proper data formatting
 const getDashboardStats = asyncHandler(async (req, res) => {
-  try {
-    console.log("Fetching dashboard statistics...");
-    
+  try { 
     // Get all required data in parallel with better error handling
       const [
       [drivers],
@@ -257,7 +255,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 // Get all fleet partners for admin - FIXED with proper column handling
 const getAllFleetPartners = asyncHandler(async (req, res) => {
   try {
-    console.log("Fetching all fleet partners for admin...");
     
     // First check if the enhanced columns exist
     const [columnCheck] = await db.query(`
@@ -297,34 +294,40 @@ const deleteFleetPartnerByAdmin = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Step 1: Check if fleet partner exists
     const [company] = await db.query(fleetPartnerQueries.getFleetCompanyById, [company_id]);
     if (company.length === 0) {
       return res.status(404).json({ message: "Fleet partner not found" });
     }
 
-    // Step 2: Get all driver_ids linked to this fleet_company_id
     const [drivers] = await db.query(fleetPartnerQueries.getDriversByCompanyId, [company_id]);
     const driverIds = drivers.map((d) => d.driver_id);
 
-    // Step 3: Delete all related data per driver
     for (const driver_id of driverIds) {
+      const [cars] = await db.query(fleetPartnerQueries.getCarsByDriverId, [driver_id]);
+      
+      for (const car of cars) {
+        const car_id = car.car_id;
+
+        await db.query(fleetPartnerQueries.deleteTripsByCarId, [car_id]);
+
+        await db.query(fleetPartnerQueries.deleteCarById, [car_id]);
+      }
+
       await db.query(fleetPartnerQueries.deleteFleetCertifications, [driver_id]);
       await db.query(fleetPartnerQueries.deleteFleetDocuments, [driver_id]);
       await db.query(fleetPartnerQueries.deleteFleetReferences, [driver_id]);
       await db.query(fleetPartnerQueries.deleteFleetServiceAreas, [driver_id]);
+
       await db.query(fleetPartnerQueries.deleteDriver, [driver_id]);
     }
 
-    // Step 4: Delete the fleet company record
     await db.query(fleetPartnerQueries.deleteFleetCompany, [company_id]);
 
     res.status(200).json({
-      message: "Fleet partner and all associated drivers and data deleted successfully.",
+      message: "Fleet partner and all related drivers, cars, and trips deleted successfully.",
       company_id,
       deleted_drivers: driverIds,
     });
-
   } catch (error) {
     console.error("Error deleting fleet partner:", error);
     res.status(500).json({
@@ -333,6 +336,7 @@ const deleteFleetPartnerByAdmin = asyncHandler(async (req, res) => {
     });
   }
 });
+
 
 // Admin: Edit Fleet Partner
 const editFleetPartnerByAdmin = asyncHandler(async (req, res) => {
@@ -425,9 +429,7 @@ const editFleetPartnerByAdmin = asyncHandler(async (req, res) => {
 
 // Get payout summary for admin - FIXED with proper data formatting
 const getPayoutSummary = asyncHandler(async (req, res) => {
-  try {
-    console.log("Fetching payout summary...");
-    
+  try {    
     // Get completed trips with driver/fleet partner info
     const [payoutData] = await db.query(adminGetQueries.getPayoutSummary);
 
