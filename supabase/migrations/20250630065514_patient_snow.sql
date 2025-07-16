@@ -2,7 +2,7 @@
 -- This file contains sample data for testing purposes (excluding admin data)
 
 -- Insert sample users (customers)
-INSERT INTO users (firstName, lastName, email, password, address, cityName, zipCord, phoneNo, profileImage) VALUES
+INSERT INTO users (firstName, lastName, email, password, address, cityName, zipCode, phoneNo, profileImage) VALUES
 ('John', 'Smith', 'john.smith@example.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '123 Main Street', 'Toronto', 'M5V3A8', '4161234567', 'https://example.com/profile1.jpg'),
 ('Sarah', 'Johnson', 'sarah.johnson@example.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '456 Queen Street', 'Vancouver', 'V6B1A1', '6041234567', 'https://example.com/profile2.jpg'),
 ('Michael', 'Brown', 'michael.brown@example.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '789 King Street', 'Montreal', 'H3A0G4', '5141234567', 'https://example.com/profile3.jpg'),
@@ -18,7 +18,7 @@ INSERT INTO fleet_companies (company_name, contact_person, email, phone, address
 ('Ottawa Executive Transport', 'Mark Thompson', 'exec@ottawaexecutive.com', '6135555678', '500 Sparks Street', 'Ottawa', 'Ontario', 'K1P5B4', 'BL-2024-005', 'Policy #INS-005-2024', 1);
 
 -- Insert sample drivers
-INSERT INTO drivers (driverName, email, password, address, cityName, status, zipCord, phoneNo, fleet_company_id, driver_license, insurance_info) VALUES
+INSERT INTO drivers (driverName, email, password, address, cityName, status, zipCode, phoneNo, fleet_company_id, driver_license, insurance_info) VALUES
 ('James Wilson', 'james.wilson@torontoelite.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '150 Front Street', 'Toronto', 1, 'M5J2N2', '4165556789', 1, 'DL-ON-123456', 'Driver Policy #DP-001'),
 ('Maria Rodriguez', 'maria.rodriguez@vancouverluxury.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '250 Robson Street', 'Vancouver', 1, 'V6B0E7', '6045557890', 2, 'DL-BC-234567', 'Driver Policy #DP-002'),
 ('Antoine Leblanc', 'antoine.leblanc@montrealpremiier.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '350 Rue Notre-Dame', 'Montreal', 1, 'H2Y1C6', '5145558901', 3, 'DL-QC-345678', 'Driver Policy #DP-003'),

@@ -32,7 +32,7 @@ const DriverSettings = () => {
       phoneNo: '',
       address: '',
       cityName: '',
-      zipCord: ''
+      zipCode: ''
     },
     notifications: {
       email_trip_assignments: true,
@@ -564,8 +564,8 @@ const DriverSettings = () => {
                 </label>
                 <input
                   type="text"
-                  value={settings.profile.zipCord || ''}
-                  onChange={(e) => updateProfileSetting('zipCord', e.target.value)}
+                  value={settings.profile.zipCode || ''}
+                  onChange={(e) => updateProfileSetting('zipCode', e.target.value)}
                   className="input-field"
                 />
               </div>

@@ -1,7 +1,7 @@
 const driverAuthQueries = {
 
     driverInsert: `
-        INSERT INTO drivers (driverName, email,password,  address, cityName, zipCord, phoneNo)
+        INSERT INTO drivers (driverName, email,password,  address, cityName, zipCode, phoneNo)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `,
 

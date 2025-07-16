@@ -120,7 +120,7 @@ const editUser = asyncHandler(async (req, res) => {
     email,
     address,
     cityName,
-    zipCord,
+    zipCode,
     phoneNo
   } = req.body;
 
@@ -135,7 +135,7 @@ const editUser = asyncHandler(async (req, res) => {
       email,
       address,
       cityName,
-      zipCord,
+      zipCode,
       phoneNo,
       user_id
     ]);
@@ -153,7 +153,7 @@ const editUser = asyncHandler(async (req, res) => {
         email,
         address,
         cityName,
-        zipCord,
+        zipCode,
         phoneNo
       }
     });
@@ -344,7 +344,7 @@ const editFleetPartnerByAdmin = asyncHandler(async (req, res) => {
     phoneNo,
     address,
     cityName,
-    zipCord,
+    zipCode,
     company_name,
     legal_entity_type,
     business_address,
@@ -387,7 +387,7 @@ const editFleetPartnerByAdmin = asyncHandler(async (req, res) => {
       phoneNo || "",
       address || "",
       cityName || "",
-      zipCord || "",
+      zipCode || "",
       company_name || "",
       legal_entity_type || "",
       business_address || "",

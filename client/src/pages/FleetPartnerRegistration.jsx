@@ -22,7 +22,7 @@ const FleetPartnerRegistration = () => {
     phoneNo: '',
     address: '',
     cityName: '',
-    zipCord: '',
+    zipCode: '',
     
     // Fleet Details
     fleet_size: '',

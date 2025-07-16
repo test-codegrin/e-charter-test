@@ -79,7 +79,7 @@ CREATE TABLE `drivers` (
   `address` text NOT NULL,
   `cityName` varchar(255) NOT NULL,
   `status` tinyint(4) DEFAULT 2,
-  `zipCord` int(11) NOT NULL,
+  `zipCode` int(11) NOT NULL,
   `phoneNo` int(22) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -87,7 +87,7 @@ CREATE TABLE `drivers` (
 -- Dumping data for table `drivers`
 --
 
-INSERT INTO `drivers` (`driver_id`, `driverName`, `email`, `password`, `address`, `cityName`, `status`, `zipCord`, `phoneNo`) VALUES
+INSERT INTO `drivers` (`driver_id`, `driverName`, `email`, `password`, `address`, `cityName`, `status`, `zipCode`, `phoneNo`) VALUES
 (1, 'test', 'asdf@gmail.com', '$2b$10$pgpv55CdLIOVNYdkrm16.eroMVsyyIzMVzpAwczh0ZnrHYcoN5HTS', 'testsdvdsa', 'asdf', 1, 2342, 2345),
 (2, 'test', 'test@gmail.com', '$2b$10$NSn0lBjntt8C9AUOKJr.zeII09WkI16ZkZMh55DjfNj1AXOZkdxr6', 'testsdvdsa', 'test', 1, 2342, 2345);
 
@@ -165,7 +165,7 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `address` text NOT NULL,
   `cityName` varchar(255) NOT NULL,
-  `zipCord` int(22) NOT NULL,
+  `zipCode` int(22) NOT NULL,
   `phoneNo` int(22) NOT NULL,
   `profileImage` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -174,7 +174,7 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `firstName`, `lastName`, `email`, `password`, `address`, `cityName`, `zipCord`, `phoneNo`, `profileImage`) VALUES
+INSERT INTO `users` (`user_id`, `firstName`, `lastName`, `email`, `password`, `address`, `cityName`, `zipCode`, `phoneNo`, `profileImage`) VALUES
 (4, 'John ', 'asd', 'asdf@gmail.com', '$2b$10$/wjflftH7UjS17xPNcbfm.ULnHRGUde0qKRDhmqOgxr2FfFPAUCIG', '123 Main Street', 'Mumbai', 400001, 2147483647, 'https://ik.imagekit.io/krina/echarter/user-profile/John__profile_1750833066409_pzWRczDJG.jpg');
 
 --

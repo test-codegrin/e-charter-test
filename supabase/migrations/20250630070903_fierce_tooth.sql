@@ -2,14 +2,14 @@
 -- This file works with existing database structure and avoids foreign key conflicts
 
 -- First, let's add more users to work with (starting from user_id 5 to avoid conflicts)
-INSERT INTO users (firstName, lastName, email, password, address, cityName, zipCord, phoneNo, profileImage) VALUES
+INSERT INTO users (firstName, lastName, email, password, address, cityName, zipCode, phoneNo, profileImage) VALUES
 ('Sarah', 'Johnson', 'sarah.johnson@example.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '456 Queen Street', 'Vancouver', 'V6B1A1', '6041234567', 'https://example.com/profile2.jpg'),
 ('Michael', 'Brown', 'michael.brown@example.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '789 King Street', 'Montreal', 'H3A0G4', '5141234567', 'https://example.com/profile3.jpg'),
 ('Emily', 'Davis', 'emily.davis@example.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '321 Bay Street', 'Calgary', 'T2P2M5', '4031234567', 'https://example.com/profile4.jpg'),
 ('David', 'Wilson', 'david.wilson@example.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '654 Yonge Street', 'Ottawa', 'K1P5Z2', '6131234567', 'https://example.com/profile5.jpg');
 
 -- Add more drivers (starting from driver_id 3 to avoid conflicts)
-INSERT INTO drivers (driverName, email, password, address, cityName, status, zipCord, phoneNo) VALUES
+INSERT INTO drivers (driverName, email, password, address, cityName, status, zipCode, phoneNo) VALUES
 ('James Wilson', 'james.wilson@torontoelite.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '150 Front Street', 'Toronto', 1, 'M5J2N2', '4165556789'),
 ('Maria Rodriguez', 'maria.rodriguez@vancouverluxury.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '250 Robson Street', 'Vancouver', 1, 'V6B0E7', '6045557890'),
 ('Antoine Leblanc', 'antoine.leblanc@montrealpremiier.com', '$2b$10$DwS03yBcBo9SgQsljAr7QeyGRl2Vcf/8Pvgi90qwFgMR1iIb8mjuW', '350 Rue Notre-Dame', 'Montreal', 1, 'H2Y1C6', '5145558901'),

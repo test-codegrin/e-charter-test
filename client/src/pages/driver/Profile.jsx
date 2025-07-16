@@ -10,7 +10,7 @@ const Profile = () => {
     phoneNo: '',
     address: '',
     cityName: '',
-    zipCord: ''
+    zipCode: ''
   })
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -239,14 +239,14 @@ const Profile = () => {
                   {editing ? (
                     <input
                       type="text"
-                      name="zipCord"
-                      value={formData.zipCord || ''}
+                      name="zipCode"
+                      value={formData.zipCode || ''}
                       onChange={handleChange}
                       className="input-field"
                       placeholder="Postal code"
                     />
                   ) : (
-                    <p className="text-secondary-900">{profile.zipCord || 'Not provided'}</p>
+                    <p className="text-secondary-900">{profile.zipCode || 'Not provided'}</p>
                   )}
                 </div>
               </div>

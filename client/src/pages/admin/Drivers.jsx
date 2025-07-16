@@ -185,7 +185,7 @@ const Drivers = () => {
                       <MapPin className="w-4 h-4 text-secondary-400" />
                       <div>
                         <p className="text-sm font-medium">{driver.cityName}</p>
-                        <p className="text-xs text-secondary-500">{driver.zipCord}</p>
+                        <p className="text-xs text-secondary-500">{driver.zipCode}</p>
                       </div>
                     </div>
                   </td>
@@ -290,7 +290,7 @@ const Drivers = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-secondary-700">Postal Code</label>
-                      <p className="text-secondary-900">{selectedDriver.zipCord}</p>
+                      <p className="text-secondary-900">{selectedDriver.zipCode}</p>
                     </div>
                   </div>
                 </div>

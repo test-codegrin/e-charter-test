@@ -20,7 +20,7 @@ const invoiceQueries = {
       u.email,
       u.address,
       u.cityName,
-      u.zipCord,
+      u.zipCode,
       u.phoneNo
     FROM invoices i
     JOIN trips t ON i.trip_id = t.trip_id

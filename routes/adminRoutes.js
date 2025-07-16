@@ -22,7 +22,7 @@ const { authenticationToken } = require("../middleware/authMiddleware")
 
 
 // Dashboard stats
-router.get("/dashboard/stats", authenticationToken, getDashboardStats);
+router.get("/dashboard/status", authenticationToken, getDashboardStats);
 
 // Data management routes
 router.get("/alldrivers", authenticationToken, getAllDrivers);

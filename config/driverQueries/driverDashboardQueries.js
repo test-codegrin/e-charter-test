@@ -55,14 +55,14 @@ const driverDashboardQueries = {
   `,
 
   getDriverProfile: `
-    SELECT driver_id, driverName, email, address, cityName, zipCord, phoneNo, status, 
+    SELECT driver_id, driverName, email, address, cityName, zipCode, phoneNo, status, 
            company_name, registration_type, fleet_size, years_experience
     FROM drivers WHERE driver_id = ?
   `,
 
   updateDriverProfile: `
     UPDATE drivers 
-    SET driverName = ?, email = ?, phoneNo = ?, address = ?, cityName = ?, zipCord = ?
+    SET driverName = ?, email = ?, phoneNo = ?, address = ?, cityName = ?, zipCode = ?
     WHERE driver_id = ?
   `,
 

@@ -23,7 +23,7 @@ const registerFleetPartner = asyncHandler(async (req, res) => {
     phoneNo,
     address,
     cityName,
-    zipCord,
+    zipCode,
     
     // Fleet Details
     fleet_size,
@@ -81,7 +81,7 @@ const registerFleetPartner = asyncHandler(async (req, res) => {
     const [result] = await db.query(
     fleetPartnerQueries.insertFleetPartner
     , [
-      driverName, email, hashedPassword, address, cityName, zipCord, phoneNo,
+      driverName, email, hashedPassword, address, cityName, zipCode, phoneNo,
       company_name, legal_entity_type, business_address, contact_person_name,
       contact_person_position, fleet_size, JSON.stringify(service_areas), operating_hours,
       years_experience, safety_protocols, insurance_policy_number,

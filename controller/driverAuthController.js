@@ -23,7 +23,7 @@ const generateResetCode = () =>
 
 // 🔹 Register Driver
 const registerDriver = asyncHandler(async (req, res) => {
-  const { driverName, email, password, address, cityName, zipCord, phoneNo } =
+  const { driverName, email, password, address, cityName, zipCode, phoneNo } =
     req.body;
   // const file = req.file;
 
@@ -33,7 +33,7 @@ const registerDriver = asyncHandler(async (req, res) => {
     !password ||
     !address ||
     !cityName ||
-    !zipCord ||
+    !zipCode ||
     !phoneNo
   ) {
     return res.status(400).json({ error: "All fields are required" });
@@ -68,7 +68,7 @@ const registerDriver = asyncHandler(async (req, res) => {
     hashedPassword,
     address,
     cityName,
-    zipCord,
+    zipCode,
     phoneNo,
   ];
 

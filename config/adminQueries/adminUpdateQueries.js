@@ -7,7 +7,7 @@ const adminUpdateQueries = {
       email = ?, 
       address = ?, 
       cityName = ?, 
-      zipCord = ?, 
+      zipCode = ?, 
       phoneNo = ?
     WHERE user_id = ?
   `

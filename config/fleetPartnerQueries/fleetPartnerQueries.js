@@ -3,7 +3,7 @@ const fleetPartnerQueries = {
 
   insertFleetPartner: `
     INSERT INTO drivers (
-      driverName, email, password, address, cityName, zipCord, phoneNo,
+      driverName, email, password, address, cityName, zipCode, phoneNo,
       company_name, legal_entity_type, business_address, contact_person_name, 
       contact_person_position, fleet_size, service_areas, operating_hours,
       years_experience, safety_protocols, insurance_policy_number, 
@@ -79,7 +79,7 @@ const fleetPartnerQueries = {
     phoneNo = ?,
     address = ?,
     cityName = ?,
-    zipCord = ?,
+    zipCode = ?,
     company_name = ?,
     legal_entity_type = ?,
     business_address = ?,

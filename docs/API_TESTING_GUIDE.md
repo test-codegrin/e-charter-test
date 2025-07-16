@@ -53,7 +53,7 @@ POST /api/user/register
   "password": "test123",
   "address": "123 Test Street",
   "cityName": "Toronto",
-  "zipCord": "M5V3A8",
+  "zipCode": "M5V3A8",
   "phoneNo": "4161234567"
 }
 

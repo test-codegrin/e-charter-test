@@ -43,7 +43,7 @@ const adminGetQueries = {
     LEFT JOIN drivers d ON c.driver_id = d.driver_id
     ORDER BY t.created_at DESC
   `,
-   getAllUsers : `SELECT user_id, firstName, lastName, email, address, cityName, zipCord, phoneNo, profileImage, created_at FROM users ORDER BY created_at DESC`,
+   getAllUsers : `SELECT user_id, firstName, lastName, email, address, cityName, zipCode, phoneNo, profileImage, created_at FROM users ORDER BY created_at DESC`,
 
 
   getDashboardTrips: `

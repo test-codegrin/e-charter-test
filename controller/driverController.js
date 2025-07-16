@@ -204,7 +204,7 @@ const getDriverProfile = asyncHandler(async (req, res) => {
 // Update driver profile
 const updateDriverProfile = asyncHandler(async (req, res) => {
   const driver_id = req.user?.driver_id;
-  const { driverName, email, phoneNo, address, cityName, zipCord } = req.body;
+  const { driverName, email, phoneNo, address, cityName, zipCode } = req.body;
 
   console.log('Driver profile update request for driver_id:', driver_id);
 
@@ -215,7 +215,7 @@ const updateDriverProfile = asyncHandler(async (req, res) => {
   try {
     const [result] = await db.query(
       driverDashboardQueries.updateDriverProfile,
-      [driverName, email, phoneNo, address, cityName, zipCord, driver_id]
+      [driverName, email, phoneNo, address, cityName, zipCode, driver_id]
     );
 
     if (result.affectedRows === 0) {
