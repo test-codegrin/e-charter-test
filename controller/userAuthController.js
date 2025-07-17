@@ -145,6 +145,7 @@ const requestReset = asyncHandler(async (req, res) => {
             text: `Your password reset code is: ${code}. It expires in 5 minutes.`,
         });
 
+
         res.status(200).json({ message: "Reset code sent to email." });
     } catch (err) {
         console.error("Email sending failed:", err);

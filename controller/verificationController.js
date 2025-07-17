@@ -7,7 +7,6 @@ const approveDriver = asyncHandler(async (req, res) => {
   const { driver_id } = req.params;
   const { status } = req.body;
 
-  console.log(`Approving driver ${driver_id} with status ${status}`);
 
   // Validate - status should be 0 (reject), 1 (approve), or 2 (suspend)
   if (![0, 1, 2].includes(Number(status)) || !driver_id) {
@@ -19,7 +18,7 @@ const approveDriver = asyncHandler(async (req, res) => {
   try {
     // Check if driver exists first
     const [driverCheck] = await db.query(
-      verificationQueries.checkDriverExists
+      verificationQueries.checkDriverExists,
       [driver_id]
     );
 
@@ -52,7 +51,6 @@ const approveDriver = asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error updating driver status:", error);
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
@@ -62,7 +60,6 @@ const approveCar = asyncHandler(async (req, res) => {
   const { car_id } = req.params;
   const { status } = req.body;
 
-  console.log(`Approving car ${car_id} with status ${status}`);
 
   // Validate - status should be 0 (reject) or 1 (approve)
   if (![0, 1].includes(Number(status)) || !car_id) {
@@ -93,7 +90,6 @@ const approveCar = asyncHandler(async (req, res) => {
 
     const statusText = status === 1 ? "Approved" : "Rejected";
     
-    console.log(`Car ${car.carName} (${car.carNumber}) ${statusText.toLowerCase()} successfully`);
 
     res.status(200).json({ 
       message: `Car ${statusText} successfully.`,
@@ -108,7 +104,6 @@ const approveCar = asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error updating car status:", error);
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
@@ -138,7 +133,6 @@ const getPendingApprovals = asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error fetching pending approvals:", error);
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
