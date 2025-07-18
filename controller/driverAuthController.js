@@ -10,6 +10,8 @@ require("dotenv").config();
 const resetCodes = new Map();
 const RESET_EXPIRATION = 5 * 60 * 1000;
 
+
+
 const transport = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -18,8 +20,10 @@ const transport = nodemailer.createTransport({
   },
 });
 
-const generateResetCode = () =>
-  Math.floor(1000 + Math.random() * 900000).toString();
+const generateResetCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit numeric OTP
+};
+
 
 // 🔹 Register Driver
 const registerDriver = asyncHandler(async (req, res) => {
@@ -86,7 +90,7 @@ const registerDriver = asyncHandler(async (req, res) => {
 const loginDriver = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  console.log("Driver login attempt:", { email });
+  // console.log("Driver login attempt:", { email });
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
