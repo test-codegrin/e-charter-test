@@ -19,7 +19,7 @@ const transport = nodemailer.createTransport({
     },
 });
 
-const generateResetCode = () => Math.floor(1000 + Math.random() * 900000).toString(); 
+const generateResetCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 // Create User
 const registerUser = asyncHandler(async (req, res) => {
     const { firstName, lastName, email, password, address, cityName, zipCode, phoneNo } = req.body;
