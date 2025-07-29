@@ -1,3 +1,5 @@
+const { get } = require("../../routes/userRoutes");
+
 const userGetQueries = {
 
 getApprovedCars : `
@@ -16,7 +18,9 @@ getApprovedCars : `
   WHERE car.status = 1
 `,
 
-
+getUserProfile: `
+  SELECT firstName, lastName, email, phoneNo, profileImage, address, cityName, zipCode
+  FROM users `
 
 
 };
