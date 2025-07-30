@@ -18,9 +18,11 @@ getApprovedCars : `
   WHERE car.status = 1
 `,
 
-getUserProfile: `
-  SELECT firstName, lastName, email, address,cityName,zipCode,phoneNo, profileImage
-  FROM users WHERE user_id = ?`
+ getUserProfileById : `
+  SELECT user_id, firstName, lastName, email, address, cityName, zipCode, phoneNo, profileImage, created_at
+  FROM users
+  WHERE user_id = ? AND is_deleted = 0
+`
 
 
 };

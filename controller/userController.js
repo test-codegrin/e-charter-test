@@ -3,23 +3,19 @@ const asyncHandler = require("express-async-handler");
 const userGetQueries = require("../config/userQueries/userGetQueries");
 
 const getUserProfile = asyncHandler(async (req, res) => {
-  const user_id = req.user.user_id;   
-  try {
-    const [user] = await db.query(userGetQueries.getUserProfile, [user_id]);
+  const userId = req.user?.user_id;
 
-    if (user.length === 0) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({
-      message: "User profile fetched successfully",
-      user: user[0]
-    });
-
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized: User ID not found" });
   }
+
+  const [user] = await db.query(userGetQueries.getUserProfileById, [userId]);
+
+  if (!user.length) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.status(200).json(user[0]);
 });
 
 const getApprovedCars = asyncHandler(async (req, res) => {
