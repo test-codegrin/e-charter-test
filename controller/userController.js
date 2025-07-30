@@ -3,7 +3,7 @@ const asyncHandler = require("express-async-handler");
 const userGetQueries = require("../config/userQueries/userGetQueries");
 
 const getUserProfile = asyncHandler(async (req, res) => {
-  const user_id = req.user.id;   
+  const user_id = req.user.user_id;   
   try {
     const [user] = await db.query(userGetQueries.getUserProfile, [user_id]);
 
