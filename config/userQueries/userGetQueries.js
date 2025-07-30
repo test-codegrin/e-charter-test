@@ -19,7 +19,7 @@ getApprovedCars : `
 `,
 
 getUserProfile: `
-  SELECT firstName, lastName, email, phoneNo, profileImage, address, cityName, zipCode
+  SELECT firstName, lastName, email, address,cityName,zipCode,phoneNo, profileImage
   FROM users WHERE user_id = ?`
 
 

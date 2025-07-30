@@ -3,9 +3,9 @@ const asyncHandler = require("express-async-handler");
 const userGetQueries = require("../config/userQueries/userGetQueries");
 
 const getUserProfile = asyncHandler(async (req, res) => {
-  const userId = req.user.id;   
+  const user_id = req.user.id;   
   try {
-    const [user] = await db.query(userGetQueries.getUserProfile, [userId]);
+    const [user] = await db.query(userGetQueries.getUserProfile, [user_id]);
 
     if (user.length === 0) {
       return res.status(404).json({ message: "User not found" });
