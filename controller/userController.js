@@ -64,6 +64,7 @@ const editUserProfile = asyncHandler(async (req, res) => {
     // 3. Update profile in DB
     const updateValues = [firstName, lastName, address, cityName, zipCode, phoneNo, newImageUrl, userId];
     await db.query(userPutQueries.updateUserProfile, updateValues);
+console.log(newImageUrl);
 
     res.status(200).json({
       message: "Profile updated successfully",
