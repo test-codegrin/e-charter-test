@@ -1,6 +1,7 @@
 const { db } = require("../config/db");
 const asyncHandler = require("express-async-handler");
 const userGetQueries = require("../config/userQueries/userGetQueries");
+const userPutQueries = require("../config/userQueries/userPutQueries");
 
 const getUserProfile = asyncHandler(async (req, res) => {
   const userId = req.user?.user_id;
@@ -34,17 +35,27 @@ const editUserProfile = asyncHandler(async (req, res) => {
     phoneNo,
   } = req.body;
 
-  let profileImage = req.body.profileImage; // fallback (in case frontend sends an image URL)
-  if (req.file && req.file.url) {
-    profileImage = req.file.url; // Multer + ImageKit will attach this
+  let profileImage = req.body.profileImage || null;
+
+  // Image upload via ImageKit
+  if (req.file && req.file.buffer) {
+    const fileName = `user_${userId}_${Date.now()}`;
+    const uploadResponse = await imagekitUpload(req.file.buffer, fileName);
+    profileImage = uploadResponse.url;
   }
 
-  // Basic field validation
-  if (!firstName || !lastName || !email || !address || !cityName || !zipCode || !phoneNo || !profileImage) {
-    return res.status(400).json({ message: "All fields are required" });
+  if (
+    !firstName ||
+    !lastName ||
+    !address ||
+    !cityName ||
+    !zipCode ||
+    !phoneNo
+  ) {
+    return res.status(400).json({ message: "Missing required fields" });
   }
 
-  const [result] = await db.query(userUpdateQueries.updateUserProfileById, [
+  const [result] = await db.query(userPutQueries.updateUserProfileById, [
     firstName,
     lastName,
     address,
