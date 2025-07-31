@@ -22,56 +22,60 @@ const getUserProfile = asyncHandler(async (req, res) => {
   res.status(200).json(user[0]);
 });
 
+
 const editUserProfile = asyncHandler(async (req, res) => {
   const userId = req.user.user_id;
-  const { firstName, lastName, address, cityName, zipCode, phoneNo } = req.body;
+  const {
+    firstName,
+    lastName,
+    address,
+    cityName,
+    zipCode,
+    phoneNo
+  } = req.body;
+
   const profileImage = req.file;
 
+  // Validate required fields
   if (!firstName || !lastName || !address || !cityName || !zipCode || !phoneNo) {
-    return res.status(400).json({ error: "All fields except email are required" });
+    return res.status(400).json({ error: "All fields except image are required" });
   }
 
-  try {
-    const [userRows] = await db.query(userPutQueries.getUserById, [userId]);
-    if (userRows.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
+  let imageURL = null;
 
-    const currentUser = userRows[0];
-    let newImageUrl = currentUser.profileImage;
-
-    if (profileImage) {
-      if (currentUser.profileImage && currentUser.profileImage.includes("imagekit.io")) {
-        const oldImagePath = currentUser.profileImage.split("/echarter/")[1];
-        if (oldImagePath) {
-          await imagekit.deleteFile(`echarter/${oldImagePath}`);
-        }
-      }
-
-      const uploadResponse = await imagekit.upload({
+  // Upload to ImageKit if new image is sent
+  if (profileImage) {
+    try {
+      const uploadedImage = await imagekit.upload({
         file: profileImage.buffer,
         fileName: `${firstName}_profile_${Date.now()}.jpg`,
-        folder: "echarter/user-profile"
+        folder: "echarter/user-profile",
       });
-
-      newImageUrl = uploadResponse.url;
+      imageURL = uploadedImage.url;
+    } catch (err) {
+      return res.status(500).json({ error: "Image upload failed", details: err.message });
     }
-
-    const updateValues = [firstName, lastName, address, cityName, zipCode, phoneNo, newImageUrl, userId];
-    await db.query(userPutQueries.updateUserProfile, updateValues);
-    console.log(newImageUrl);
-
-    res.status(200).json({
-      message: "Profile updated successfully",
-      profileImage: newImageUrl,
-    });
-
-  } catch (err) {
-    console.error("Edit Profile Error:", err);
-    res.status(500).json({ error: "Internal server error", message: err.message });
   }
-});
 
+  // Update the user profile
+  const updateFields = [
+    firstName,
+    lastName,
+    address,
+    cityName,
+    zipCode,
+    phoneNo,
+    imageURL, // can be null
+    userId
+  ];
+
+  await db.query(userPutQueries.updateUserProfile, updateFields);
+
+  res.status(200).json({
+    message: "Profile updated successfully",
+    profileImage: imageURL || undefined, // send image if updated
+  });
+});
 
 const getApprovedCars = asyncHandler(async (req, res) => {
   try {
@@ -88,4 +92,4 @@ const getApprovedCars = asyncHandler(async (req, res) => {
 });
 
 
-module.exports = { getApprovedCars, editUserProfile, getUserProfile };
+module.exports = { getApprovedCars,editUserProfile, getUserProfile };
