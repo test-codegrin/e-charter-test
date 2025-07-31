@@ -1,5 +1,6 @@
 const { db } = require("../config/db");
 const asyncHandler = require("express-async-handler");
+const imagekit = require("../config/imagekit");
 const userGetQueries = require("../config/userQueries/userGetQueries");
 const userPutQueries = require("../config/userQueries/userPutQueries");
 
