@@ -18,6 +18,50 @@ const getUserProfile = asyncHandler(async (req, res) => {
   res.status(200).json(user[0]);
 });
 
+const editUserProfile = asyncHandler(async (req, res) => {
+  const userId = req.user?.user_id;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized: User ID missing" });
+  }
+
+  const {
+    firstName,
+    lastName,
+    address,
+    cityName,
+    zipCode,
+    phoneNo,
+  } = req.body;
+
+  let profileImage = req.body.profileImage; // fallback (in case frontend sends an image URL)
+  if (req.file && req.file.url) {
+    profileImage = req.file.url; // Multer + ImageKit will attach this
+  }
+
+  // Basic field validation
+  if (!firstName || !lastName || !email || !address || !cityName || !zipCode || !phoneNo || !profileImage) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const [result] = await db.query(userUpdateQueries.updateUserProfileById, [
+    firstName,
+    lastName,
+    address,
+    cityName,
+    zipCode,
+    phoneNo,
+    profileImage,
+    userId,
+  ]);
+
+  if (result.affectedRows === 0) {
+    return res.status(404).json({ message: "User not found or no changes made" });
+  }
+
+  res.status(200).json({ message: "Profile updated successfully", profileImage });
+});
+
 const getApprovedCars = asyncHandler(async (req, res) => {
   try {
     const [cars] = await db.query(userGetQueries.getApprovedCars);
@@ -33,7 +77,4 @@ const getApprovedCars = asyncHandler(async (req, res) => {
 });
 
 
-
-
-
-module.exports = { getApprovedCars,getUserProfile };
+module.exports = { getApprovedCars,editUserProfile, getUserProfile };
