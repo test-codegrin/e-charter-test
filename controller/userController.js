@@ -23,6 +23,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 });
 
 const editUserProfile = asyncHandler(async (req, res) => {
+  try {
   const userId = req.user.user_id;
   const { firstName, lastName, address, cityName, zipCode, phoneNo } = req.body;
   const profileImage = req.file;
@@ -31,8 +32,7 @@ const editUserProfile = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: "All fields except email are required" });
   }
 
-  try {
-    // 1. Get current user data
+ 
     const [userRows] = await db.query(userPutQueries.getUserById, [userId]);
     if (userRows.length === 0) {
       return res.status(404).json({ error: "User not found" });
@@ -41,9 +41,7 @@ const editUserProfile = asyncHandler(async (req, res) => {
     const currentUser = userRows[0];
     let newImageUrl = currentUser.profileImage;
 
-    // 2. If new profile image uploaded
     if (profileImage) {
-      // Delete old image if exists and stored via ImageKit
       if (currentUser.profileImage && currentUser.profileImage.includes("imagekit.io")) {
         const oldImagePath = currentUser.profileImage.split("/echarter/")[1];
         if (oldImagePath) {
@@ -51,20 +49,18 @@ const editUserProfile = asyncHandler(async (req, res) => {
         }
       }
 
-      // Upload new image
       const uploadResponse = await imagekit.upload({
         file: profileImage.buffer,
-        fileName: `user_${userId}_${Date.now()}.jpg`,
-        folder: "echarter/user-profile",
+        fileName: `${firstName}_profile_${Date.now()}.jpg`,
+        folder: "echarter/user-profile"
       });
 
       newImageUrl = uploadResponse.url;
     }
 
-    // 3. Update profile in DB
     const updateValues = [firstName, lastName, address, cityName, zipCode, phoneNo, newImageUrl, userId];
     await db.query(userPutQueries.updateUserProfile, updateValues);
-console.log(newImageUrl);
+    console.log(newImageUrl);
 
     res.status(200).json({
       message: "Profile updated successfully",
@@ -93,4 +89,4 @@ const getApprovedCars = asyncHandler(async (req, res) => {
 });
 
 
-module.exports = { getApprovedCars,editUserProfile, getUserProfile };
+module.exports = { getApprovedCars, editUserProfile, getUserProfile };
