@@ -4,10 +4,7 @@ const imagekit = require("../config/imagekit");
 const userGetQueries = require("../config/userQueries/userGetQueries");
 const userPutQueries = require("../config/userQueries/userPutQueries");
 
-function extractFileIdFromUrl(url) {
-  const parts = url.split("/");
-  return parts[parts.length - 1].split(".")[0]; // "image.jpg" => "image"
-}
+
 
 const getUserProfile = asyncHandler(async (req, res) => {
   const userId = req.user?.user_id;
@@ -68,7 +65,7 @@ const editUserProfile = asyncHandler(async (req, res) => {
     const updateValues = [firstName, lastName, address, cityName, zipCode, phoneNo, newImageUrl, userId];
     await db.query(userPutQueries.updateUserProfile, updateValues);
 
-    res.json({
+    res.status(200).json({
       message: "Profile updated successfully",
       profileImage: newImageUrl,
     });
