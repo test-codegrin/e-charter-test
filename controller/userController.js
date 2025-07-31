@@ -3,6 +3,11 @@ const asyncHandler = require("express-async-handler");
 const userGetQueries = require("../config/userQueries/userGetQueries");
 const userPutQueries = require("../config/userQueries/userPutQueries");
 
+function extractFileIdFromUrl(url) {
+  const parts = url.split("/");
+  return parts[parts.length - 1].split(".")[0]; // "image.jpg" => "image"
+}
+
 const getUserProfile = asyncHandler(async (req, res) => {
   const userId = req.user?.user_id;
 
@@ -20,58 +25,59 @@ const getUserProfile = asyncHandler(async (req, res) => {
 });
 
 const editUserProfile = asyncHandler(async (req, res) => {
-  const userId = req.user?.user_id;
+  const userId = req.user.user_id;
+  const { firstName, lastName, address, cityName, zipCode, phoneNo } = req.body;
+  const profileImage = req.file;
 
-  if (!userId) {
-    return res.status(401).json({ message: "Unauthorized: User ID missing" });
+  if (!firstName || !lastName || !address || !cityName || !zipCode || !phoneNo) {
+    return res.status(400).json({ error: "All fields except email are required" });
   }
 
-  const {
-    firstName,
-    lastName,
-    address,
-    cityName,
-    zipCode,
-    phoneNo,
-  } = req.body;
+  try {
+    // 1. Get current user data
+    const [userRows] = await db.query(userPutQueries.getUserById, [userId]);
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-  let profileImage = req.body.profileImage || null;
+    const currentUser = userRows[0];
+    let newImageUrl = currentUser.profileImage;
 
-  // Image upload via ImageKit
-  if (req.file && req.file.buffer) {
-    const fileName = `user_${userId}_${Date.now()}`;
-    const uploadResponse = await imagekitUpload(req.file.buffer, fileName);
-    profileImage = uploadResponse.url;
+    // 2. If new profile image uploaded
+    if (profileImage) {
+      // Delete old image if exists and stored via ImageKit
+      if (currentUser.profileImage && currentUser.profileImage.includes("imagekit.io")) {
+        const oldImagePath = currentUser.profileImage.split("/echarter/")[1];
+        if (oldImagePath) {
+          await imagekit.deleteFile(`echarter/${oldImagePath}`);
+        }
+      }
+
+      // Upload new image
+      const uploadResponse = await imagekit.upload({
+        file: profileImage.buffer,
+        fileName: `user_${userId}_${Date.now()}.jpg`,
+        folder: "echarter/user-profile",
+      });
+
+      newImageUrl = uploadResponse.url;
+    }
+
+    // 3. Update profile in DB
+    const updateValues = [firstName, lastName, address, cityName, zipCode, phoneNo, newImageUrl, userId];
+    await db.query(userPutQueries.updateUserProfile, updateValues);
+
+    res.json({
+      message: "Profile updated successfully",
+      profileImage: newImageUrl,
+    });
+
+  } catch (err) {
+    console.error("Edit Profile Error:", err);
+    res.status(500).json({ error: "Internal server error", message: err.message });
   }
-
-  if (
-    !firstName ||
-    !lastName ||
-    !address ||
-    !cityName ||
-    !zipCode ||
-    !phoneNo
-  ) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-
-  const [result] = await db.query(userPutQueries.updateUserProfileById, [
-    firstName,
-    lastName,
-    address,
-    cityName,
-    zipCode,
-    phoneNo,
-    profileImage,
-    userId,
-  ]);
-
-  if (result.affectedRows === 0) {
-    return res.status(404).json({ message: "User not found or no changes made" });
-  }
-
-  res.status(200).json({ message: "Profile updated successfully", profileImage });
 });
+
 
 const getApprovedCars = asyncHandler(async (req, res) => {
   try {
