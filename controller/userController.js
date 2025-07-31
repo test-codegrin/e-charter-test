@@ -23,7 +23,6 @@ const getUserProfile = asyncHandler(async (req, res) => {
 });
 
 const editUserProfile = asyncHandler(async (req, res) => {
-  try {
   const userId = req.user.user_id;
   const { firstName, lastName, address, cityName, zipCode, phoneNo } = req.body;
   const profileImage = req.file;
@@ -32,7 +31,7 @@ const editUserProfile = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: "All fields except email are required" });
   }
 
- 
+  try {
     const [userRows] = await db.query(userPutQueries.getUserById, [userId]);
     if (userRows.length === 0) {
       return res.status(404).json({ error: "User not found" });
