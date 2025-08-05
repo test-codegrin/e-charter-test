@@ -24,57 +24,45 @@ const getUserProfile = asyncHandler(async (req, res) => {
 
 
 const editUserProfile = asyncHandler(async (req, res) => {
-  const userId = req.user.user_id;
-  const {
-    firstName,
-    lastName,
-    address,
-    cityName,
-    zipCode,
-    phoneNo
-  } = req.body;
+    const userId = req.user?.user_id;
+    const { firstName, lastName, address, cityName, zipCode, phoneNo } = req.body;
+    const profileImage = req.file;
 
-  const profileImage = req.file;
-
-  // Validate required fields
-  if (!firstName || !lastName || !address || !cityName || !zipCode || !phoneNo) {
-    return res.status(400).json({ error: "All fields except image are required" });
-  }
-
-  let imageURL = null;
-
-  // Upload to ImageKit if new image is sent
-  if (profileImage) {
-    try {
-      const uploadedImage = await imagekit.upload({
-        file: profileImage.buffer,
-        fileName: `${firstName}_profile_${Date.now()}.jpg`,
-        folder: "echarter/user-profile",
-      });
-      imageURL = uploadedImage.url;
-    } catch (err) {
-      return res.status(500).json({ error: "Image upload failed", details: err.message });
+    // Validate fields
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized: User not found" });
     }
-  }
 
-  // Update the user profile
-  const updateFields = [
-    firstName,
-    lastName,
-    address,
-    cityName,
-    zipCode,
-    phoneNo,
-    imageURL, // can be null
-    userId
-  ];
+    if (!firstName || !lastName || !address || !cityName || !zipCode || !phoneNo) {
+        return res.status(400).json({ error: "All fields are required" });
+    }
 
-  await db.query(userPutQueries.updateUserProfile, updateFields);
+    try {
+        // Optional profile image upload
+        let imageURL = null;
 
-  res.status(200).json({
-    message: "Profile updated successfully",
-    profileImage: imageURL || undefined, // send image if updated
-  });
+        if (profileImage) {
+            const uploadedImage = await imagekit.upload({
+                file: profileImage.buffer,
+                fileName: `${firstName}_profile_${Date.now()}.jpg`,
+                folder: "echarter/user-profile",
+            });
+            imageURL = uploadedImage.url;
+        }
+
+        const updateFields = [firstName, lastName, address, cityName, zipCode, phoneNo, imageURL, userId];
+
+        await db.query(userAuthQueries.updateUserProfile, updateFields);
+
+        res.status(200).json({
+            message: "Profile updated successfully.",
+            profileImage: imageURL,
+        });
+
+    } catch (err) {
+        console.error("Edit Profile Error:", err);
+        res.status(500).json({ error: "Server error", details: err.message });
+    }
 });
 
 const getApprovedCars = asyncHandler(async (req, res) => {
