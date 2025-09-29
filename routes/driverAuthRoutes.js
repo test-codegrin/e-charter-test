@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
-
+const { authenticationToken } = require("../middleware/authMiddleware");
 const {
     registerDriver,
     loginDriver,
@@ -19,7 +19,7 @@ router.post("/login", loginDriver);
 router.post("/requestreset", requestDriverReset);
 router.post("/verifyreset", verifyDriverResetCode);
 router.post("/resetpassword", resetDriverPassword);
-router.put("/updatepassword", updateDriverPassword);
+router.put("/updatepassword",authenticationToken, updateDriverPassword);
 
 
 
