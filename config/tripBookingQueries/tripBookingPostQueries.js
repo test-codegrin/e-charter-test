@@ -3,6 +3,7 @@ const tripBookingPostQueries = {
 createTrip: `
   INSERT INTO trips (
     user_id,
+    car_id,
     pickupLocation, 
     pickupLatitude,
     pickupLongitude,
@@ -15,7 +16,7 @@ createTrip: `
     durationHours,
     distance_km,
     status
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `,
 getUserDetails: `SELECT user_id, firstName, lastName, email, phoneNo, address, cityName, profileImage FROM users WHERE user_id = ?`,
 

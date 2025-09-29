@@ -18,10 +18,10 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
 
   return R * c; // Distance in km
 };
-
 const bookTrip = asyncHandler(async (req, res) => {
   const user_id = req.user?.user_id;
   const {
+    car_id,
     pickupLocation,
     pickupLatitude,
     pickupLongitude,
@@ -31,62 +31,43 @@ const bookTrip = asyncHandler(async (req, res) => {
     tripStartDate,
     tripEndDate,
     tripTime,
-    mid_stops = [] // optional array of mid stops with stayDuration
+    mid_stops = []
   } = req.body;
 
-  // Validate required fields
-  if (!user_id || !pickupLocation || !dropLocation || !tripStartDate || !tripTime) {
+  if (!user_id || !pickupLocation || !dropLocation || !tripStartDate || !tripTime || !car_id) {
     return res.status(400).json({ message: "Required fields missing" });
   }
 
-  // Step 1: Calculate total distance via mid stops
   let totalDistance = 0;
-
   const allStops = [
     { latitude: pickupLatitude, longitude: pickupLongitude },
-    ...mid_stops.map(stop => ({
-      latitude: stop.latitude,
-      longitude: stop.longitude
-    })),
+    ...mid_stops.map(stop => ({ latitude: stop.latitude, longitude: stop.longitude })),
     { latitude: dropLatitude, longitude: dropLongitude }
   ];
 
   for (let i = 0; i < allStops.length - 1; i++) {
     const from = allStops[i];
     const to = allStops[i + 1];
-
-    totalDistance += haversineDistance(
-      from.latitude,
-      from.longitude,
-      to.latitude,
-      to.longitude
-    );
+    totalDistance += haversineDistance(from.latitude, from.longitude, to.latitude, to.longitude);
   }
-
   totalDistance = parseFloat(totalDistance.toFixed(2));
 
-  // Step 2: Calculate stay time from mid stops
   let totalStayHours = 0;
-  mid_stops.forEach(stop => {
-    const stay = parseFloat(stop.stayDuration || 0);
-    totalStayHours += isNaN(stay) ? 0 : stay;
-  });
+  mid_stops.forEach(stop => { totalStayHours += parseFloat(stop.stayDuration || 0); });
   totalStayHours = parseFloat(totalStayHours.toFixed(2));
 
-  // Step 3: Calculate travel & total duration
-  const travelHours = parseFloat((totalDistance / 40).toFixed(2)); // Assuming avg speed = 40 km/h
+  const travelHours = parseFloat((totalDistance / 40).toFixed(2));
   const durationHours = parseFloat((travelHours + totalStayHours).toFixed(2));
 
-  const status = 0; // 0 = pending
+  const status = 0;
 
   const conn = await db.getConnection();
-
   try {
     await conn.beginTransaction();
 
-    // Step 4: Insert main trip
     const [result] = await conn.query(tripBookingPostQueries.createTrip, [
       user_id,
+      car_id,
       pickupLocation,
       pickupLatitude,
       pickupLongitude,
@@ -103,7 +84,6 @@ const bookTrip = asyncHandler(async (req, res) => {
 
     const trip_id = result.insertId;
 
-    // Step 5: Insert mid stops with stayDuration
     if (mid_stops.length > 0) {
       const midStopValues = mid_stops.map((stop, index) => [
         trip_id,
@@ -123,6 +103,7 @@ const bookTrip = asyncHandler(async (req, res) => {
     res.status(201).json({
       message: "Trip booked successfully",
       trip_id,
+      car_id,
       totalDistance,
       travelHours,
       totalStayHours,
