@@ -18,7 +18,7 @@ const { authenticationToken } = require("../middleware/authMiddleware");
 
 
 // Dashboard and profile routes
-router.get("/dashboard/stats", authenticationToken, getDashboardStats);
+router.get("/dashboard/status", authenticationToken, getDashboardStats);
 router.get("/trips", authenticationToken, getDriverTrips);
 router.get("/profile", authenticationToken, getDriverProfile);
 router.put("/profile", authenticationToken, updateDriverProfile);
