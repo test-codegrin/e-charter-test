@@ -7,11 +7,9 @@ const driverCarQueries = {
 
   // Insert a new car
   insertNewCar: `
-    INSERT INTO car (
-      driver_id, carName, carNumber, carSize, carType, bus_capacity,
-      vehicle_age, vehicle_condition, specialized_services, wheelchair_accessible,
-      vehicle_features, maintenance_schedule, insurance_expiry, license_plate_expiry, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ INSERT INTO car 
+(driver_id, carName, carNumber, carSize, carType, car_image, bus_capacity, vehicle_age, vehicle_condition, specialized_services, wheelchair_accessible, vehicle_features, maintenance_schedule, insurance_expiry, license_plate_expiry, status) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   `,
 
   // Get all cars by driver ID

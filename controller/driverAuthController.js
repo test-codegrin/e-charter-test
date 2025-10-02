@@ -126,8 +126,7 @@ const loginDriver = asyncHandler(async (req, res) => {
       email: driver[0].email,
       role: "driver",
     },
-    process.env.JWT_SECRET,
-    { expiresIn: "1d" }
+    process.env.JWT_SECRET
   );
 
   // Return consistent user object matching admin login format

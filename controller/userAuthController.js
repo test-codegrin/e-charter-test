@@ -101,7 +101,6 @@ const loginUser = asyncHandler(async (req, res) => {
                 email: user.email
             },
             process.env.JWT_SECRET || "your_jwt_secret", 
-            { expiresIn: "1h" }
         );
 
         res.status(200).json({
