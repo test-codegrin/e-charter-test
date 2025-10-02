@@ -9,6 +9,7 @@ getApprovedCars : `
     car.carNumber,
     car.carSize,
     car.carType,
+    car.car_image,
     drivers.driver_id,
    drivers.driverName AS driverName,
     drivers.email,
