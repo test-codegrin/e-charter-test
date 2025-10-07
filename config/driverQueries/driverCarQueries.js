@@ -8,7 +8,7 @@ const driverCarQueries = {
   // Insert a new car
   insertNewCar: `
  INSERT INTO car 
-(driver_id, carName, carNumber, carSize, carType, car_image, bus_capacity, vehicle_age, vehicle_condition, specialized_services, wheelchair_accessible, vehicle_features, maintenance_schedule, insurance_expiry, license_plate_expiry, status) 
+(driver_id, carName, carNumber, carSize, carType, car_image, passenger_capacity, vehicle_age, vehicle_condition, specialized_services, wheelchair_accessible, vehicle_features, maintenance_schedule, insurance_expiry_date, license_plate_expiry, status) 
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   `,
 
@@ -16,9 +16,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   getCarsByDriver: `
     SELECT 
       car_id, carName, carNumber, carSize, carType, car_image, status,
-      bus_capacity, vehicle_age, vehicle_condition, specialized_services,
+      passenger_capacity, vehicle_age, vehicle_condition, specialized_services,
       wheelchair_accessible, vehicle_features, maintenance_schedule,
-      insurance_expiry, license_plate_expiry, created_at
+      insurance_expiry_date, license_plate_expiry, created_at
     FROM car 
     WHERE driver_id = ?
     ORDER BY created_at DESC
@@ -28,9 +28,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   getCarById: `
     SELECT 
       car_id, carName, carNumber, carSize, carType,car_image, status,
-      bus_capacity, vehicle_age, vehicle_condition, specialized_services,
+      passenger_capacity, vehicle_age, vehicle_condition, specialized_services,
       wheelchair_accessible, vehicle_features, maintenance_schedule,
-      insurance_expiry, license_plate_expiry, created_at
+      insurance_expiry_date, license_plate_expiry, created_at
     FROM car 
     WHERE car_id = ? AND driver_id = ?
   `,
@@ -48,9 +48,9 @@ getUpdatedCarById: `
   SELECT 
     car_id, carName, carNumber, carSize, carType, status,
     car_image,
-    bus_capacity, vehicle_age, vehicle_condition, specialized_services,
+    passenger_capacity, vehicle_age, vehicle_condition, specialized_services,
     wheelchair_accessible, vehicle_features, maintenance_schedule,
-    insurance_expiry, license_plate_expiry
+    insurance_expiry_date, license_plate_expiry
   FROM car 
   WHERE car_id = ?
 `,

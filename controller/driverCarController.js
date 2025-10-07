@@ -6,11 +6,19 @@ const imagekit = require("../config/imagekit");
 // Add Car - UPDATED with car_image
 const addCar = asyncHandler(async (req, res) => {
   const { 
-    carName, carNumber, carSize, carType, 
-    bus_capacity, vehicle_age, vehicle_condition, 
-    specialized_services, wheelchair_accessible, 
-    vehicle_features, maintenance_schedule, 
-    insurance_expiry, license_plate_expiry 
+    carName, 
+    carNumber, 
+    carSize, 
+    carType, 
+    passenger_capacity,   
+    vehicle_age, 
+    vehicle_condition, 
+    specialized_services, 
+    wheelchair_accessible, 
+    vehicle_features, 
+    maintenance_schedule, 
+    insurance_expiry_date, 
+    license_plate_expiry 
   } = req.body;
 
   const driver_id = req.user?.driver_id; 
@@ -31,27 +39,34 @@ const addCar = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Check license plate exists
+    // ✅ Check license plate exists
     const [existingCar] = await db.query(driverCarQueries.checkExistingCarNumber, [carNumber]);
-    if (existingCar.length > 0) return res.status(400).json({ message: "License plate number already exists" });
+    if (existingCar.length > 0) 
+      return res.status(400).json({ message: "License plate number already exists" });
 
-    // Check driver approval
+    // ✅ Check driver approval
     const [driverCheck] = await db.query(driverCarQueries.getDriverStatusById, [driver_id]);
-    if (driverCheck.length === 0) return res.status(404).json({ message: "Driver not found" });
-    if (driverCheck[0].status !== 1) return res.status(403).json({ message: "Driver must be approved before adding vehicles" });
+    if (driverCheck.length === 0) 
+      return res.status(404).json({ message: "Driver not found" });
+    if (driverCheck[0].status !== 1) 
+      return res.status(403).json({ message: "Driver must be approved before adding vehicles" });
 
-    // Insert new car
+    // ✅ Insert new car
     const [result] = await db.query(driverCarQueries.insertNewCar, [
-      driver_id, carName, carNumber, carSize, carType, 
-      car_image, // ✅ store ImageKit URL
-      bus_capacity || null,
+      driver_id, 
+      carName, 
+      carNumber, 
+      carSize, 
+      carType, 
+      car_image,                 
+      passenger_capacity || null,    
       vehicle_age || null,
       vehicle_condition || 'good',
       specialized_services ? JSON.stringify(specialized_services) : null,
       wheelchair_accessible || false,
       vehicle_features ? JSON.stringify(vehicle_features) : null,
       maintenance_schedule || null,
-      insurance_expiry || null,
+      insurance_expiry_date || null,
       license_plate_expiry || null,
       0
     ]);
@@ -62,6 +77,7 @@ const addCar = asyncHandler(async (req, res) => {
       carName,
       carNumber,
       car_image,
+      passenger_capacity,
       status: "pending_approval"
     });
 
@@ -70,6 +86,7 @@ const addCar = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
+
 
 // Get all cars for a driver - ENHANCED with detailed info
 const getCarsByDriver = asyncHandler(async (req, res) => {
@@ -188,10 +205,10 @@ const updateCar = asyncHandler(async (req, res) => {
     const updateValues = [];
 
     const allowedFields = [
-      'carName', 'carNumber', 'carSize', 'carType', 'bus_capacity',
+      'carName', 'carNumber', 'carSize', 'carType', 'passenger_capacity',
       'vehicle_age', 'vehicle_condition', 'specialized_services',
       'wheelchair_accessible', 'vehicle_features', 'maintenance_schedule',
-      'insurance_expiry', 'license_plate_expiry', 'car_image' // ✅ included car_image
+      'insurance_expiry_date', 'license_plate_expiry', 'car_image' // ✅ included car_image
     ];
 allowedFields.forEach(field => {
   if (field in updateData) {
