@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const { db } = require("../config/db");
 const tripBookingPostQueries = require("../config/tripBookingQueries/tripBookingPostQueries");
+const PricingService = require('../services/PricingService');
 
 // Haversine formula to calculate distance in kilometers
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
@@ -117,38 +118,55 @@ const bookTrip = asyncHandler(async (req, res) => {
   }
 });
 
+const normalizeCarType = type => {
+  if (!type) return 'sedan';
+  type = type.toLowerCase().trim();
+  if (['sedan', 'suv', 'van', 'bus'].includes(type)) return type;
+  return 'sedan'; // fallback
+};
+
+const normalizeCarSize = size => {
+  if (!size) return 'medium';
+  size = size.toLowerCase().trim();
+  if (['small', 'medium', 'large'].includes(size)) return size;
+
+  // Map seat-based sizes
+  if (['4-seater', '5-seater'].includes(size)) return 'small';
+  if (['6-seater', '7-seater'].includes(size)) return 'medium';
+  if (['8-seater', '10-seater', '12-seater'].includes(size)) return 'large';
+
+  return 'medium';
+};
+
 const recommendCars = asyncHandler(async (req, res) => {
   try {
-    const { distance, passengers, luggages, number_of_stop, number_of_days } = req.body;
+    const {
+      distance,
+      passengers,
+      luggages,
+      number_of_stop = 0,
+      travel_time, // ✅ now using travel_time in seconds
+      serviceType = 'one-way'
+    } = req.body;
 
-    // ✅ Validate input
-    if (!distance || !passengers || !luggages || !number_of_days) {
+    if (!distance || !passengers || !luggages || !travel_time) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide distance, passengers, luggages, and number_of_days'
+        message: 'Please provide distance, passengers, luggages, and travel_time (in seconds)'
       });
     }
 
-    // ✅ Fetch suitable cars along with driver's address dynamically
+    // Convert travel_time (seconds) → hours
+    const durationHours = parseFloat((travel_time / 3600).toFixed(2));
+    const durationMinutes = Math.round(travel_time / 60);
+
+    // Fetch suitable cars
     const [cars] = await db.query(
-      `SELECT 
-          c.car_id,
-          c.carName,
-          c.carSize,
-          c.carType,
-          c.car_image,
-          c.passenger_capacity,
-          c.luggage_capacity,
-          c.fuel_type,
-          c.daily_rate,
-          c.per_km_rate,
-          '200' AS cancellation_charge,
-          d.address AS driver_address,
-          d.cityName AS driver_city,
-          d.zipCode AS driver_zip,
-          d.driverName
-       FROM car AS c
-       LEFT JOIN drivers AS d ON c.driver_id = d.driver_id
+      `SELECT c.car_id, c.carName, c.carSize, c.carType, c.car_image, 
+              c.passenger_capacity, c.fuel_type, c.daily_rate, c.per_km_rate, 
+              '200' AS cancellation_charge, d.address
+       FROM car c
+       JOIN drivers d ON c.driver_id = d.driver_id
        WHERE c.passenger_capacity >= ? 
          AND c.luggage_capacity >= ? 
          AND c.status = 1
@@ -160,35 +178,39 @@ const recommendCars = asyncHandler(async (req, res) => {
       return res.json({ success: true, cars: [] });
     }
 
-    // ✅ Calculate total price and return results
-    const carsWithPrice = cars.map(car => {
-      const kmRate = car.per_km_rate || 0;
-      const dayRate = car.daily_rate || 0;
-      const totalPrice = (distance * kmRate) + (number_of_days * dayRate);
+    // Normalize types/sizes
+    const carsMapped = cars.map(car => ({
+      ...car,
+      carType: normalizeCarType(car.carType),
+      carSize: normalizeCarSize(car.carSize)
+    }));
 
-      // Combine address fields
-      const fullAddress = `${car.driver_address || ''}, ${car.driver_city || ''} - ${car.driver_zip || ''}`;
+    // Prepare trip data for pricing
+    const tripData = {
+      distance_km: parseFloat(distance),
+      durationHours,        // ✅ replaced number_of_days logic
+      durationMinutes,      // ✅ additional info if needed
+      midStopsCount: parseInt(number_of_stop),
+      serviceType
+    };
 
-      return {
-        car_id: car.car_id,
-        carName: car.carName,
-        carSize: car.carSize,
-        carType: car.carType,
-        car_image: car.car_image,
-        passenger_capacity: car.passenger_capacity,
-        fuelType: car.fuel_type === 'gasoline' ? 'Petrol' : 'Diesel',
-        cancellation_charge: car.cancellation_charge,
-        driver_name: car.driverName,
-        driver_address: fullAddress.trim(),
-        price: parseFloat(totalPrice.toFixed(2))
-      };
-    });
+    // Pricing calculation
+    const carsWithPrice = PricingService.getVehicleQuote(carsMapped, tripData).map(car => ({
+      car_id: car.car_id,
+      carName: car.carName,
+      carSize: car.carSize,
+      carType: car.carType,
+      car_image: car.car_image,
+      car_passenger: car.passenger_capacity,
+      fuelType: car.fuel_type === 'gasoline' ? 'Petrol' : 'Diesel',
+      cancellation_charge: car.cancellation_charge,
+      address: car.address,
+      travel_time_seconds: travel_time,  // ✅ show original travel_time
+      travel_time_hours: durationHours,  // ✅ added for clarity
+      price: car.pricing.totalPrice
+    }));
 
-    res.json({
-      success: true,
-      cars: carsWithPrice
-    });
-
+    res.json({ success: true, cars: carsWithPrice });
   } catch (error) {
     console.error('Error recommending cars:', error);
     res.status(500).json({
