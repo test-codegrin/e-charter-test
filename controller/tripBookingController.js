@@ -117,4 +117,88 @@ const bookTrip = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { bookTrip };
+const recommendCars = asyncHandler(async (req, res) => {
+  try {
+    const { distance, passengers, luggages, number_of_stop, number_of_days } = req.body;
+
+    // ✅ Validate input
+    if (!distance || !passengers || !luggages || !number_of_days) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide distance, passengers, luggages, and number_of_days'
+      });
+    }
+
+    // ✅ Fetch suitable cars along with driver's address dynamically
+    const [cars] = await db.query(
+      `SELECT 
+          c.car_id,
+          c.carName,
+          c.carSize,
+          c.carType,
+          c.car_image,
+          c.passenger_capacity,
+          c.luggage_capacity,
+          c.fuel_type,
+          c.daily_rate,
+          c.per_km_rate,
+          '200' AS cancellation_charge,
+          d.address AS driver_address,
+          d.cityName AS driver_city,
+          d.zipCode AS driver_zip,
+          d.driverName
+       FROM car AS c
+       LEFT JOIN drivers AS d ON c.driver_id = d.driver_id
+       WHERE c.passenger_capacity >= ? 
+         AND c.luggage_capacity >= ? 
+         AND c.status = 1
+         AND c.vehicle_condition IN ('excellent', 'good')`,
+      [passengers, luggages]
+    );
+
+    if (cars.length === 0) {
+      return res.json({ success: true, cars: [] });
+    }
+
+    // ✅ Calculate total price and return results
+    const carsWithPrice = cars.map(car => {
+      const kmRate = car.per_km_rate || 0;
+      const dayRate = car.daily_rate || 0;
+      const totalPrice = (distance * kmRate) + (number_of_days * dayRate);
+
+      // Combine address fields
+      const fullAddress = `${car.driver_address || ''}, ${car.driver_city || ''} - ${car.driver_zip || ''}`;
+
+      return {
+        car_id: car.car_id,
+        carName: car.carName,
+        carSize: car.carSize,
+        carType: car.carType,
+        car_image: car.car_image,
+        passenger_capacity: car.passenger_capacity,
+        fuelType: car.fuel_type === 'gasoline' ? 'Petrol' : 'Diesel',
+        cancellation_charge: car.cancellation_charge,
+        driver_name: car.driverName,
+        driver_address: fullAddress.trim(),
+        price: parseFloat(totalPrice.toFixed(2))
+      };
+    });
+
+    res.json({
+      success: true,
+      cars: carsWithPrice
+    });
+
+  } catch (error) {
+    console.error('Error recommending cars:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while recommending cars',
+      error: error.message
+    });
+  }
+});
+
+
+
+module.exports = { bookTrip, recommendCars };
