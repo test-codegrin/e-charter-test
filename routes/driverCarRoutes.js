@@ -16,7 +16,7 @@ const { authenticationToken } = require("../middleware/authMiddleware")
 router.post("/addcar",upload.single("car_image"), authenticationToken, addCar); 
 router.get("/getdrivercar", authenticationToken, getCarsByDriver);
 router.get("/car/:car_id", authenticationToken, getCarDetails);
-router.put("/car/:car_id", authenticationToken, updateCar);
+router.put("/car/:car_id",upload.single("car_image"), authenticationToken, updateCar);
 router.delete("/car/:car_id", authenticationToken, deleteCar);
 
 

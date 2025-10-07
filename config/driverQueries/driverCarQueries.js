@@ -15,7 +15,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   // Get all cars by driver ID
   getCarsByDriver: `
     SELECT 
-      car_id, carName, carNumber, carSize, carType, status,
+      car_id, carName, carNumber, carSize, carType, car_image, status,
       bus_capacity, vehicle_age, vehicle_condition, specialized_services,
       wheelchair_accessible, vehicle_features, maintenance_schedule,
       insurance_expiry, license_plate_expiry, created_at
@@ -27,7 +27,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   // Get specific car details by car_id and driver_id
   getCarById: `
     SELECT 
-      car_id, carName, carNumber, carSize, carType, status,
+      car_id, carName, carNumber, carSize, carType,car_image, status,
       bus_capacity, vehicle_age, vehicle_condition, specialized_services,
       wheelchair_accessible, vehicle_features, maintenance_schedule,
       insurance_expiry, license_plate_expiry, created_at
@@ -44,15 +44,17 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   // Update car - constructed dynamically in controller
 
   // Get car after update
-  getUpdatedCarById: `
-    SELECT 
-      car_id, carName, carNumber, carSize, carType, status,
-      bus_capacity, vehicle_age, vehicle_condition, specialized_services,
-      wheelchair_accessible, vehicle_features, maintenance_schedule,
-      insurance_expiry, license_plate_expiry
-    FROM car 
-    WHERE car_id = ?
-  `,
+getUpdatedCarById: `
+  SELECT 
+    car_id, carName, carNumber, carSize, carType, status,
+    car_image,
+    bus_capacity, vehicle_age, vehicle_condition, specialized_services,
+    wheelchair_accessible, vehicle_features, maintenance_schedule,
+    insurance_expiry, license_plate_expiry
+  FROM car 
+  WHERE car_id = ?
+`,
+
 
   // Check if car exists before delete
   getCarForDelete: `SELECT car_id, carName, carNumber FROM car WHERE car_id = ? AND driver_id = ?`,

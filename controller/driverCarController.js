@@ -191,23 +191,39 @@ const updateCar = asyncHandler(async (req, res) => {
       'carName', 'carNumber', 'carSize', 'carType', 'bus_capacity',
       'vehicle_age', 'vehicle_condition', 'specialized_services',
       'wheelchair_accessible', 'vehicle_features', 'maintenance_schedule',
-      'insurance_expiry', 'license_plate_expiry'
+      'insurance_expiry', 'license_plate_expiry', 'car_image' // ✅ included car_image
     ];
+allowedFields.forEach(field => {
+  if (field in updateData) {
+    // Parse JSON fields if they came as string
+    let value = updateData[field];
 
-    allowedFields.forEach(field => {
-      if (updateData.hasOwnProperty(field)) {
-        updateFields.push(`${field} = ?`);
-        
-        // Handle JSON fields
-        if (field === 'specialized_services' || field === 'vehicle_features') {
-          updateValues.push(Array.isArray(updateData[field]) ? JSON.stringify(updateData[field]) : updateData[field]);
-        } else if (field === 'wheelchair_accessible') {
-          updateValues.push(Boolean(updateData[field]));
-        } else {
-          updateValues.push(updateData[field]);
+    if (field === 'specialized_services' || field === 'vehicle_features') {
+      // Convert JSON strings to arrays
+      if (typeof value === 'string') {
+        try {
+          value = JSON.parse(value);
+        } catch (err) {
+          console.warn(`Failed to parse ${field}, using raw string`);
         }
       }
-    });
+      updateValues.push(Array.isArray(value) ? JSON.stringify(value) : value);
+    } else if (field === 'wheelchair_accessible') {
+      updateValues.push(value === 'true' || value === true);
+    } else {
+      updateValues.push(value);
+    }
+
+    updateFields.push(`${field} = ?`);
+  }
+});
+
+
+    // ✅ Handle uploaded image from ImageKit
+    if (req.uploadedFiles?.car_image?.[0]?.url) {
+      updateFields.push(`car_image = ?`);
+      updateValues.push(req.uploadedFiles.car_image[0].url);
+    }
 
     if (updateFields.length === 0) {
       return res.status(400).json({ message: "No valid fields to update" });
@@ -216,7 +232,7 @@ const updateCar = asyncHandler(async (req, res) => {
     // If car was previously approved and significant changes are made, reset to pending
     const significantFields = ['carNumber', 'carType', 'carSize'];
     const hasSignificantChanges = significantFields.some(field => updateData.hasOwnProperty(field));
-    
+
     if (hasSignificantChanges && existingCar[0].status === 1) {
       updateFields.push('status = ?');
       updateValues.push(0); // Reset to pending approval
@@ -225,7 +241,6 @@ const updateCar = asyncHandler(async (req, res) => {
     updateValues.push(car_id);
 
     const updateQuery = `UPDATE car SET ${updateFields.join(', ')} WHERE car_id = ?`;
-    
     const [result] = await db.query(updateQuery, updateValues);
 
     if (result.affectedRows === 0) {
@@ -235,9 +250,7 @@ const updateCar = asyncHandler(async (req, res) => {
     console.log('Car updated successfully:', car_id);
 
     // Fetch updated car details
-    const [updatedCar] = await db.query(
-     driverCarQueries.getUpdatedCarById
-    , [car_id]);
+    const [updatedCar] = await db.query(driverCarQueries.getUpdatedCarById, [car_id]);
 
     const car = updatedCar[0];
     const formattedCar = {
@@ -248,7 +261,7 @@ const updateCar = asyncHandler(async (req, res) => {
     };
 
     res.status(200).json({
-      message: hasSignificantChanges && existingCar[0].status === 1 
+      message: hasSignificantChanges && existingCar[0].status === 1
         ? "Vehicle updated successfully. Significant changes require re-approval."
         : "Vehicle updated successfully",
       car: formattedCar
@@ -258,6 +271,10 @@ const updateCar = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
+
+
+
+
 
 // Delete car - NEW
 const deleteCar = asyncHandler(async (req, res) => {
