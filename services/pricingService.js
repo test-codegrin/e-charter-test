@@ -1,6 +1,6 @@
 class PricingService {
   constructor() {
-    // Base pricing configuration
+    // 🚗 Base pricing configuration by car type and size
     this.basePricing = {
       sedan: {
         small: { base: 50, perKm: 2.5, perHour: 25, midstop: 15 },
@@ -24,51 +24,54 @@ class PricingService {
       }
     };
 
-    this.taxRate = 0.13; // 13% HST for Canada
+    this.taxRate = 0.13; // 13% HST (or can be adapted for other regions)
   }
 
   calculateTripPrice(tripData) {
-    const { carType, carSize, distance_km, durationHours, midStopsCount, serviceType } = tripData;
-    
-    // Get base pricing for vehicle type and size
-    const vehiclePricing = this.basePricing[carType.toLowerCase()]?.[carSize.toLowerCase()];
+    const {
+      carType,
+      carSize,
+      distance_km,
+      durationHours, // derived from travel_time / 3600
+      midStopsCount = 0,
+      serviceType = 'Single Trip'
+    } = tripData;
+
+    // ✅ Get base rate config
+    const vehiclePricing = this.basePricing[carType?.toLowerCase()]?.[carSize?.toLowerCase()];
     if (!vehiclePricing) {
-      throw new Error('Invalid vehicle type or size');
+      throw new Error('Invalid carType or carSize');
     }
 
-    // Calculate base components
-    let basePrice = vehiclePricing.base;
-    let distancePrice = distance_km * vehiclePricing.perKm;
-    let timePrice = durationHours * vehiclePricing.perHour;
-    let midstopPrice = midStopsCount * vehiclePricing.midstop;
+    // 🧮 Basic cost components
+    const basePrice = vehiclePricing.base;
+    const distancePrice = distance_km * vehiclePricing.perKm;
+    const timePrice = durationHours * vehiclePricing.perHour;
+    const midstopPrice = midStopsCount * vehiclePricing.midstop;
 
-    // Apply service type multipliers
+    // 🔄 Updated multipliers for your 3 service types
     const serviceMultipliers = {
-      'one-way': 1.0,
-      'round-trip': 1.8, // Slight discount for round trip
-      'multi-stop': 1.1,
-      'multi-day': 1.2
+      'single trip': 1.0,
+      'round trip': 1.8,
+      'multi stop': 1.3
     };
 
-    const multiplier = serviceMultipliers[serviceType] || 1.0;
-    
-    // Calculate subtotal
+    const multiplier = serviceMultipliers[serviceType.toLowerCase()] || 1.0;
+
+    // 💰 Subtotal + tax calculation
     const subtotal = (basePrice + distancePrice + timePrice + midstopPrice) * multiplier;
-    
-    // Calculate tax
     const taxAmount = subtotal * this.taxRate;
-    
-    // Calculate total
     const totalPrice = subtotal + taxAmount;
 
+    // ✅ Return detailed breakdown
     return {
-      basePrice: parseFloat(basePrice.toFixed(2)),
-      distancePrice: parseFloat(distancePrice.toFixed(2)),
-      timePrice: parseFloat(timePrice.toFixed(2)),
-      midstopPrice: parseFloat(midstopPrice.toFixed(2)),
-      subtotal: parseFloat(subtotal.toFixed(2)),
-      taxAmount: parseFloat(taxAmount.toFixed(2)),
-      totalPrice: parseFloat(totalPrice.toFixed(2)),
+      basePrice: +basePrice.toFixed(2),
+      distancePrice: +distancePrice.toFixed(2),
+      timePrice: +timePrice.toFixed(2),
+      midstopPrice: +midstopPrice.toFixed(2),
+      subtotal: +subtotal.toFixed(2),
+      taxAmount: +taxAmount.toFixed(2),
+      totalPrice: +totalPrice.toFixed(2),
       breakdown: {
         distance_km,
         durationHours,
@@ -79,6 +82,7 @@ class PricingService {
     };
   }
 
+  // 🔁 Quote for multiple vehicles
   getVehicleQuote(vehicles, tripData) {
     return vehicles.map(vehicle => {
       const pricing = this.calculateTripPrice({
