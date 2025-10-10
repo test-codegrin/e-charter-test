@@ -1,11 +1,27 @@
 const adminGetQueries = {
+  getAllDrivers: `SELECT 
+    d.*,
+    COALESCE(ROUND(AVG(dr.rating), 1), 0.0) AS average_rating,
+    COUNT(dr.driver_rating_id) AS total_ratings,
+    fc.company_name AS fleet_company_name
+    FROM drivers d
+    LEFT JOIN driver_ratings dr ON d.driver_id = dr.driver_id
+    LEFT JOIN fleet_companies fc ON d.fleet_company_id = fc.fleet_company_id
+    GROUP BY d.driver_id
+    ORDER BY d.created_at DESC;
+    `,
 
-  getAllDrivers: ` SELECT 
-    driver_id, driverName, email, phoneNo, cityName, status, created_at 
-  FROM drivers 
-  ORDER BY created_at DESC`,
+  getAllFleetCompanies: `Select * from fleet_companies where is_deleted = 0 order by created_at DESC`,
 
-  getAllCars: `SELECT * FROM car ORDER BY created_at DESC`,
+  getAllVehicles: `
+  SELECT 
+v.*,
+fc.company_name as fleet_company_name
+FROM vehicle v
+LEFT JOIN fleet_companies fc 
+ON v.fleet_company_id = fc.fleet_company_id
+ORDER BY v.created_at DESC;
+`,
 
   getAllUsers: ` SELECT 
     user_id, firstName, lastName, email, phoneNo, created_at 
@@ -43,8 +59,7 @@ const adminGetQueries = {
     LEFT JOIN drivers d ON c.driver_id = d.driver_id
     ORDER BY t.created_at DESC
   `,
-   getAllUsers : `SELECT user_id, firstName, lastName, email, address, cityName, zipCode, phoneNo, profileImage, created_at FROM users ORDER BY created_at DESC`,
-
+  getAllUsers: `SELECT user_id, firstName, lastName, email, address, cityName, zipCode, phoneNo, profileImage, created_at FROM users ORDER BY created_at DESC`,
 
   getDashboardTrips: `
     SELECT 
@@ -137,8 +152,7 @@ const adminGetQueries = {
     JOIN users u ON t.user_id = u.user_id
     WHERE t.status = 'completed' AND COALESCE(t.total_price, 0) > 0
     ORDER BY t.created_at DESC
-  `
-
-}
+  `,
+};
 
 module.exports = adminGetQueries;

@@ -59,13 +59,13 @@ const Login = () => {
     if (role === 'admin') {
       setFormData({
         email: 'asdf@gmail.com',
-        password: 'test123',
+        password: 'test',
         role: 'admin'
       })
     } else {
       setFormData({
         email: 'test@gmail.com',
-        password: 'test123',
+        password: 'test',
         role: 'driver'
       })
     }

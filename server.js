@@ -12,6 +12,8 @@ const adminRoutes = require("./routes/adminRoutes")
 const driverCarRoutes = require("./routes/driverCarRoutes")
 const userRoutes = require("./routes/userRoutes")
 const tripBookingRoutes = require("./routes/tripBookingRoutes")
+const fleetCompanyAuthRoutes = require("./routes/fleetCompanyAuthRoutes")
+// const fleetCompanyRoutes = require("./routes/fleetCompanyRoutes")
 
 // Import new enhanced routes
 const pricingRoutes = require("./routes/pricingRoutes")
@@ -55,6 +57,13 @@ try {
     app.use("/api/driver", driverAuthRoutes)
     app.use("/api/driver", driverRoutes)
     app.use("/api/driver", driverCarRoutes)
+
+    //Vehicle routes
+    // app.use("/api/vehicle", vehicleRoutes)
+
+    // Fleet company routes
+    app.use("/api/fleet-company", fleetCompanyAuthRoutes)
+    // app.use("/api/fleet-company", fleetCompanyRoutes)
 
     // Fleet partner routes
     app.use("/api/fleet", fleetPartnerRoutes)

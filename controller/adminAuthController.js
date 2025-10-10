@@ -78,7 +78,7 @@ const adminLogin = asyncHandler(async (req, res) => {
 
         const admin = adminRows[0];
 
-        const isMatch = await bcrypt.compare(password, admin.password);
+        const isMatch = await bcrypt.compare(password, admin.admin_password);
         if (!isMatch) {
             return res.status(401).json({ error: "Invalid email or password" });
         }
@@ -87,8 +87,8 @@ const adminLogin = asyncHandler(async (req, res) => {
         const token = jwt.sign(
             {
                 admin_id: admin.admin_id,
-                adminName: admin.adminName,
-                email: admin.email,
+                adminName: admin.admin_name,
+                email: admin.admin_email,
                 role: 'admin'
             },
             process.env.JWT_SECRET,
@@ -98,8 +98,8 @@ const adminLogin = asyncHandler(async (req, res) => {
         // Return consistent user object
         const user = {
             admin_id: admin.admin_id,
-            adminName: admin.adminName,
-            email: admin.email,
+            adminName: admin.admin_name,
+            email: admin.admin_email,
             role: 'admin'
         };
 

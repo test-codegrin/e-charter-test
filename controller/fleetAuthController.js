@@ -1,11 +1,11 @@
 const { db } = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const driverAuthQueries = require("../config/driverQueries/driverAuthQueries");
 const asyncHandler = require("express-async-handler");
 const imagekit = require("../config/imagekit");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
+const fleetCompanyAuthQueries = require("../config/fleetCompanyQueries/fleetCompanyAuthQueries");
 
 const resetCodes = new Map();
 const RESET_EXPIRATION = 5 * 60 * 1000;
@@ -25,14 +25,14 @@ const generateResetCode = () => {
 };
 
 
-// 🔹 Register Driver
-const registerDriver = asyncHandler(async (req, res) => {
-  const { firstname,lastname, email, password,phone_no,gender,driver_type,fleet_company_id, address, city_name, zip_code,year_of_experiance } =
+// 🔹 Register Company
+const registerCompany = asyncHandler(async (req, res) => {
+  const { company_name, email, password,phone_no,fcm_token,website,address,city_name,postal_code} =
     req.body;
-  // const file = req.file;
+  const profileImage = req.file;
 
   if (
-    !firstname || !lastname || !email || !password || !phone_no || !gender || !address || !city_name || !zip_code || !year_of_experiance
+    !company_name || !email || !password || !phone_no || !website || !address || !city_name || !postal_code
   ) {
     return res.status(400).json({ error: "All fields are required" });
   }
@@ -42,40 +42,41 @@ const registerDriver = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: "Invalid email format" });
   }
 
-  const [existingDriver] = await db.query(driverAuthQueries.driverMailCheck, [
+  const [existingCompany] = await db.query(fleetCompanyAuthQueries.companyMailCheck, [
     email,
   ]);
-  if (existingDriver.length > 0) {
+  if (existingCompany.length > 0) {
     return res.status(400).json({ error: "Email already exists" });
   }
 
-  // let imageURL = null;
-  // if (file) {
-  //     const uploaded = await imagekit.upload({
-  //         file: file.buffer,
-  //         fileName: `${driverName}_profile_${Date.now()}.jpg`,
-  //         folder: "echarter/driver-profile",
-  //     });
-  //     imageURL = uploaded.url;
-  // }
+  let imageURL = null;
+  if (profileImage) {
+      const uploaded = await imagekit.upload({
+          file: profileImage.buffer,
+          fileName: `${company_name}_profile_${Date.now()}.jpg`,
+          folder: "echarter/company-profile",
+      });
+      imageURL = uploaded.url;
+  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const driverValues = [
-    firstname,lastname, email, hashedPassword,phone_no,gender,driver_type,fleet_company_id, address, city_name, zip_code,year_of_experiance
+  const companyValues = [
+    company_name, email, hashedPassword,phone_no,fcm_token,imageURL,website,address,city_name,postal_code
   ];
 
-  const [result] = await db.query(driverAuthQueries.driverInsert, driverValues);
+  const [result] = await db.query(fleetCompanyAuthQueries.companyInsert, companyValues);
 
   res
     .status(201)
     .json({
-      message: "Driver registered successfully, pending approval",
-      driverId: result.insertId,
+      message: "Company registered successfully, pending approval",
+      companyId: result.insertId,
     });
 });
 
+
 // 🔹 Login Driver
-const loginDriver = asyncHandler(async (req, res) => {
+const loginCompany = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   // console.log("Driver login attempt:", { email });
@@ -235,8 +236,8 @@ const updateDriverPassword = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  registerDriver,
-  loginDriver,
+  registerCompany,
+  loginCompany,
   requestDriverReset,
   verifyDriverResetCode,
   resetDriverPassword,

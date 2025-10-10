@@ -75,7 +75,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // User Login
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, fcmToken } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required" });
@@ -95,12 +95,20 @@ const loginUser = asyncHandler(async (req, res) => {
             return res.status(401).json({ error: "Invalid credentials" });
         }
 
+        // Update FCM token without triggering updated_at change
+        if (fcmToken) {
+            await db.query(
+                userAuthQueries.addFCMToken,
+                [fcmToken, user.user_id]
+            );
+        }
+
         const token = jwt.sign(
             {
                 user_id: user.user_id, 
                 email: user.email
             },
-            process.env.JWT_SECRET || "your_jwt_secret", 
+            process.env.JWT_SECRET || "your_jwt_secret"
         );
 
         res.status(200).json({
@@ -114,6 +122,7 @@ const loginUser = asyncHandler(async (req, res) => {
         res.status(500).json({ error: "Server error", details: err.message });
     }
 });
+
 
 
 const requestReset = asyncHandler(async (req, res) => {

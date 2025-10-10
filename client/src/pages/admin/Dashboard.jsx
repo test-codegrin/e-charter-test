@@ -116,7 +116,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bounce-in">
+      <div className="fade-in">
         <h1 className="text-2xl font-bold text-dark-800">Admin Dashboard</h1>
         <p className="text-secondary-600">Welcome back! Here's what's happening with your platform.</p>
       </div>

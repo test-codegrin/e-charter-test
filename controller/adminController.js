@@ -20,16 +20,32 @@ const getAllDrivers = asyncHandler(async (req, res) => {
     }
 });
 
-const getAllCars = asyncHandler(async (req, res) => {
+
+// Get all fleet companies
+const getAllFleetCompanies= asyncHandler(async (req, res) => {
   try {
-    const [cars] = await db.query(adminGetQueries.getAllCars);
+    const [companies] = await db.query(adminGetQueries.getAllFleetCompanies);
     res.status(200).json({
-      message: "All cars fetched successfully",
-      count: cars.length,
-      cars
+      message: "All fleet companies fetched successfully",
+      count: companies.length,
+      companies
     });
   } catch (error) {
-    console.error("Error fetching cars:", error);
+    console.error("Error fetching companies:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+const getAllVehicles = asyncHandler(async (req, res) => {
+  try {
+    const [vehicles] = await db.query(adminGetQueries.getAllVehicles);
+    res.status(200).json({
+      message: "All vehicles fetched successfully",
+      count: vehicles.length,
+      vehicles
+    });
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
@@ -500,12 +516,13 @@ const getPayoutSummary = asyncHandler(async (req, res) => {
 
 module.exports = {
     getAllDrivers,
-    getAllCars,
+    getAllVehicles,
     getAllTrips,
     getAllUsers,
     deleteUser,
     editUser,
     getDashboardStats,
+    getAllFleetCompanies,
     getAllFleetPartners,
     editFleetPartnerByAdmin,
     deleteFleetPartnerByAdmin,

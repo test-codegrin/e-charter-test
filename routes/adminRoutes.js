@@ -2,7 +2,7 @@ const express = require("express")
 const router = express.Router()
 const {
   getAllDrivers, 
-  getAllCars, 
+  getAllVehicles, 
   getAllTrips, 
   getDashboardStats,
   getAllFleetPartners,
@@ -11,12 +11,14 @@ const {
   getPayoutSummary,
   getAllUsers,
   editUser,
-  deleteUser
+  deleteUser,
+  getAllFleetCompanies
 } = require("../controller/adminController")
 const { 
   approveDriver, 
-  approveCar, 
-  getPendingApprovals 
+  approveVehicle, 
+  getPendingApprovals, 
+  approveFleetCompany
 } = require("../controller/verificationController")
 const { authenticationToken } = require("../middleware/authMiddleware")
 
@@ -25,11 +27,12 @@ const { authenticationToken } = require("../middleware/authMiddleware")
 router.get("/dashboard/status", authenticationToken, getDashboardStats);
 
 // Data management routes
-router.get("/alldrivers", authenticationToken, getAllDrivers);
-router.get("/allcars", authenticationToken, getAllCars);
-router.get("/alltrips", authenticationToken, getAllTrips);
-router.get("/allusers",authenticationToken,getAllUsers);
-router.delete("/deleteuser/:user_id", authenticationToken,deleteUser);
+router.get("/all-drivers", authenticationToken, getAllDrivers);
+router.get("/all-vehicles", authenticationToken, getAllVehicles);
+router.get("/all-trips", authenticationToken, getAllTrips);
+router.get("/all-users",authenticationToken,getAllUsers);
+router.get("/fleet-companies",authenticationToken,getAllFleetCompanies);
+router.delete("/delete-user/:user_id", authenticationToken,deleteUser);
 router.put("/edituser/:user_id", editUser);
 
 
@@ -44,9 +47,9 @@ router.delete( "/deletefleetpartner/:company_id",authenticationToken, deleteFlee
 router.get("/payouts", authenticationToken, getPayoutSummary);
 
 // Approval management
-router.get("/pending-approvals", authenticationToken, getPendingApprovals);
-router.post("/approve-driver/:driver_id", authenticationToken, approveDriver);
-router.post("/approve-car/:car_id", authenticationToken, approveCar);
-
+// router.get("/pending-approvals", authenticationToken, getPendingApprovals);
+// router.put("/approve-driver/:driver_id", authenticationToken, approveDriver);
+// router.put("/approve-fleet-company/:fleet_company_id", authenticationToken, approveFleetCompany);
+// router.put("/approve-vehicle/:vehicle_id", authenticationToken, approveVehicle);
 
 module.exports = router;

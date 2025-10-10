@@ -1,8 +1,8 @@
 const driverAuthQueries = {
 
     driverInsert: `
-        INSERT INTO drivers (driverName, email,password,  address, cityName, zipCode, phoneNo)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO drivers (firstname,lastname, email, password,phone_no,gender,driver_type,fleet_company_id, address, city_name, zip_code,year_of_experiance)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
 
     driverMailCheck: `SELECT * FROM drivers WHERE email = ?`,

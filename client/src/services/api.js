@@ -30,6 +30,7 @@ api.interceptors.response.use(
     // 1. Not on login page
     // 2. Not during login request
     // 3. User is actually logged in (has token)
+
     if (error.response?.status === 401) {
       const isLoginPage = window.location.pathname === '/' || window.location.pathname.includes('/login')
       const isLoginRequest = error.config?.url?.includes('/login')
@@ -62,15 +63,20 @@ export const adminAPI = {
   getDashboardStats: () => api.get('/admin/dashboard/stats'),
   
   // Drivers
-  getAllDrivers: () => api.get('/admin/alldrivers'),
-  approveDriver: (driverId, status) => api.post(`/admin/approve-driver/${driverId}`, { status }),
+  getAllDrivers: () => api.get('/admin/all-drivers'),
+  addDriver: (driverData) => api.post('/driver/register', driverData),
+  approveDriver: (driverId, status) => api.put(`/verification/approve-driver/${driverId}`, { status }),
+
+  // Fleet Partners
+  getAllFleetPartners: () => api.get('/admin/fleet-companies'),
+  updateFleetPartnerStatus: (companyId, status) => api.put(`/verification/approve-fleet-company/${companyId}`, { status }),
   
   // Vehicles
-  getAllVehicles: () => api.get('/admin/allcars'),
-  approveVehicle: (carId, status) => api.post(`/admin/approve-car/${carId}`, { status }),
+  getAllVehicles: () => api.get('/admin/all-vehicles'),
+  approveVehicle: (vehicleId, status) => api.put(`/verification/approve-vehicle/${vehicleId}`, { status }),
   
   // Trips
-  getAllTrips: () => api.get('/admin/alltrips'),
+  getAllTrips: () => api.get('/admin/all-trips'),
   getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
   updateTripStatus: (tripId, status) => api.put(`/trips/${tripId}/status`, { status }),
   
@@ -83,8 +89,6 @@ export const adminAPI = {
   markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
   markAllAsRead: () => api.put('/notifications/mark-all-read'),
   
-  // Fleet Partners
-  getAllFleetPartners: () => api.get('/admin/fleet-partners'),
   
   // Payouts
   getPayoutSummary: () => api.get('/admin/payouts'),

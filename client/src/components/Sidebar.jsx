@@ -70,11 +70,22 @@ const Sidebar = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`sidebar-link ${isActiveRoute ? 'active' : ''}`}
+              className={`
+                flex items-center space-x-3 px-4 py-3 rounded-lg 
+                transition-colors duration-200
+                ${isActiveRoute 
+                  ? 'bg-ice-100 text-ice-700 font-medium' 
+                  : 'text-gray-300 hover:bg-ice-50 hover:text-ice-700'
+                }
+              `}
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <Icon className={`w-5 h-5 ${isActiveRoute ? 'text-ice-500' : 'text-ice-300'}`} />
-              <span className={isActiveRoute ? 'text-white' : 'text-gray-300'}>{item.label}</span>
+              <Icon 
+                className={`w-5 h-5 transition-colors ${
+                  isActiveRoute ? 'text-primary-500' : 'text-ice-300'
+                }`} 
+              />
+              <span>{item.label}</span>
             </Link>
           )
         })}
@@ -83,7 +94,7 @@ const Sidebar = () => {
       {/* Footer - Simple branding only */}
       <div className="p-4 border-t border-dark-700 bg-dark-800">
         <div className="text-center">
-          <p className="text-xs text-gray-400">© 2024 eCharter</p>
+          <p className="text-xs text-gray-400">© 2025 eCharter</p>
           <p className="text-xs text-gray-400">All rights reserved</p>
         </div>
       </div>

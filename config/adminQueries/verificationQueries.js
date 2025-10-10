@@ -2,7 +2,7 @@ const verificationQueries = {
 
 
  checkDriverExists: `
-    SELECT driver_id, driverName, email, registration_type 
+    SELECT * 
     FROM drivers 
     WHERE driver_id = ?
   `,
@@ -11,16 +11,27 @@ const verificationQueries = {
     UPDATE drivers SET status = ? WHERE driver_id = ?
   `,
 
-  checkCarExists: `
-    SELECT c.car_id, c.carName, c.carNumber, d.driverName, d.email 
-    FROM car c 
-    JOIN drivers d ON c.driver_id = d.driver_id 
-    WHERE c.car_id = ?
+
+  checkVehicleExists: `
+    SELECT * 
+    FROM vehicle 
+    WHERE vehicle_id = ?
+  `,
+  updateVehicleStatus: `
+    UPDATE vehicle SET status = ? WHERE vehicle_id = ?
   `,
 
-  updateCarStatus: `
-    UPDATE car SET status = ? WHERE car_id = ?
-  `,
+  // Fleet company queries
+  checkFleetCompanyExists: 'SELECT * FROM fleet_companies WHERE fleet_company_id = ? AND is_deleted = 0',
+  updateFleetCompanyStatus: 'UPDATE fleet_companies SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE fleet_company_id = ?',
+
+
+
+
+
+
+
+
 
   getPendingDrivers: `
     SELECT 
