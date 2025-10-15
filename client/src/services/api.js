@@ -25,7 +25,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.data || error.message)
-    
+
     // Only handle 401 errors if:
     // 1. Not on login page
     // 2. Not during login request
@@ -35,7 +35,7 @@ api.interceptors.response.use(
       const isLoginPage = window.location.pathname === '/' || window.location.pathname.includes('/login')
       const isLoginRequest = error.config?.url?.includes('/login')
       const hasToken = localStorage.getItem('token')
-      
+
       // Only redirect if user was logged in and this isn't a login-related request
       if (!isLoginPage && !isLoginRequest && hasToken) {
         console.log('401 error - clearing auth and redirecting to login')
@@ -61,38 +61,43 @@ export const authAPI = {
 export const adminAPI = {
   // Dashboard
   getDashboardStats: () => api.get('/admin/dashboard/stats'),
-  
+
   // Drivers
   getAllDrivers: () => api.get('/admin/all-drivers'),
   addDriver: (driverData) => api.post('/driver/register', driverData),
+  getDriverById: (driverId) => api.get(`/admin/driver/${driverId}`),
   approveDriver: (driverId, status) => api.put(`/verification/approve-driver/${driverId}`, { status }),
+  deleteDriver: (driverId) => api.delete(`/admin/driver/${driverId}`),
+
 
   // Fleet Partners
   getAllFleetPartners: () => api.get('/admin/fleet-companies'),
   updateFleetPartnerStatus: (companyId, status) => api.put(`/verification/approve-fleet-company/${companyId}`, { status }),
-  
+
   // Vehicles
   getAllVehicles: () => api.get('/admin/all-vehicles'),
+  getVehicleById: (vehicleId) => api.get(`/admin/vehicle/${vehicleId}`),  
   approveVehicle: (vehicleId, status) => api.put(`/verification/approve-vehicle/${vehicleId}`, { status }),
-  
+  deleteVehicle: (vehicleId) => api.delete(`/admin/vehicle/${vehicleId}`),
+
   // Trips
   getAllTrips: () => api.get('/admin/all-trips'),
   getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
   updateTripStatus: (tripId, status) => api.put(`/trips/${tripId}/status`, { status }),
-  
+
   // Invoices
   getAllInvoices: () => api.get('/invoices/admin/all'),
   updateInvoiceStatus: (invoiceId, status) => api.put(`/invoices/${invoiceId}/status`, { status }),
-  
+
   // Notifications
   getNotifications: () => api.get('/notifications/admin'),
   markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
   markAllAsRead: () => api.put('/notifications/mark-all-read'),
-  
-  
+
+
   // Payouts
   getPayoutSummary: () => api.get('/admin/payouts'),
-  
+
   // Settings
   getSettings: () => api.get('/admin/settings'),
   updateSettings: (category, settings) => api.put('/admin/settings', { category, settings }),
@@ -104,25 +109,25 @@ export const adminAPI = {
 export const driverAPI = {
   // Dashboard
   getDashboardStats: () => api.get('/driver/dashboard/stats'),
-  
+
   // Trips
   getTrips: () => api.get('/driver/trips'),
   getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
   startTrip: (tripId) => api.post(`/trips/${tripId}/start`),
   completeTrip: (tripId) => api.post(`/trips/${tripId}/complete`),
   updateLocation: (tripId, location) => api.put(`/trips/${tripId}/location`, location),
-  
+
   // Vehicles - ENHANCED CRUD operations
   getVehicles: () => api.get('/driver/getdrivercar'),
   addVehicle: (vehicleData) => api.post('/driver/addcar', vehicleData),
   getVehicleDetails: (carId) => api.get(`/driver/car/${carId}`),
   updateVehicle: (carId, vehicleData) => api.put(`/driver/car/${carId}`, vehicleData),
   deleteVehicle: (carId) => api.delete(`/driver/car/${carId}`),
-  
+
   // Profile
   getProfile: () => api.get('/driver/profile'),
   updateProfile: (profileData) => api.put('/driver/profile', profileData),
-  
+
   // Settings
   getNotificationSettings: () => api.get('/driver/settings/notifications'),
   updateNotificationSettings: (settings) => api.put('/driver/settings/notifications', settings),
@@ -130,7 +135,7 @@ export const driverAPI = {
   updateFleetSettings: (settings) => api.put('/driver/settings/fleet', settings),
   getPaymentSettings: () => api.get('/driver/settings/payment'),
   updatePaymentSettings: (settings) => api.put('/driver/settings/payment', settings),
-  
+
   // Notifications
   getNotifications: () => api.get('/notifications/driver'),
   markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`)

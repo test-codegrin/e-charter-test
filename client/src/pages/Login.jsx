@@ -58,7 +58,7 @@ const Login = () => {
   const fillTestCredentials = (role) => {
     if (role === 'admin') {
       setFormData({
-        email: 'asdf@gmail.com',
+        email: 'admin@gmail.com',
         password: 'test',
         role: 'admin'
       })

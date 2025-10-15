@@ -15,7 +15,9 @@ const Dashboard = () => {
     inProgressTrips: 0,
     completedTrips: 0,
     approvedDrivers: 0,
-    approvedVehicles: 0
+    approvedVehicles: 0,
+    pendingDrivers: 0,
+    pendingVehicles: 0
   })
   const [recentTrips, setRecentTrips] = useState([])
   const [loading, setLoading] = useState(true)
@@ -32,26 +34,17 @@ const Dashboard = () => {
       const response = await adminAPI.getDashboardStats()
       const { stats: dashboardStats, recentTrips: trips } = response.data
 
-      setStats(dashboardStats)
+      // Merge API stats with default values
+      setStats(prevStats => ({
+        ...prevStats,
+        ...dashboardStats
+      }))
+      
       setRecentTrips(trips || [])
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
-      
-      // Set default values on error
-      setStats({
-        totalDrivers: 0,
-        totalVehicles: 0,
-        totalTrips: 0,
-        totalUsers: 0,
-        totalRevenue: 0,
-        monthlyRevenue: 0,
-        pendingApprovals: 0,
-        inProgressTrips: 0,
-        completedTrips: 0,
-        approvedDrivers: 0,
-        approvedVehicles: 0
-      })
+      toast.error('Failed to fetch dashboard data')
     } finally {
       setLoading(false)
     }
@@ -161,11 +154,20 @@ const Dashboard = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-warning-50 rounded-lg">
               <div>
-                <p className="font-medium text-warning-800">Driver & Vehicle Applications</p>
+                <p className="font-medium text-warning-800">Driver Applications</p>
                 <p className="text-sm text-warning-600">Requires review</p>
               </div>
               <span className="bg-warning-200 text-warning-800 px-2 py-1 rounded-full text-sm font-medium">
-                {stats.pendingApprovals}
+                {stats.pendingDrivers}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-warning-50 rounded-lg">
+              <div>
+                <p className="font-medium text-warning-800">Vehicle Applications</p>
+                <p className="text-sm text-warning-600">Requires review</p>
+              </div>
+              <span className="bg-warning-200 text-warning-800 px-2 py-1 rounded-full text-sm font-medium">
+                {stats.pendingVehicles}
               </span>
             </div>
             <button className="w-full btn-primary text-sm">

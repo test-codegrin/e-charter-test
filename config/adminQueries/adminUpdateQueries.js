@@ -11,6 +11,8 @@ const adminUpdateQueries = {
       phoneNo = ?
     WHERE user_id = ?
   `
+  
 };
+
 
 module.exports = adminUpdateQueries;

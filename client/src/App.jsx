@@ -25,6 +25,8 @@ import DriverSettings from './pages/driver/Settings'
 
 // Public Pages
 import FleetPartnerRegistration from './pages/FleetPartnerRegistration'
+import ViewDriver from './pages/admin/ViewDriver'
+import ViewVehicle from './pages/admin/ViewVehicle'
 
 function App() {
   const { user, loading } = useAuth()
@@ -62,10 +64,12 @@ function App() {
             <Route path="/" element={<AdminDashboard />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/drivers" element={<AdminDrivers />} />
+            <Route path="/admin/add-driver" element={<AddDriver />} />
+            <Route path="/admin/view-driver/:driver_id" element={<ViewDriver />} />
             <Route path="/admin/vehicles" element={<AdminVehicles />} />
+            <Route path="/admin/view-vehicle/:vehicle_id" element={<ViewVehicle />} />
             <Route path="/admin/trips" element={<AdminTrips />} />
             <Route path="/admin/invoices" element={<AdminInvoices />} />
-            <Route path="/admin/add-driver" element={<AddDriver />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/fleet-partners" element={<FleetPartners />} />
             <Route path="/admin/payouts" element={<Payouts />} />

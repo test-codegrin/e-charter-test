@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import {
   Search,
   Filter,
-  Eye,
   Phone,
   Mail,
   MapPin,
@@ -14,10 +13,14 @@ import {
   Clock,
   Building2,
   Plus,
+  ArrowRight,
+  AlertTriangle,
+  FileText,
 } from "lucide-react";
 import { adminAPI } from "../../services/api";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
+import Loader from "../../components/Loader";
 
 const Drivers = () => {
   const [drivers, setDrivers] = useState([]);
@@ -25,8 +28,7 @@ const Drivers = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedDriver, setSelectedDriver] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [documentFilter, setDocumentFilter] = useState("all");
 
   useEffect(() => {
     fetchDrivers();
@@ -34,7 +36,7 @@ const Drivers = () => {
 
   useEffect(() => {
     filterDrivers();
-  }, [drivers, searchTerm, statusFilter]);
+  }, [drivers, searchTerm, statusFilter, documentFilter]);
 
   const fetchDrivers = async () => {
     try {
@@ -75,6 +77,21 @@ const Drivers = () => {
       filtered = filtered.filter((driver) => driver.status === statusFilter);
     }
 
+    // Document expiry filter
+    if (documentFilter !== "all") {
+      filtered = filtered.filter((driver) => {
+        const docStatus = checkDocumentExpiry(driver.documents);
+        if (documentFilter === "expired") {
+          return docStatus.hasExpired;
+        } else if (documentFilter === "expiring") {
+          return docStatus.hasExpiring && !docStatus.hasExpired;
+        } else if (documentFilter === "valid") {
+          return !docStatus.hasExpired && !docStatus.hasExpiring;
+        }
+        return true;
+      });
+    }
+
     setFilteredDrivers(filtered);
   };
 
@@ -97,9 +114,65 @@ const Drivers = () => {
     }
   };
 
+  // Check document expiry status
+  const checkDocumentExpiry = (documents) => {
+    if (!documents || documents.length === 0)
+      return { hasExpired: false, expiredCount: 0, expiringCount: 0 };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let expiredCount = 0;
+    let expiringCount = 0;
+
+    documents.forEach((doc) => {
+      if (doc.document_expiry_date) {
+        const expiry = new Date(doc.document_expiry_date);
+        expiry.setHours(0, 0, 0, 0);
+
+        const diffTime = expiry.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+          expiredCount++;
+        } else if (diffDays <= 30) {
+          expiringCount++;
+        }
+      }
+    });
+
+    return {
+      hasExpired: expiredCount > 0,
+      hasExpiring: expiringCount > 0,
+      expiredCount,
+      expiringCount,
+    };
+  };
+
+  // Count drivers by document status
+  const getDocumentStatusCounts = () => {
+    let expired = 0;
+    let expiring = 0;
+    let valid = 0;
+
+    drivers.forEach((driver) => {
+      const docStatus = checkDocumentExpiry(driver.documents);
+      if (docStatus.hasExpired) {
+        expired++;
+      } else if (docStatus.hasExpiring) {
+        expiring++;
+      } else {
+        valid++;
+      }
+    });
+
+    return { expired, expiring, valid };
+  };
+
+  const docCounts = getDocumentStatusCounts();
+
   // Status badge component
   const getStatusBadge = (status) => {
-    // Handle empty status as in_review
     const normalizedStatus = status || "in_review";
 
     switch (normalizedStatus) {
@@ -168,7 +241,7 @@ const Drivers = () => {
         const rect = buttonRef.current.getBoundingClientRect();
         setPosition({
           top: rect.bottom + window.scrollY + 8,
-          left: rect.right + window.scrollX - 192, // 192px = w-48 width
+          left: rect.right + window.scrollX - 192,
         });
       }
       setIsOpen(!isOpen);
@@ -287,11 +360,6 @@ const Drivers = () => {
     );
   };
 
-  const openDriverModal = (driver) => {
-    setSelectedDriver(driver);
-    setShowModal(true);
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -302,11 +370,7 @@ const Drivers = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
@@ -320,75 +384,177 @@ const Drivers = () => {
           Manage driver registrations and approvals
         </p>
       </div>
-      <div className="flex items-center space-x-4">
-        {/* Add Driver Button */}
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div className="bg-white rounded-lg shadow p-4">
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+            Total Drivers
+          </p>
+          <p className="text-2xl font-bold text-gray-900">{drivers.length}</p>
+        </div>
+        <div className="bg-green-50 rounded-lg shadow p-4 border border-green-200">
+          <p className="text-xs text-green-700 uppercase tracking-wide mb-1">
+            Approved
+          </p>
+          <p className="text-2xl font-bold text-green-600">
+            {drivers.filter((d) => d.status === "approved").length}
+          </p>
+        </div>
+        <div className="bg-yellow-50 rounded-lg shadow p-4 border border-yellow-200">
+          <p className="text-xs text-yellow-700 uppercase tracking-wide mb-1">
+            In Review
+          </p>
+          <p className="text-2xl font-bold text-yellow-600">
+            {drivers.filter((d) => !d.status || d.status === "in_review").length}
+          </p>
+        </div>
+        <div className="bg-red-50 rounded-lg shadow p-4 border border-red-200">
+          <p className="text-xs text-red-700 uppercase tracking-wide mb-1">
+            Rejected
+          </p>
+          <p className="text-2xl font-bold text-red-600">
+            {drivers.filter((d) => d.status === "rejected").length}
+          </p>
+        </div>
+        <div className="bg-red-50 rounded-lg shadow p-4 border border-red-300">
+          <p className="text-xs text-red-700 uppercase tracking-wide mb-1 flex items-center">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Doc Expired
+          </p>
+          <p className="text-2xl font-bold text-red-700">{docCounts.expired}</p>
+        </div>
+        <div className="bg-orange-50 rounded-lg shadow p-4 border border-orange-200">
+          <p className="text-xs text-orange-700 uppercase tracking-wide mb-1 flex items-center">
+            <Clock className="w-3 h-3 mr-1" />
+            Doc Expiring
+          </p>
+          <p className="text-2xl font-bold text-orange-600">
+            {docCounts.expiring}
+          </p>
+        </div>
+        <div className="bg-blue-50 rounded-lg shadow p-4 border border-blue-200">
+          <p className="text-xs text-blue-700 uppercase tracking-wide mb-1 flex items-center">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Doc Valid
+          </p>
+          <p className="text-2xl font-bold text-blue-600">{docCounts.valid}</p>
+        </div>
+      </div>
+
+      {/* Action Bar */}
+      {/* <div className="flex items-center justify-between">
         <Link
           to="/admin/add-driver"
-          className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+          className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium shadow-md"
         >
           <Plus className="w-5 h-5" />
           <span>Add Driver</span>
         </Link>
-
-        <div className="flex items-center space-x-4">
-          <div className="text-sm">
-            <span className="text-secondary-600">Total: </span>
-            <span className="font-semibold text-secondary-900">
-              {drivers.length}
-            </span>
-          </div>
-          <div className="text-sm">
-            <span className="text-secondary-600">Approved: </span>
-            <span className="font-semibold text-green-600">
-              {drivers.filter((d) => d.status === "approved").length}
-            </span>
-          </div>
-          <div className="text-sm">
-            <span className="text-secondary-600">In Review: </span>
-            <span className="font-semibold text-yellow-600">
-              {
-                drivers.filter((d) => !d.status || d.status === "in_review")
-                  .length
-              }
-            </span>
-          </div>
-          <div className="text-sm">
-            <span className="text-secondary-600">Rejected: </span>
-            <span className="font-semibold text-red-600">
-              {drivers.filter((d) => d.status === "rejected").length}
-            </span>
-          </div>
-        </div>
-      </div>
+      </div> */}
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 gap-4">
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 gap-4">
           {/* Search */}
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search by name, email, city, or company..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center space-x-2">
-            <Filter className="w-5 h-5 text-secondary-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-secondary-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="all">All Status</option>
-              <option value="in_review">In Review</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
+          {/* Filters Row */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Status Filter */}
+            <div className="relative">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 cursor-pointer"
+                >
+                  <option value="all">All Status</option>
+                  <option value="in_review">In Review</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Document Status Filter */}
+            <div className="relative">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Documents
+              </label>
+              <div className="relative">
+                <select
+                  value={documentFilter}
+                  onChange={(e) => setDocumentFilter(e.target.value)}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 cursor-pointer"
+                >
+                  <option value="all">All Documents</option>
+                  <option value="expired">Expired</option>
+                  <option value="expiring">Expiring Soon</option>
+                  <option value="valid">Valid</option>
+                </select>
+                <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                  </div>
+              </div>
+            </div>
+
+            {/* Clear Filters */}
+            {(searchTerm || statusFilter !== "all" || documentFilter !== "all") && (
+              <div className="mt-5">
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                    setDocumentFilter("all");
+                  }}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -426,102 +592,133 @@ const Drivers = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredDrivers.map((driver) => (
-                <tr
-                  key={driver.driver_id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                        <span className="text-primary-600 font-medium text-lg">
-                          {driver.firstname?.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {driver.firstname} {driver.lastname}
-                        </p>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-sm text-gray-500">
-                            ID: {driver.driver_id}
-                          </p>
-                          {driver.fleet_company_name && (
-                            <>
-                              <span className="text-gray-300">•</span>
-                              <div className="flex items-center space-x-1">
-                                <Building2 className="w-3 h-3 text-blue-500" />
-                                <span className="text-xs text-blue-600 font-medium">
-                                  {driver.fleet_company_name}
-                                </span>
-                              </div>
-                            </>
-                          )}
+              {filteredDrivers.map((driver) => {
+                const docStatus = checkDocumentExpiry(driver.documents);
+                return (
+                  <tr
+                    key={driver.driver_id}
+                    className={`transition-colors ${
+                      docStatus.hasExpired
+                        ? "bg-red-50 hover:bg-red-100"
+                        : docStatus.hasExpiring
+                        ? "bg-yellow-50 hover:bg-yellow-100"
+                        : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                          <span className="text-primary-600 font-medium text-lg">
+                            {driver.firstname?.charAt(0).toUpperCase()}
+                            {driver.lastname?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <p className="font-medium text-gray-900">
+                              {driver.firstname} {driver.lastname}
+                            </p>
+                            {docStatus.hasExpired && (
+                              <span
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 animate-pulse"
+                                title={`${docStatus.expiredCount} document(s) expired`}
+                              >
+                                <AlertTriangle className="w-3 h-3 mr-1" />
+                                {docStatus.expiredCount} Expired
+                              </span>
+                            )}
+                            {!docStatus.hasExpired && docStatus.hasExpiring && (
+                              <span
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800"
+                                title={`${docStatus.expiringCount} document(s) expiring soon`}
+                              >
+                                <Clock className="w-3 h-3 mr-1" />
+                                {docStatus.expiringCount} Expiring
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <p className="text-sm text-gray-500">
+                              ID: {driver.driver_id}
+                            </p>
+                            {driver.fleet_company_name && (
+                              <>
+                                <span className="text-gray-300">•</span>
+                                <div className="flex items-center space-x-1">
+                                  <Building2 className="w-3 h-3 text-blue-500" />
+                                  <span className="text-xs text-blue-600 font-medium">
+                                    {driver.fleet_company_name}
+                                  </span>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2 text-sm text-gray-900">
-                        <Mail className="w-4 h-4 text-gray-400" />
-                        <span>{driver.email}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2 text-sm text-gray-900">
+                          <Mail className="w-4 h-4 text-gray-400" />
+                          <span>{driver.email}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <Phone className="w-4 h-4 text-gray-400" />
+                          <span>{driver.phone_no}</span>
+                        </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {driver.city_name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            ZIP: {driver.zip_code}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StarRating
+                        rating={driver.average_rating}
+                        totalRatings={driver.total_ratings}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-900">
+                        {driver.year_of_experiance}{" "}
+                        {driver.year_of_experiance === 1 ? "year" : "years"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusDropdown
+                        currentStatus={driver.status}
+                        driverId={driver.driver_id}
+                        driverName={`${driver.firstname} ${driver.lastname}`}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <Phone className="w-4 h-4 text-gray-400" />
-                        <span>{driver.phone_no}</span>
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatDate(driver.created_at)}</span>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-start space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {driver.city_name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          ZIP: {driver.zip_code}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StarRating
-                      rating={driver.average_rating}
-                      totalRatings={driver.total_ratings}
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">
-                      {driver.year_of_experiance}{" "}
-                      {driver.year_of_experiance === 1 ? "year" : "years"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusDropdown
-                      currentStatus={driver.status}
-                      driverId={driver.driver_id}
-                      driverName={`${driver.firstname} ${driver.lastname}`}
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <Calendar className="w-4 h-4" />
-                      <span>{formatDate(driver.created_at)}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => openDriverModal(driver)}
-                      className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="View Details"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Link
+                        to={`/admin/view-driver/${driver.driver_id}`}
+                        className="flex items-center space-x-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors font-medium"
+                        title="View Details"
+                      >
+                        <span>View</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -534,244 +731,6 @@ const Drivers = () => {
           )}
         </div>
       </div>
-
-      {/* Driver Details Modal */}
-      {showModal && selectedDriver && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white  max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900">
-                  Driver Details
-                </h3>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <XCircle className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                {/* Rating Section */}
-                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-6 border border-yellow-200">
-                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                    <Star
-                      className="w-5 h-5 text-yellow-500 mr-2"
-                      fill="currentColor"
-                    />
-                    Driver Rating
-                  </h4>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <StarRating
-                        rating={selectedDriver.average_rating}
-                        totalRatings={selectedDriver.total_ratings}
-                        size="lg"
-                        showCount={false}
-                      />
-                      <p className="text-sm text-gray-600 mt-2">
-                        Based on {selectedDriver.total_ratings}{" "}
-                        {selectedDriver.total_ratings === 1
-                          ? "review"
-                          : "reviews"}
-                      </p>
-                    </div>
-                    {parseFloat(selectedDriver.average_rating) > 0 && (
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-gray-900">
-                          {parseFloat(selectedDriver.average_rating).toFixed(1)}
-                        </div>
-                        <div className="text-sm text-gray-500">out of 5.0</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Basic Info */}
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 pb-2 border-b">
-                    Basic Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        First Name
-                      </label>
-                      <p className="text-gray-900">
-                        {selectedDriver.firstname}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Last Name
-                      </label>
-                      <p className="text-gray-900">{selectedDriver.lastname}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Email
-                      </label>
-                      <p className="text-gray-900">{selectedDriver.email}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Phone
-                      </label>
-                      <p className="text-gray-900">{selectedDriver.phone_no}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Gender
-                      </label>
-                      <p className="text-gray-900 capitalize">
-                        {selectedDriver.gender}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Driver Type
-                      </label>
-                      <p className="text-gray-900 capitalize">
-                        {selectedDriver.driver_type}
-                      </p>
-                    </div>
-                    {selectedDriver.fleet_company_name && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-1">
-                          Fleet Company
-                        </label>
-                        <div className="flex items-center space-x-2">
-                          <Building2 className="w-4 h-4 text-blue-500" />
-                          <p className="text-gray-900 font-medium">
-                            {selectedDriver.fleet_company_name}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Experience
-                      </label>
-                      <p className="text-gray-900">
-                        {selectedDriver.year_of_experiance} years
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Status
-                      </label>
-                      {getStatusBadge(selectedDriver.status)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Address */}
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 pb-2 border-b">
-                    Address Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Street Address
-                      </label>
-                      <p className="text-gray-900">{selectedDriver.address}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        City
-                      </label>
-                      <p className="text-gray-900">
-                        {selectedDriver.city_name}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        ZIP Code
-                      </label>
-                      <p className="text-gray-900">{selectedDriver.zip_code}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Registration Info */}
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 pb-2 border-b">
-                    Registration Details
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Registered On
-                      </label>
-                      <p className="text-gray-900">
-                        {formatDate(selectedDriver.created_at)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Last Updated
-                      </label>
-                      <p className="text-gray-900">
-                        {formatDate(selectedDriver.updated_at)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status Change Actions */}
-                <div className="pt-4 border-t">
-                  <h4 className="font-semibold text-gray-900 mb-3">
-                    Change Status
-                  </h4>
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={() => {
-                        handleStatusChange(
-                          selectedDriver.driver_id,
-                          "approved"
-                        );
-                        setShowModal(false);
-                      }}
-                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center space-x-2"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Approve</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleStatusChange(
-                          selectedDriver.driver_id,
-                          "in_review"
-                        );
-                        setShowModal(false);
-                      }}
-                      className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium flex items-center justify-center space-x-2"
-                    >
-                      <Clock className="w-4 h-4" />
-                      <span>In Review</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleStatusChange(
-                          selectedDriver.driver_id,
-                          "rejected"
-                        );
-                        setShowModal(false);
-                      }}
-                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center space-x-2"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      <span>Reject</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

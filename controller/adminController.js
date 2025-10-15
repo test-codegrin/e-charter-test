@@ -1,18 +1,28 @@
 const {db} = require("../config/db");
 const asyncHandler = require("express-async-handler");
 const adminGetQueries = require("../config/adminQueries/adminGetQueries");
+const dashboardGetQueries = require("../config/dashboardQueries/dashboardGetQueries");
 const adminDeleteQueries = require("../config/adminQueries/adminDeleteQueries");
 const adminUpdateQueries = require("../config/adminQueries/adminUpdateQueries");
 const fleetPartnerQueries = require("../config/fleetPartnerQueries/fleetPartnerQueries");
+const imagekit = require("../config/imagekit");
+
+// GET 
 
 const getAllDrivers = asyncHandler(async (req, res) => {
     try {
         const [drivers] = await db.query(adminGetQueries.getAllDrivers);
 
+        // Parse documents JSON for each driver
+        const parsedDrivers = drivers.map(driver => ({
+            ...driver,
+            documents: driver.documents ? JSON.parse(driver.documents) : null
+        }));
+
         res.status(200).json({
             message: "Drivers fetched successfully",
-            count: drivers.length,
-            drivers
+            count: parsedDrivers.length,
+            drivers: parsedDrivers
         });
     } catch (error) {
         console.error("Error fetching drivers:", error);
@@ -20,8 +30,84 @@ const getAllDrivers = asyncHandler(async (req, res) => {
     }
 });
 
+const getDriverById = asyncHandler(async (req, res) => {
+    const { driver_id } = req.params;
+    
+    if (!driver_id) {
+        return res.status(400).json({ message: "Driver ID is required" });
+    }
+    
+    try {
+        const [driver] = await db.query(adminGetQueries.getDriverById, [driver_id]);
+        
+        if (driver.length === 0) {
+            return res.status(404).json({ message: "Driver not found" });
+        }
+        
+        // Parse JSON strings to actual JSON objects
+        const parsedDriver = {
+            ...driver[0],
+            average_rating: parseFloat(driver[0].average_rating),
+            // Handle documents - return null if no documents, otherwise parse
+            documents: driver[0].documents ? JSON.parse(driver[0].documents) : null,
+            // Handle ratings - return empty array if no ratings, otherwise parse
+            ratings: driver[0].ratings ? JSON.parse(driver[0].ratings) : [],
+            // Handle fleet company details - return null if not fleet partner, otherwise parse
+            fleet_company_details: driver[0].fleet_company_details 
+                ? JSON.parse(driver[0].fleet_company_details) 
+                : null
+        };
+        
+        res.status(200).json({
+            message: "Driver fetched successfully",
+            driver: parsedDriver
+        });
+    } catch (error) {
+        console.error("Error fetching driver:", error);
+        res.status(500).json({ 
+            message: "Internal server error", 
+            error: error.message 
+        });
+    }
+});
 
-// Get all fleet companies
+const getVehicleById = asyncHandler(async (req, res) => {
+    const { vehicle_id } = req.params;
+    
+    if (!vehicle_id) {
+        return res.status(400).json({ message: "Vehicle ID is required" });
+    }
+    
+    try {
+        const [vehicle] = await db.query(adminGetQueries.getVehicleById, [vehicle_id]);
+        
+        if (vehicle.length === 0) {
+            return res.status(404).json({ message: "Vehicle not found" });
+        }
+        
+        // Parse JSON strings to actual JSON objects
+        const parsedVehicle = {
+            ...vehicle[0],
+            documents: vehicle[0].documents ? JSON.parse(vehicle[0].documents) : null,
+            features: vehicle[0].features ? JSON.parse(vehicle[0].features) : null,
+            fleet_company_details: vehicle[0].fleet_company_details 
+                ? JSON.parse(vehicle[0].fleet_company_details) 
+                : null
+        };
+        
+        res.status(200).json({
+            message: "Vehicle fetched successfully",
+            vehicle: parsedVehicle
+        });
+    } catch (error) {
+        console.error("Error fetching vehicle:", error);
+        res.status(500).json({ 
+            message: "Internal server error", 
+            error: error.message 
+        });
+    }
+});
+
 const getAllFleetCompanies= asyncHandler(async (req, res) => {
   try {
     const [companies] = await db.query(adminGetQueries.getAllFleetCompanies);
@@ -39,16 +125,102 @@ const getAllFleetCompanies= asyncHandler(async (req, res) => {
 const getAllVehicles = asyncHandler(async (req, res) => {
   try {
     const [vehicles] = await db.query(adminGetQueries.getAllVehicles);
+    
+    // Parse JSON fields and handle null documents properly
+    const parsedVehicles = vehicles.map(vehicle => {
+      // Parse documents - handle null or empty cases
+      let documents = [];
+      if (vehicle.documents) {
+        try {
+          const parsedDocs = JSON.parse(vehicle.documents);
+          // Filter out null values and ensure it's an array
+          documents = Array.isArray(parsedDocs) 
+            ? parsedDocs.filter(doc => doc !== null) 
+            : [];
+        } catch (e) {
+          console.error('Error parsing documents for vehicle:', vehicle.vehicle_id);
+          documents = [];
+        }
+      }
+
+      // Parse fleet company details
+      let fleetCompanyDetails = null;
+      if (vehicle.fleet_company_details) {
+        try {
+          fleetCompanyDetails = JSON.parse(vehicle.fleet_company_details);
+        } catch (e) {
+          console.error('Error parsing fleet company details for vehicle:', vehicle.vehicle_id);
+        }
+      }
+
+      // Parse features
+      let features = null;
+      if (vehicle.features) {
+        try {
+          features = JSON.parse(vehicle.features);
+        } catch (e) {
+          console.error('Error parsing features for vehicle:', vehicle.vehicle_id);
+        }
+      }
+
+      return {
+        ...vehicle,
+        documents,
+        features,
+        fleet_company_details: fleetCompanyDetails
+      };
+    });
+
     res.status(200).json({
       message: "All vehicles fetched successfully",
-      count: vehicles.length,
-      vehicles
+      count: parsedVehicles.length,
+      vehicles: parsedVehicles
     });
   } catch (error) {
     console.error("Error fetching vehicles:", error);
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
+
+
+
+
+// DELETE
+
+const deleteDriver = asyncHandler(async (req, res) => {
+  try {
+    const { driver_id } = req.params;
+    const [result] = await db.query(adminDeleteQueries.deleteDriverById, [driver_id]);
+    res.status(200).json({
+      message: "Driver deleted successfully",
+      result,
+      driver_id,
+    });
+  } catch (error) {
+    console.error("Error deleting driver:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+const deleteVehicle = asyncHandler(async (req, res) => {
+  try {
+    const { vehicle_id } = req.params;
+    const [result] = await db.query(adminDeleteQueries.deleteVehicleById, [vehicle_id]);
+    res.status(200).json({
+      message: "Vehicle deleted successfully",
+      result,
+      vehicle_id,
+    });
+  } catch (error) {
+    console.error("Error deleting vehicle:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+
+
+
+
 
 // Get all trips for admin dashboard - FIXED with proper data formatting
 const getAllTrips = asyncHandler(async (req, res) => {
@@ -182,84 +354,33 @@ const editUser = asyncHandler(async (req, res) => {
 // Get dashboard statistics for admin - ENHANCED with proper data formatting
 const getDashboardStats = asyncHandler(async (req, res) => {
   try { 
-    // Get all required data in parallel with better error handling
-      const [
-      [drivers],
-      [vehicles],
-      [trips],
-      [users],
-      [fleetPartners]
-    ] = await Promise.all([
-      db.query(adminGetQueries.getAllDrivers),
-      db.query(adminGetQueries.getAllCars),
-      db.query(adminGetQueries.getDashboardTrips),
-      db.query(adminGetQueries.getAllUsers),
-      db.query(adminGetQueries.getFleetPartnersOnly).catch(() => [[]])
-    ]);
-
-    // Calculate statistics with proper number handling
-    const completedTrips = trips.filter(t => t.status === 'completed');
-    const totalRevenue = completedTrips.reduce((sum, trip) => {
-      return sum + (parseFloat(trip.total_price) || 0);
-    }, 0);
-
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    const monthlyRevenue = completedTrips
-      .filter(t => {
-        const tripDate = new Date(t.created_at);
-        return tripDate.getMonth() === currentMonth && 
-               tripDate.getFullYear() === currentYear;
-      })
-      .reduce((sum, trip) => sum + (parseFloat(trip.total_price) || 0), 0);
-
+    // Execute the dashboard stats query
+    const [statsRows] = await db.query(dashboardGetQueries.getDashboardStats);
+    
+    // Get the first row which contains all the counts
+    const statsData = statsRows[0];
+    
     const stats = {
-      totalDrivers: drivers.length,
-      totalVehicles: vehicles.length,
-      totalTrips: trips.length,
-      totalUsers: users.length,
-      totalFleetPartners: fleetPartners.length,
+      totalDrivers: statsData.total_drivers,
+      totalVehicles: statsData.total_vehicles,
       
       // Driver stats
-      approvedDrivers: drivers.filter(d => d.status === 1).length,
-      pendingDrivers: drivers.filter(d => d.status === 0).length,
-      rejectedDrivers: drivers.filter(d => d.status === 2).length,
+      approvedDrivers: statsData.approved_drivers,
+      pendingDrivers: statsData.pending_drivers,
       
       // Vehicle stats
-      approvedVehicles: vehicles.filter(v => v.status === 1).length,
-      pendingVehicles: vehicles.filter(v => v.status === 0).length,
-      
-      // Trip stats
-      pendingTrips: trips.filter(t => t.status === 'pending' || t.status === '0').length,
-      confirmedTrips: trips.filter(t => t.status === 'confirmed').length,
-      inProgressTrips: trips.filter(t => t.status === 'in_progress').length,
-      completedTrips: completedTrips.length,
-      cancelledTrips: trips.filter(t => t.status === 'cancelled').length,
-      
-      // Revenue calculation - properly formatted
-      totalRevenue: parseFloat(totalRevenue.toFixed(2)),
-      monthlyRevenue: parseFloat(monthlyRevenue.toFixed(2)),
+      approvedVehicles: statsData.approved_vehicles,
+      pendingVehicles: statsData.pending_vehicles,
       
       // Pending approvals
-      pendingApprovals: drivers.filter(d => d.status === 0).length + 
-                       vehicles.filter(v => v.status === 0).length +
-                       fleetPartners.filter(fp => fp.status === 0).length
+      pendingApprovals: statsData.pending_drivers + statsData.pending_vehicles
     };
-
-    // Get recent trips (last 10) with proper formatting
-    const recentTrips = trips.slice(0, 10).map(trip => ({
-      ...trip,
-      total_price: parseFloat(trip.total_price) || 0,
-      base_price: parseFloat(trip.base_price) || 0,
-      tax_amount: parseFloat(trip.tax_amount) || 0
-    }));
 
     console.log("Dashboard stats calculated successfully");
 
     res.status(200).json({
       message: "Dashboard statistics fetched successfully",
-      stats,
-      recentTrips
+      stats
     });
 
   } catch (error) {
@@ -267,6 +388,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
+
+
 
 // Get all fleet partners for admin - FIXED with proper column handling
 const getAllFleetPartners = asyncHandler(async (req, res) => {
@@ -516,10 +639,14 @@ const getPayoutSummary = asyncHandler(async (req, res) => {
 
 module.exports = {
     getAllDrivers,
+    getDriverById,
     getAllVehicles,
+    getVehicleById,
     getAllTrips,
     getAllUsers,
     deleteUser,
+    deleteDriver,
+    deleteVehicle,
     editUser,
     getDashboardStats,
     getAllFleetCompanies,

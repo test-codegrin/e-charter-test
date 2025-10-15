@@ -48,31 +48,26 @@ const Sidebar = () => {
   return (
     <div className="bg-dark-800 w-64 min-h-screen shadow-lg flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-dark-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-ice-500 rounded-lg flex items-center justify-center shadow-glow">
-            <Car className="w-6 h-6 text-white animated-icon" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">eCharter</h1>
-            <p className="text-sm text-ice-400 capitalize">{user?.role || 'User'} Panel</p>
-          </div>
+      <div className="p-4 border-b border-dark-700">
+        <div className="flex flex-col justify-center items-center">
+          <img src="/assets/images/logo.png" alt="" className="w-24 mb-2" />
+          <p className="text-md text-white capitalize font-bold">{user?.role || 'User'} Panel</p>
         </div>
       </div>
 
-      {/* Navigation - Takes up remaining space */}
+      {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {menuItems.map((item, index) => {
           const Icon = item.icon
           const isActiveRoute = isActive(item.path)
-          
+
           return (
             <Link
               key={item.path}
               to={item.path}
               className={`
                 flex items-center space-x-3 px-4 py-3 rounded-lg 
-                transition-colors duration-200
+                transition-colors duration-200 group
                 ${isActiveRoute 
                   ? 'bg-ice-100 text-ice-700 font-medium' 
                   : 'text-gray-300 hover:bg-ice-50 hover:text-ice-700'
@@ -81,9 +76,8 @@ const Sidebar = () => {
               style={{ animationDelay: `${index * 0.05}s` }}
             >
               <Icon 
-                className={`w-5 h-5 transition-colors ${
-                  isActiveRoute ? 'text-primary-500' : 'text-ice-300'
-                }`} 
+                className={`w-5 h-5 transition-colors duration-200 
+                  ${isActiveRoute ? 'text-ice-700' : 'text-gray-300 group-hover:text-ice-700'}`} 
               />
               <span>{item.label}</span>
             </Link>
@@ -91,7 +85,7 @@ const Sidebar = () => {
         })}
       </nav>
 
-      {/* Footer - Simple branding only */}
+      {/* Footer */}
       <div className="p-4 border-t border-dark-700 bg-dark-800">
         <div className="text-center">
           <p className="text-xs text-gray-400">© 2025 eCharter</p>

@@ -10,30 +10,32 @@ const {
   deleteFleetPartnerByAdmin,
   getPayoutSummary,
   getAllUsers,
+  getDriverById,
   editUser,
   deleteUser,
-  getAllFleetCompanies
+  getAllFleetCompanies,
+  deleteDriver,
+  getVehicleById,
+  deleteVehicle
 } = require("../controller/adminController")
-const { 
-  approveDriver, 
-  approveVehicle, 
-  getPendingApprovals, 
-  approveFleetCompany
-} = require("../controller/verificationController")
 const { authenticationToken } = require("../middleware/authMiddleware")
 
 
 // Dashboard stats
-router.get("/dashboard/status", authenticationToken, getDashboardStats);
+router.get("/dashboard/stats", authenticationToken, getDashboardStats);
 
 // Data management routes
 router.get("/all-drivers", authenticationToken, getAllDrivers);
+router.get("/driver/:driver_id", authenticationToken, getDriverById);
 router.get("/all-vehicles", authenticationToken, getAllVehicles);
+router.get("/vehicle/:vehicle_id", authenticationToken, getVehicleById);
 router.get("/all-trips", authenticationToken, getAllTrips);
 router.get("/all-users",authenticationToken,getAllUsers);
 router.get("/fleet-companies",authenticationToken,getAllFleetCompanies);
 router.delete("/delete-user/:user_id", authenticationToken,deleteUser);
 router.put("/edituser/:user_id", editUser);
+router.delete("/driver/:driver_id", authenticationToken,deleteDriver);
+router.delete("/vehicle/:vehicle_id", authenticationToken,deleteVehicle);
 
 
 

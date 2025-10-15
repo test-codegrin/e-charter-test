@@ -91,8 +91,8 @@ const adminLogin = asyncHandler(async (req, res) => {
                 email: admin.admin_email,
                 role: 'admin'
             },
-            process.env.JWT_SECRET,
-            { expiresIn: "1d" }
+            process.env.JWT_SECRET
+            // { expiresIn: "1d" }
         );
 
         // Return consistent user object
