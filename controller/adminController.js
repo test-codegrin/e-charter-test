@@ -71,56 +71,6 @@ const getDriverById = asyncHandler(async (req, res) => {
     }
 });
 
-const getVehicleById = asyncHandler(async (req, res) => {
-    const { vehicle_id } = req.params;
-    
-    if (!vehicle_id) {
-        return res.status(400).json({ message: "Vehicle ID is required" });
-    }
-    
-    try {
-        const [vehicle] = await db.query(adminGetQueries.getVehicleById, [vehicle_id]);
-        
-        if (vehicle.length === 0) {
-            return res.status(404).json({ message: "Vehicle not found" });
-        }
-        
-        // Parse JSON strings to actual JSON objects
-        const parsedVehicle = {
-            ...vehicle[0],
-            documents: vehicle[0].documents ? JSON.parse(vehicle[0].documents) : null,
-            features: vehicle[0].features ? JSON.parse(vehicle[0].features) : null,
-            fleet_company_details: vehicle[0].fleet_company_details 
-                ? JSON.parse(vehicle[0].fleet_company_details) 
-                : null
-        };
-        
-        res.status(200).json({
-            message: "Vehicle fetched successfully",
-            vehicle: parsedVehicle
-        });
-    } catch (error) {
-        console.error("Error fetching vehicle:", error);
-        res.status(500).json({ 
-            message: "Internal server error", 
-            error: error.message 
-        });
-    }
-});
-
-const getAllFleetCompanies= asyncHandler(async (req, res) => {
-  try {
-    const [companies] = await db.query(adminGetQueries.getAllFleetCompanies);
-    res.status(200).json({
-      message: "All fleet companies fetched successfully",
-      count: companies.length,
-      companies
-    });
-  } catch (error) {
-    console.error("Error fetching companies:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
-  }
-});
 
 const getAllVehicles = asyncHandler(async (req, res) => {
   try {
@@ -182,6 +132,291 @@ const getAllVehicles = asyncHandler(async (req, res) => {
   }
 });
 
+const getVehicleById = asyncHandler(async (req, res) => {
+    const { vehicle_id } = req.params;
+    
+    if (!vehicle_id) {
+        return res.status(400).json({ message: "Vehicle ID is required" });
+    }
+    
+    try {
+        const [vehicle] = await db.query(adminGetQueries.getVehicleById, [vehicle_id]);
+        
+        if (vehicle.length === 0) {
+            return res.status(404).json({ message: "Vehicle not found" });
+        }
+        
+        // Parse JSON strings to actual JSON objects
+        const parsedVehicle = {
+            ...vehicle[0],
+            documents: vehicle[0].documents ? JSON.parse(vehicle[0].documents) : null,
+            features: vehicle[0].features ? JSON.parse(vehicle[0].features) : null,
+            fleet_company_details: vehicle[0].fleet_company_details 
+                ? JSON.parse(vehicle[0].fleet_company_details) 
+                : null
+        };
+        
+        res.status(200).json({
+            message: "Vehicle fetched successfully",
+            vehicle: parsedVehicle
+        });
+    } catch (error) {
+        console.error("Error fetching vehicle:", error);
+        res.status(500).json({ 
+            message: "Internal server error", 
+            error: error.message 
+        });
+    }
+});
+
+const getAllFleetCompanies = asyncHandler(async (req, res) => {
+  try {
+    const [companies] = await db.query(adminGetQueries.getAllFleetCompanies);
+    
+    // Parse JSON fields for each company
+    const parsedCompanies = companies.map(company => {
+      // Parse documents - handle null or empty cases
+      let documents = [];
+      if (company.documents) {
+        try {
+          const parsedDocs = JSON.parse(company.documents);
+          // Filter out null values and ensure it's an array
+          documents = Array.isArray(parsedDocs) 
+            ? parsedDocs.filter(doc => doc !== null) 
+            : [];
+        } catch (e) {
+          console.error('Error parsing documents for company:', company.fleet_company_id);
+          documents = [];
+        }
+      }
+
+      return {
+        ...company,
+        documents
+      };
+    });
+
+    res.status(200).json({
+      message: "All fleet companies fetched successfully",
+      count: parsedCompanies.length,
+      companies: parsedCompanies
+    });
+  } catch (error) {
+    console.error("Error fetching companies:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+const getFleetCompanyById = asyncHandler(async (req, res) => {
+  try {
+    const { fleet_company_id } = req.params;
+
+    console.log('Fetching fleet company with ID:', fleet_company_id);
+    
+    const [companies] = await db.query(
+      adminGetQueries.getFleetCompanyById, 
+      [fleet_company_id]
+    );
+    
+    console.log('Query result:', companies);
+
+    if (!companies || companies.length === 0) {
+      return res.status(404).json({ message: "Fleet company not found" });
+    }
+
+    const company = companies[0];
+
+    // Parse documents - FIXED NULL HANDLING
+    let documents = [];
+    if (company.documents && company.documents !== null) {
+      try {
+        // Check if it's already an array or needs parsing
+        if (typeof company.documents === 'string') {
+          const parsedDocs = JSON.parse(company.documents);
+          documents = Array.isArray(parsedDocs) 
+            ? parsedDocs.filter(doc => doc !== null) 
+            : [];
+        } else if (Array.isArray(company.documents)) {
+          documents = company.documents.filter(doc => doc !== null);
+        }
+      } catch (e) {
+        console.error('Error parsing documents:', e);
+        documents = [];
+      }
+    }
+
+    let contact_person = [];
+    if (company.contact_person && company.contact_person !== null) {
+      try {
+        // Check if it's already an array or needs parsing
+        if (typeof company.contact_person === 'string') {
+          const parsedDocs = JSON.parse(company.contact_person);
+          contact_person = Array.isArray(parsedDocs) 
+            ? parsedDocs.filter(doc => doc !== null) 
+            : [];
+        } else if (Array.isArray(company.contact_person)) {
+          contact_person = company.contact_person.filter(doc => doc !== null);
+        }
+      } catch (e) {
+        console.error('Error parsing contact person:', e);
+        contact_person = [];
+      }
+    }
+
+    res.status(200).json({
+      message: "Fleet company fetched successfully",
+      company: {
+        ...company,
+        documents,
+        contact_person
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching fleet company:", error);
+    res.status(500).json({ 
+      message: "Internal server error", 
+      error: error.message 
+    });
+  }
+});
+
+const deleteFleetCompany = asyncHandler(async (req, res) => {
+  try {
+    const { fleet_company_id } = req.params;
+
+    // Check if company exists
+    const [companies] = await db.query(
+      adminDeleteQueries.deleteFleetCompany,
+      [fleet_company_id]
+    );
+
+    if (!companies || companies.length === 0) {
+      return res.status(404).json({ message: "Fleet company not found" });
+    }
+
+    // Soft delete
+    await db.query(
+      adminGetQueries.deleteFleetCompany, 
+      [fleet_company_id]
+    );
+
+    res.status(200).json({
+      message: "Fleet company deleted successfully"
+    });
+  } catch (error) {
+    console.error("Error deleting fleet company:", error);
+    res.status(500).json({ 
+      message: "Internal server error", 
+      error: error.message 
+    });
+  }
+});
+
+
+const getAllVehiclesByFleetCompany = asyncHandler(async (req, res) => {
+  try {
+    const { fleet_company_id } = req.params;
+    const [vehicles] = await db.query(adminGetQueries.getAllVehiclesByFleetCompany, [fleet_company_id]);
+    
+    // Parse JSON fields and handle null documents properly
+    const parsedVehicles = vehicles.map(vehicle => {
+      // Parse documents - handle null or empty cases
+      let documents = [];
+      if (vehicle.documents) {
+        try {
+          const parsedDocs = JSON.parse(vehicle.documents);
+          // Filter out null values and ensure it's an array
+          documents = Array.isArray(parsedDocs) 
+            ? parsedDocs.filter(doc => doc !== null) 
+            : [];
+        } catch (e) {
+          console.error('Error parsing documents for vehicle:', vehicle.vehicle_id);
+          documents = [];
+        }
+      }
+
+      // Parse fleet company details
+      let fleetCompanyDetails = null;
+      if (vehicle.fleet_company_details) {
+        try {
+          fleetCompanyDetails = JSON.parse(vehicle.fleet_company_details);
+        } catch (e) {
+          console.error('Error parsing fleet company details for vehicle:', vehicle.vehicle_id);
+        }
+      }
+
+      // Parse features
+      let features = null;
+      if (vehicle.features) {
+        try {
+          features = JSON.parse(vehicle.features);
+        } catch (e) {
+          console.error('Error parsing features for vehicle:', vehicle.vehicle_id);
+        }
+      }
+
+      return {
+        ...vehicle,
+        documents,
+        features,
+        fleet_company_details: fleetCompanyDetails
+      };
+    });
+
+    res.status(200).json({
+      message: "All vehicles fetched successfully",
+      count: parsedVehicles.length,
+      vehicles: parsedVehicles
+    });
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+const getAllDriversByFleetCompany = asyncHandler(async (req, res) => {
+    try {
+        const { fleet_company_id } = req.params;
+        const [drivers] = await db.query(adminGetQueries.getAllDriversByFleetCompany, [fleet_company_id]);
+
+        // Parse documents JSON for each driver
+        const parsedDrivers = drivers.map(driver => ({
+            ...driver,
+            documents: driver.documents ? JSON.parse(driver.documents) : null
+        }));
+
+        res.status(200).json({
+            message: "Drivers fetched successfully",
+            count: parsedDrivers.length,
+            drivers: parsedDrivers
+        });
+    } catch (error) {
+        console.error("Error fetching drivers:", error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+});
+
+const getVehicleByDriverId = asyncHandler(async (req, res) => {
+    try {
+        const { driver_id } = req.params;
+        const [vehicles] = await db.query(adminGetQueries.getVehicleByDriverId, [driver_id]);
+
+        // Parse documents JSON for each vehicle
+        const parsedVehicles = vehicles.map(vehicle => ({
+            ...vehicle,
+            documents: vehicle.documents ? JSON.parse(vehicle.documents) : null
+        }));
+
+        res.status(200).json({
+            message: "Vehicles fetched successfully",
+            count: parsedVehicles.length,
+            vehicles: parsedVehicles
+        });
+    } catch (error) {
+        console.error("Error fetching vehicles:", error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+});
 
 
 
@@ -642,6 +877,11 @@ module.exports = {
     getDriverById,
     getAllVehicles,
     getVehicleById,
+    getAllVehiclesByFleetCompany,
+    getAllDriversByFleetCompany,
+    getVehicleByDriverId,
+    getFleetCompanyById,
+    deleteFleetCompany,
     getAllTrips,
     getAllUsers,
     deleteUser,

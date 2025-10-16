@@ -11,6 +11,7 @@
   }
 }
 
+
 @layer components {
   .btn-primary {
     @apply bg-ice-600 hover:bg-ice-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ice-500 focus:ring-offset-2 shadow-ice;
@@ -231,7 +232,18 @@
     opacity: 1;
   }
 }
+@keyframes loading {
+  0% {
+    left: -33%;
+  }
+  100% {
+    left: 100%;
+  }
+}
 
+.animate-loading {
+  animation: loading 1s ease-in-out infinite;
+}
 .animate-bounce-in {
   animation: bounceIn 0.5s ease-out;
 }

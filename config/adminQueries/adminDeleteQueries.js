@@ -1,11 +1,17 @@
 const adminDeleteQueries = {
-    deleteTripsById:`DELETE FROM trips WHERE user_id = 4`,
+    deleteTripsById:`UPDATE trips SET is_deleted = 1, updated_at = NOW() WHERE user_id = 4`,
     
-  deleteUserById: `DELETE FROM users WHERE user_id = ?`,
+  deleteUserById: `UPDATE users SET is_deleted = 1, updated_at = NOW() WHERE user_id = ?`,
 
-  deleteDriverById: `UPDATE drivers SET is_deleted = 1 WHERE driver_id = ?`,
+  deleteDriverById: `UPDATE drivers SET is_deleted = 1, updated_at = NOW() WHERE driver_id = ?`,
   
-  deleteVehicleById: `UPDATE vehicle SET is_deleted = 1 WHERE vehicle_id = ?`,
+  deleteVehicleById: `UPDATE vehicle SET is_deleted = 1, updated_at = NOW() WHERE vehicle_id = ?`,
+
+   deleteFleetCompany: `
+    UPDATE fleet_companies 
+    SET is_deleted = 1, updated_at = NOW() 
+    WHERE fleet_company_id = ?
+  `,
   
 };
 

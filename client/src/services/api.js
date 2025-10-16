@@ -68,10 +68,14 @@ export const adminAPI = {
   getDriverById: (driverId) => api.get(`/admin/driver/${driverId}`),
   approveDriver: (driverId, status) => api.put(`/verification/approve-driver/${driverId}`, { status }),
   deleteDriver: (driverId) => api.delete(`/admin/driver/${driverId}`),
+  getVehicleByDriverId: (driverId) => api.get(`/admin/driver-vehicles/${driverId}`),
 
 
   // Fleet Partners
   getAllFleetPartners: () => api.get('/admin/fleet-companies'),
+  getFleetPartnerById: (fleetCompanyId) => api.get(`/admin/fleet-company/${fleetCompanyId}`),
+  getAllFleetPartnersVehicles: (fleetCompanyId) => api.get(`/admin/fleet-company-vehicles/${fleetCompanyId}`),
+  getAllFleetPartnersDrivers: (fleetCompanyId) => api.get(`/admin/fleet-company-drivers/${fleetCompanyId}`),
   updateFleetPartnerStatus: (companyId, status) => api.put(`/verification/approve-fleet-company/${companyId}`, { status }),
 
   // Vehicles

@@ -26,62 +26,142 @@ const adminGetQueries = {
     ORDER BY d.created_at DESC;
 `,
 
-
-getAllVehicles: `
- SELECT
-    v.*,
-    CASE 
-        WHEN v.fleet_company_id IS NOT NULL 
-        THEN JSON_OBJECT(
-            'fleet_company_id', fc.fleet_company_id,
-            'company_name', fc.company_name,
-            'email', fc.email,
-            'phone_no', fc.phone_no,
-            'address', fc.address,
-            'city', fc.city_name,
-            'postal_code', fc.postal_code,
-            'website', fc.website,
-            'profile_image', fc.profile_image,
-            'status', fc.status
-        )
-        ELSE NULL
-    END AS fleet_company_details,
-    CASE 
-        WHEN vf.vehicle_features_id IS NOT NULL THEN
-            JSON_OBJECT(
-                'vehicle_features_id', vf.vehicle_features_id,
-                'has_air_conditioner', vf.has_air_conditioner,
-                'has_charging_port', vf.has_charging_port,
-                'has_wifi', vf.has_wifi,
-                'has_entertainment_system', vf.has_entertainment_system,
-                'has_gps', vf.has_gps,
-                'has_recliner_seats', vf.has_recliner_seats,
-                'is_wheelchair_accessible', vf.is_wheelchair_accessible
-            )
-        ELSE NULL
-    END AS features,
+  getAllDriversByFleetCompany: `SELECT 
+    d.*,
+    COALESCE(ROUND(AVG(dr.rating), 1), 0.0) AS average_rating,
+    COUNT(DISTINCT dr.driver_rating_id) AS total_ratings,
+    fc.company_name AS fleet_company_name,
     (
         SELECT JSON_ARRAYAGG(
             JSON_OBJECT(
-                'vehicle_document_id', vd.vehicle_document_id,
-                'document_type', vd.document_type,
-                'document_number', vd.document_number,
-                'document_url', vd.document_url,
-                'document_expiry_date', vd.document_expiry_date,
-                'is_deleted', vd.is_deleted,
-                'created_at', vd.created_at,
-                'updated_at', vd.updated_at
+                'driver_document_id', dd.driver_document_id,
+                'document_type', dd.document_type,
+                'document_expiry_date', dd.document_expiry_date
             )
         )
-        FROM vehicle_documents vd
-        WHERE vd.vehicle_id = v.vehicle_id AND vd.is_deleted = 0
+        FROM driver_documents dd
+        WHERE dd.driver_id = d.driver_id AND dd.is_deleted = 0
     ) AS documents
-FROM vehicle v
-LEFT JOIN fleet_companies fc ON v.fleet_company_id = fc.fleet_company_id
-LEFT JOIN vehicle_features vf ON v.vehicle_id = vf.vehicle_id
-WHERE v.is_deleted = 0
-ORDER BY v.created_at DESC;
+    FROM drivers d
+    LEFT JOIN driver_ratings dr ON d.driver_id = dr.driver_id
+    LEFT JOIN fleet_companies fc ON d.fleet_company_id = fc.fleet_company_id
+    WHERE d.is_deleted = 0 and d.driver_type="fleet_partner" and d.fleet_company_id=?
+    GROUP BY d.driver_id
+    ORDER BY d.created_at DESC;
 `,
+
+
+  getAllVehicles: `
+  SELECT
+      v.*,
+      CASE 
+          WHEN v.fleet_company_id IS NOT NULL 
+          THEN JSON_OBJECT(
+              'fleet_company_id', fc.fleet_company_id,
+              'company_name', fc.company_name,
+              'email', fc.email,
+              'phone_no', fc.phone_no,
+              'address', fc.address,
+              'city', fc.city_name,
+              'postal_code', fc.postal_code,
+              'website', fc.website,
+              'profile_image', fc.profile_image,
+              'status', fc.status
+          )
+          ELSE NULL
+      END AS fleet_company_details,
+      CASE 
+          WHEN vf.vehicle_features_id IS NOT NULL THEN
+              JSON_OBJECT(
+                  'vehicle_features_id', vf.vehicle_features_id,
+                  'has_air_conditioner', vf.has_air_conditioner,
+                  'has_charging_port', vf.has_charging_port,
+                  'has_wifi', vf.has_wifi,
+                  'has_entertainment_system', vf.has_entertainment_system,
+                  'has_gps', vf.has_gps,
+                  'has_recliner_seats', vf.has_recliner_seats,
+                  'is_wheelchair_accessible', vf.is_wheelchair_accessible
+              )
+          ELSE NULL
+      END AS features,
+      (
+          SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                  'vehicle_document_id', vd.vehicle_document_id,
+                  'document_type', vd.document_type,
+                  'document_number', vd.document_number,
+                  'document_url', vd.document_url,
+                  'document_expiry_date', vd.document_expiry_date,
+                  'is_deleted', vd.is_deleted,
+                  'created_at', vd.created_at,
+                  'updated_at', vd.updated_at
+              )
+          )
+          FROM vehicle_documents vd
+          WHERE vd.vehicle_id = v.vehicle_id AND vd.is_deleted = 0
+      ) AS documents
+  FROM vehicle v
+  LEFT JOIN fleet_companies fc ON v.fleet_company_id = fc.fleet_company_id
+  LEFT JOIN vehicle_features vf ON v.vehicle_id = vf.vehicle_id
+  WHERE v.is_deleted = 0
+  ORDER BY v.created_at DESC;
+  `,
+
+ getAllVehiclesByFleetCompany: `
+  SELECT
+      v.*,
+      CASE 
+          WHEN v.fleet_company_id IS NOT NULL 
+          THEN JSON_OBJECT(
+              'fleet_company_id', fc.fleet_company_id,
+              'company_name', fc.company_name,
+              'email', fc.email,
+              'phone_no', fc.phone_no,
+              'address', fc.address,
+              'city', fc.city_name,
+              'postal_code', fc.postal_code,
+              'website', fc.website,
+              'profile_image', fc.profile_image,
+              'status', fc.status
+          )
+          ELSE NULL
+      END AS fleet_company_details,
+      CASE 
+          WHEN vf.vehicle_features_id IS NOT NULL THEN
+              JSON_OBJECT(
+                  'vehicle_features_id', vf.vehicle_features_id,
+                  'has_air_conditioner', vf.has_air_conditioner,
+                  'has_charging_port', vf.has_charging_port,
+                  'has_wifi', vf.has_wifi,
+                  'has_entertainment_system', vf.has_entertainment_system,
+                  'has_gps', vf.has_gps,
+                  'has_recliner_seats', vf.has_recliner_seats,
+                  'is_wheelchair_accessible', vf.is_wheelchair_accessible
+              )
+          ELSE NULL
+      END AS features,
+      (
+          SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                  'vehicle_document_id', vd.vehicle_document_id,
+                  'document_type', vd.document_type,
+                  'document_number', vd.document_number,
+                  'document_url', vd.document_url,
+                  'document_expiry_date', vd.document_expiry_date,
+                  'is_deleted', vd.is_deleted,
+                  'created_at', vd.created_at,
+                  'updated_at', vd.updated_at
+              )
+          )
+          FROM vehicle_documents vd
+          WHERE vd.vehicle_id = v.vehicle_id AND vd.is_deleted = 0
+      ) AS documents
+  FROM vehicle v
+  LEFT JOIN fleet_companies fc ON v.fleet_company_id = fc.fleet_company_id
+  LEFT JOIN vehicle_features vf ON v.vehicle_id = vf.vehicle_id
+  WHERE v.is_deleted = 0 and v.ownership="fleet_company" and v.fleet_company_id=?
+  ORDER BY v.created_at DESC;
+  `,
 
 
 
@@ -216,38 +296,130 @@ WHERE v.is_deleted = 0 AND v.vehicle_id = ?
 GROUP BY v.vehicle_id;
 `,
 
-  getAllFleetCompanies: `Select * from fleet_companies where is_deleted = 0 order by created_at DESC`,
+getVehicleByDriverId:`SELECT
+      v.*,
+      CASE 
+          WHEN v.fleet_company_id IS NOT NULL 
+          THEN JSON_OBJECT(
+              'fleet_company_id', fc.fleet_company_id,
+              'company_name', fc.company_name,
+              'email', fc.email,
+              'phone_no', fc.phone_no,
+              'address', fc.address,
+              'city', fc.city_name,
+              'postal_code', fc.postal_code,
+              'website', fc.website,
+              'profile_image', fc.profile_image,
+              'status', fc.status
+          )
+          ELSE NULL
+      END AS fleet_company_details,
+      CASE 
+          WHEN vf.vehicle_features_id IS NOT NULL THEN
+              JSON_OBJECT(
+                  'vehicle_features_id', vf.vehicle_features_id,
+                  'has_air_conditioner', vf.has_air_conditioner,
+                  'has_charging_port', vf.has_charging_port,
+                  'has_wifi', vf.has_wifi,
+                  'has_entertainment_system', vf.has_entertainment_system,
+                  'has_gps', vf.has_gps,
+                  'has_recliner_seats', vf.has_recliner_seats,
+                  'is_wheelchair_accessible', vf.is_wheelchair_accessible
+              )
+          ELSE NULL
+      END AS features,
+      (
+          SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                  'vehicle_document_id', vd.vehicle_document_id,
+                  'document_type', vd.document_type,
+                  'document_number', vd.document_number,
+                  'document_url', vd.document_url,
+                  'document_expiry_date', vd.document_expiry_date,
+                  'is_deleted', vd.is_deleted,
+                  'created_at', vd.created_at,
+                  'updated_at', vd.updated_at
+              )
+          )
+          FROM vehicle_documents vd
+          WHERE vd.vehicle_id = v.vehicle_id AND vd.is_deleted = 0
+      ) AS documents
+  FROM vehicle v
+  LEFT JOIN fleet_companies fc ON v.fleet_company_id = fc.fleet_company_id
+  LEFT JOIN vehicle_features vf ON v.vehicle_id = vf.vehicle_id
+  WHERE v.is_deleted = 0 and v.ownership="individual" and v.driver_id=?
+  ORDER BY v.created_at DESC;`,
 
-//   getAllVehicles: `
-//   SELECT
-//       v.*,
-//       fc.company_name AS fleet_company_name,
-//       COALESCE(
-//           JSON_ARRAYAGG(
-//               CASE 
-//                   WHEN vd.vehicle_document_id IS NOT NULL 
-//                   THEN JSON_OBJECT(
-//                       'vehicle_document_id', vd.vehicle_document_id,
-//                       'document_type', vd.document_type,
-//                       'document_number', vd.document_number,
-//                       'document_url', vd.document_url,
-//                       'document_expiry_date', vd.document_expiry_date,
-//                       'is_delete', vd.is_deleted,
-//                       'created_at', vd.created_at,
-//                       'updated_at', vd.updated_at
-//                   )
-//                   ELSE NULL
-//               END
-//           ), 
-//           JSON_ARRAY()
-//       ) AS documents
-//   FROM vehicle v
-//   LEFT JOIN vehicle_document vd ON v.vehicle_id = vd.vehicle_id AND vd.is_deleted = 0
-//   LEFT JOIN fleet_companies fc ON v.fleet_company_id = fc.fleet_company_id
-//   WHERE v.is_deleted = 0
-//   GROUP BY v.vehicle_id
-//   ORDER BY v.created_at DESC;
-// `,
+
+  getAllFleetCompanies: `SELECT 
+    fc.*,
+    (SELECT COUNT(v.vehicle_id) from vehicle v where v.ownership="fleet_company" and v.fleet_company_id = fc.fleet_company_id) as total_vehicles,
+    (SELECT COUNT(d.driver_id) from drivers d where d.driver_type="fleet_partner" and d.fleet_company_id = fc.fleet_company_id) as total_drivers,
+    (
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'fleet_company_document_id', fcd.fleet_company_document_id,
+                'document_type', fcd.document_type,
+                'document_number', fcd.document_number,
+                'document_url', fcd.document_url,
+                'document_expiry_date', fcd.document_expiry_date,
+                'is_deleted', fcd.is_deleted,
+                'created_at', fcd.created_at,
+                'updated_at', fcd.updated_at
+            )
+        )
+        FROM fleet_company_documents fcd
+        WHERE fcd.fleet_company_id = fc.fleet_company_id AND fcd.is_deleted = 0
+    ) AS documents
+FROM fleet_companies fc 
+WHERE fc.is_deleted = 0
+ORDER BY fc.created_at DESC;
+`,
+
+getFleetCompanyById: `
+    SELECT 
+      fc.*,
+      COALESCE(
+        (
+          SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'fleet_company_document_id', fcd.fleet_company_document_id,
+              'document_type', fcd.document_type,
+              'document_number', fcd.document_number,
+              'document_url', fcd.document_url,
+              'document_expiry_date', fcd.document_expiry_date,
+              'is_deleted', fcd.is_deleted,
+              'created_at', fcd.created_at,
+              'updated_at', fcd.updated_at
+            )
+          )
+          FROM fleet_company_documents fcd
+          WHERE fcd.fleet_company_id = fc.fleet_company_id AND fcd.is_deleted = 0
+        ),
+        JSON_ARRAY()
+      ) AS documents,
+      COALESCE(
+        (
+          SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'fleet_company_contact_person_id', fccp.fleet_company_contact_person_id,
+              'fullname', fccp.fullname,
+              'email', fccp.email,
+              'phone_no', fccp.phone_no,
+              'is_deleted', fccp.is_deleted,
+              'created_at', fccp.created_at,
+              'updated_at', fccp.updated_at
+            )
+          )
+          FROM fleet_company_contact_person fccp
+          WHERE fccp.fleet_company_id = fc.fleet_company_id AND fccp.is_deleted = 0
+        ),
+        JSON_ARRAY()
+      ) AS contact_person
+    FROM fleet_companies fc 
+    WHERE fc.fleet_company_id = ? AND fc.is_deleted = 0
+  `,
+
 
   getAllUsers: ` SELECT 
     user_id, firstName, lastName, email, phoneNo, created_at 
@@ -285,6 +457,7 @@ GROUP BY v.vehicle_id;
     LEFT JOIN drivers d ON c.driver_id = d.driver_id
     ORDER BY t.created_at DESC
   `,
+
   getAllUsers: `SELECT user_id, firstName, lastName, email, address, cityName, zipCode, phoneNo, profileImage, created_at FROM users ORDER BY created_at DESC`,
 
   getDashboardTrips: `

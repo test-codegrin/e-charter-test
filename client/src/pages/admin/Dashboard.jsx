@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Users, Car, MapPin, DollarSign, TrendingUp, TrendingDown, Clock, Calendar, CheckCircle, AlertTriangle } from 'lucide-react'
 import { adminAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import Loader from '../../components/Loader'
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -100,9 +101,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-ice-600"></div>
-      </div>
+     <Loader text='Preparing Dashboard...'/>
     )
   }
 

@@ -1,7 +1,7 @@
 const userAuthQueries = {
 
-     userInsert: `INSERT INTO users ( firstName,lastName,  email, password,address, cityName, zipCode, phoneNo, profileImage) 
-                 VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)  `,
+     userInsert: `INSERT INTO users ( firstname,lastname,  email, password,gender,address, city_name, zip_code, phone_no, profile_image) 
+                 VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)  `,
 
     userMailCheck: 'SELECT * FROM users WHERE email = ?',
 

@@ -355,7 +355,7 @@ const Vehicles = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div className="fade-in">
         <h1 className="text-2xl font-bold text-secondary-900">Vehicle Management</h1>
         <p className="text-secondary-600">Manage vehicle registrations and approvals</p>
       </div>

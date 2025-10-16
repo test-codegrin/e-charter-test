@@ -5,7 +5,7 @@ const { authenticationToken } = require("../middleware/authMiddleware")
 const { registerUser, loginUser, requestReset, verifyResetCode, resetPassword, updatePassword } = require("../controller/userAuthController.js")
 
 // Fixed route definitions - no parameters needed here
-router.post("/register", upload.single("profileImage"), registerUser)
+router.post("/register", upload.single("profile_image"), registerUser)
 router.post("/login", loginUser)
 router.post("/requestreset", requestReset)
 router.post("/verifyresetcode", verifyResetCode)

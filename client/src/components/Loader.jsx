@@ -1,8 +1,13 @@
-export default function Loader() {
-    return (
-        <div className="flex items-center justify-center h-64">
-           
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+export default function Loader({ text = "Almost there..." }) {
+  return (
+    <section className="h-[80vh] w-full flex flex-col items-center justify-center">
+      <div className="text-xl font-semibold text-primary-500">
+        {text}
+      </div>
+     <div className="w-[25rem] h-1 bg-gray-300 rounded overflow-hidden relative mt-4"> 
+        <div className="absolute h-full w-1/3 bg-primary-400 animate-loading" /> 
         </div>
-    );
+    </section>
+  );
 }
+

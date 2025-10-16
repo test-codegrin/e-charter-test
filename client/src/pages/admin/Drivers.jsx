@@ -376,7 +376,7 @@ const Drivers = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div className="fade-in">
         <h1 className="text-2xl font-bold text-secondary-900">
           Driver Management
         </h1>
@@ -470,6 +470,23 @@ const Drivers = () => {
 
           {/* Filters Row */}
           <div className="flex flex-wrap items-center gap-3">
+
+            {/* Clear Filters */}
+            {(searchTerm || statusFilter !== "all" || documentFilter !== "all") && (
+              <div className="mt-5">
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                    setDocumentFilter("all");
+                  }}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+
             {/* Status Filter */}
             <div className="relative">
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -540,21 +557,7 @@ const Drivers = () => {
               </div>
             </div>
 
-            {/* Clear Filters */}
-            {(searchTerm || statusFilter !== "all" || documentFilter !== "all") && (
-              <div className="mt-5">
-                <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setStatusFilter("all");
-                    setDocumentFilter("all");
-                  }}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            )}
+            
           </div>
         </div>
       </div>

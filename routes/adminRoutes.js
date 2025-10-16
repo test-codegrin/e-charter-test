@@ -16,7 +16,12 @@ const {
   getAllFleetCompanies,
   deleteDriver,
   getVehicleById,
-  deleteVehicle
+  deleteVehicle,
+  getFleetCompanyById,
+  deleteFleetCompany,
+  getAllVehiclesByFleetCompany,
+  getAllDriversByFleetCompany,
+  getVehicleByDriverId
 } = require("../controller/adminController")
 const { authenticationToken } = require("../middleware/authMiddleware")
 
@@ -27,8 +32,17 @@ router.get("/dashboard/stats", authenticationToken, getDashboardStats);
 // Data management routes
 router.get("/all-drivers", authenticationToken, getAllDrivers);
 router.get("/driver/:driver_id", authenticationToken, getDriverById);
+router.get('/driver-vehicles/:driver_id', getVehicleByDriverId);
+
 router.get("/all-vehicles", authenticationToken, getAllVehicles);
 router.get("/vehicle/:vehicle_id", authenticationToken, getVehicleById);
+
+router.get('/fleet-company/:fleet_company_id', getFleetCompanyById);
+router.get('/fleet-company-vehicles/:fleet_company_id', getAllVehiclesByFleetCompany);
+router.get('/fleet-company-drivers/:fleet_company_id', getAllDriversByFleetCompany);
+router.delete('/fleet-company/:fleet_company_id', deleteFleetCompany);
+
+
 router.get("/all-trips", authenticationToken, getAllTrips);
 router.get("/all-users",authenticationToken,getAllUsers);
 router.get("/fleet-companies",authenticationToken,getAllFleetCompanies);
@@ -39,11 +53,10 @@ router.delete("/vehicle/:vehicle_id", authenticationToken,deleteVehicle);
 
 
 
-// Fleet partner management
-router.get("/fleetpartners", authenticationToken, getAllFleetPartners);
-router.put("/editfleetpartner/:driver_id", authenticationToken, editFleetPartnerByAdmin);
-router.delete( "/deletefleetpartner/:company_id",authenticationToken, deleteFleetPartnerByAdmin);
-
+// // Fleet partner management
+// router.get("/fleetpartners", authenticationToken, getAllFleetPartners);
+// router.put("/editfleetpartner/:driver_id", authenticationToken, editFleetPartnerByAdmin);
+// router.delete( "/deletefleetpartner/:company_id",authenticationToken, deleteFleetPartnerByAdmin);
 
 // Payout management
 router.get("/payouts", authenticationToken, getPayoutSummary);

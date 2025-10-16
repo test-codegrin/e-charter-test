@@ -20,13 +20,16 @@ const transport = nodemailer.createTransport({
 });
 
 const generateResetCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+
+
 // Create User
 const registerUser = asyncHandler(async (req, res) => {
-    const { firstName, lastName, email, password, address, cityName, zipCode, phoneNo } = req.body;
-    const profileImage = req.file;
+    const { firstname, lastname, email, password,gender, address, city_name, zip_code, phone_no } = req.body;
+    const profile_image = req.file;
 
     // Validation
-    if (!firstName || !lastName || !email || !password || !address || !cityName || !zipCode || !phoneNo) {
+    if (!firstname || !lastname || !email || !password || !gender || !address || !city_name || !zip_code || !phone_no) {
         return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -44,17 +47,17 @@ const registerUser = asyncHandler(async (req, res) => {
 
         let imageURL = null;
 
-        if (profileImage) {
+        if (profile_image) {
             const uploadedImage = await imagekit.upload({
-                file: profileImage.buffer,
-                fileName: `${firstName}_profile_${Date.now()}.jpg`,
+                file: profile_image.buffer,
+                fileName: `${firstname}_profile_${Date.now()}.jpg`,
                 folder: "echarter/user-profile",
             });
             imageURL = uploadedImage.url;
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const userValues = [firstName,lastName, email,hashedPassword, address, cityName, zipCode, phoneNo, imageURL];
+        const userValues = [firstname,lastname, email,hashedPassword,gender, address, city_name, zip_code, phone_no, imageURL];
 
         const [result] = await db
             .query(userAuthQueries.userInsert,
@@ -75,7 +78,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // User Login
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, password, fcmToken } = req.body;
+    const { email, password, fcm_token } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required" });
@@ -96,10 +99,10 @@ const loginUser = asyncHandler(async (req, res) => {
         }
 
         // Update FCM token without triggering updated_at change
-        if (fcmToken) {
+        if (fcm_token) {
             await db.query(
                 userAuthQueries.addFCMToken,
-                [fcmToken, user.user_id]
+                [fcm_token, user.user_id]
             );
         }
 
