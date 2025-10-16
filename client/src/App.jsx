@@ -28,6 +28,7 @@ import FleetPartnerRegistration from './pages/FleetPartnerRegistration'
 import ViewDriver from './pages/admin/ViewDriver'
 import ViewVehicle from './pages/admin/ViewVehicle'
 import ViewFleetPartner from './pages/admin/ViewFleetPartner'
+import ViewTripDetails from './pages/admin/ViewTripDetails'
 
 function App() {
   const { user, loading } = useAuth()
@@ -71,6 +72,8 @@ function App() {
             <Route path="/admin/view-vehicle/:vehicle_id" element={<ViewVehicle />} />
 
             <Route path="/admin/trips" element={<AdminTrips />} />
+            <Route path="/admin/view-trip/:trip_id" element={<ViewTripDetails />} />
+
             <Route path="/admin/invoices" element={<AdminInvoices />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/fleet-partners" element={<FleetPartners />} />

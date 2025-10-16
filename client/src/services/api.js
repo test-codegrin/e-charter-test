@@ -86,6 +86,7 @@ export const adminAPI = {
 
   // Trips
   getAllTrips: () => api.get('/admin/all-trips'),
+  getTripById: (tripId) => api.get(`/admin/trip/${tripId}`),
   getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
   updateTripStatus: (tripId, status) => api.put(`/trips/${tripId}/status`, { status }),
 

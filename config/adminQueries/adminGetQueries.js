@@ -420,138 +420,150 @@ getFleetCompanyById: `
     WHERE fc.fleet_company_id = ? AND fc.is_deleted = 0
   `,
 
-
-  getAllUsers: ` SELECT 
-    user_id, firstName, lastName, email, phoneNo, created_at 
-  FROM users WHERE is_deleted = 0`,
-
-  getAllTrips: `
-    SELECT 
-      t.trip_id,
-      t.user_id,
-      t.car_id,
-      t.pickupLocation,
-      t.dropLocation,
-      t.tripStartDate,
-      t.tripEndDate,
-      t.tripTime,
-      t.durationHours,
-      t.distance_km,
-      t.status,
-      COALESCE(t.total_price, 0) as total_price,
-      COALESCE(t.base_price, 0) as base_price,
-      COALESCE(t.tax_amount, 0) as tax_amount,
-      t.service_type,
-      t.created_at,
-      u.firstName,
-      u.lastName,
-      u.email as userEmail,
-      u.phoneNo as userPhone,
-      COALESCE(c.carName, 'Not Assigned') as carName,
-      COALESCE(c.carType, 'N/A') as carType,
-      COALESCE(d.driverName, 'Not Assigned') as driverName,
-      COALESCE(d.phoneNo, 'N/A') as driverPhone
-    FROM trips t
-    JOIN users u ON t.user_id = u.user_id
-    LEFT JOIN car c ON t.car_id = c.car_id
-    LEFT JOIN drivers d ON c.driver_id = d.driver_id
-    ORDER BY t.created_at DESC
-  `,
-
-  getAllUsers: `SELECT user_id, firstName, lastName, email, address, cityName, zipCode, phoneNo, profileImage, created_at FROM users ORDER BY created_at DESC`,
-
-  getDashboardTrips: `
+getAllTrips: `
     SELECT 
       t.*,
-      u.firstName,
-      u.lastName,
-      u.email as userEmail
+      
+      -- User details
+      u.firstname AS user_firstname,
+      u.lastname AS user_lastname,
+      u.email AS user_email,
+      u.phone_no AS user_phone,
+      
+      -- Driver details
+      d.firstname AS driver_firstname,
+      d.lastname AS driver_lastname,
+      d.email AS driver_email,
+      d.phone_no AS driver_phone,
+      d.driver_type,
+      COALESCE(ROUND(AVG(dr.rating), 1), 0.0) AS driver_rating,
+      
+      -- Vehicle details
+      v.maker AS vehicle_maker,
+      v.model AS vehicle_model,
+      v.registration_number,
+      v.vehicle_type,
+      v.number_of_seats,
+      v.fuel_type,
+      v.car_image,
+      
+      -- Fleet company details (if driver is fleet_partner)
+      fc.company_name AS fleet_company_name,
+      fc.fleet_company_id,
+      
+      -- Trip stops (for multi-stop trips)
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'trip_stop_id', ts.trip_stop_id,
+            'stop_location_name', ts.stop_location_name,
+            'stop_location_latitude', ts.stop_location_latitude,
+            'stop_location_longitude', ts.stop_location_longitude,
+            'stop_order', ts.stop_order,
+            'stop_date', ts.stop_date
+          )
+        )
+        FROM trip_stops ts
+        WHERE ts.trip_id = t.trip_id
+        ORDER BY ts.stop_order ASC
+      ) AS stops
+      
     FROM trips t
-    JOIN users u ON t.user_id = u.user_id
+    LEFT JOIN users u ON t.user_id = u.user_id
+    LEFT JOIN drivers d ON t.driver_id = d.driver_id
+    LEFT JOIN driver_ratings dr ON d.driver_id = dr.driver_id
+    LEFT JOIN vehicle v ON t.vehicle_id = v.vehicle_id
+    LEFT JOIN fleet_companies fc ON d.fleet_company_id = fc.fleet_company_id
+    GROUP BY t.trip_id
     ORDER BY t.created_at DESC
   `,
-  getFleetPartnersOnly: `
-    SELECT * FROM drivers 
-    WHERE registration_type = 'fleet_partner' OR company_name IS NOT NULL
-  `,
-  getFleetPartnersEnhanced: `
-    SELECT 
-      driver_id,
-      driverName,
-      email,
-      phoneNo,
-      cityName,
-      COALESCE(company_name, 'Not Set') as company_name,
-      COALESCE(legal_entity_type, 'Not Specified') as legal_entity_type,
-      COALESCE(business_address, 'Not Provided') as business_address,
-      COALESCE(contact_person_name, 'Not Provided') as contact_person_name,
-      COALESCE(contact_person_position, 'Not Provided') as contact_person_position,
-      COALESCE(fleet_size, 0) as fleet_size,
-      COALESCE(years_experience, 0) as years_experience,
-      COALESCE(operating_hours, 'Not Specified') as operating_hours,
-      status,
-      COALESCE(registration_type, 'individual') as registration_type,
-      COALESCE(terms_accepted, 0) as terms_accepted,
-      COALESCE(technology_agreement, 0) as technology_agreement,
-      COALESCE(created_at, NOW()) as created_at
-    FROM drivers 
-    WHERE registration_type = 'fleet_partner' OR company_name IS NOT NULL
-    ORDER BY created_at DESC
-  `,
 
-  getFleetPartnersBasic: `
+ getTripById: `
     SELECT 
-      driver_id,
-      driverName,
-      email,
-      phoneNo,
-      cityName,
-      'Not Set' as company_name,
-      'Not Specified' as legal_entity_type,
-      'Not Provided' as business_address,
-      'Not Provided' as contact_person_name,
-      'Not Provided' as contact_person_position,
-      0 as fleet_size,
-      0 as years_experience,
-      'Not Specified' as operating_hours,
-      status,
-      'fleet_partner' as registration_type,
-      1 as terms_accepted,
-      1 as technology_agreement,
-      NOW() as created_at
-    FROM drivers 
-    WHERE driver_id > 2
-    ORDER BY driver_id DESC
-  `,
-
-  getPayoutSummary: `
-    SELECT 
-      t.trip_id,
-      COALESCE(t.total_price, 0) as total_price,
-      t.created_at as trip_date,
-      d.driver_id,
-      d.driverName,
-      d.email as driver_email,
-      COALESCE(d.registration_type, 'individual') as registration_type,
-      COALESCE(d.company_name, d.driverName) as company_name,
-      COALESCE(c.carName, 'Unknown Vehicle') as carName,
-      u.firstName as customer_first_name,
-      u.lastName as customer_last_name,
-      CASE 
-        WHEN COALESCE(d.registration_type, 'individual') = 'fleet_partner' THEN COALESCE(t.total_price, 0) * 0.15
-        ELSE COALESCE(t.total_price, 0) * 0.20
-      END as admin_commission,
-      CASE 
-        WHEN COALESCE(d.registration_type, 'individual') = 'fleet_partner' THEN COALESCE(t.total_price, 0) * 0.85
-        ELSE COALESCE(t.total_price, 0) * 0.80
-      END as driver_payout
+      t.*,
+      
+      -- User details as JSON object
+      JSON_OBJECT(
+        'user_id', u.user_id,
+        'firstname', u.firstname,
+        'lastname', u.lastname,
+        'email', u.email,
+        'phone_no', u.phone_no
+      ) AS user_details,
+      
+      -- Driver details as JSON object
+      JSON_OBJECT(
+        'driver_id', d.driver_id,
+        'firstname', d.firstname,
+        'lastname', d.lastname,
+        'email', d.email,
+        'phone_no', d.phone_no,
+        'driver_type', d.driver_type,
+        'average_rating', COALESCE(ROUND(AVG(dr.rating), 1), 0.0),
+        'year_of_experiance', d.year_of_experiance
+      ) AS driver_details,
+      
+      -- Vehicle details as JSON object
+      JSON_OBJECT(
+        'vehicle_id', v.vehicle_id,
+        'maker', v.maker,
+        'model', v.model,
+        'registration_number', v.registration_number,
+        'vehicle_type', v.vehicle_type,
+        'number_of_seats', v.number_of_seats,
+        'fuel_type', v.fuel_type,
+        'car_image', v.car_image
+      ) AS vehicle_details,
+      
+      -- Fleet company details as JSON object
+      JSON_OBJECT(
+        'fleet_company_id', fc.fleet_company_id,
+        'company_name', fc.company_name,
+        'email', fc.email,
+        'phone_no', fc.phone_no
+      ) AS fleet_company_details,
+      
+      -- Payment transaction details as JSON object
+      JSON_OBJECT(
+        'transaction_id', pt.transaction_id,
+        'payment_gateway', pt.payment_gateway,
+        'card_number', pt.card_number,
+        'gateway_transaction_id', pt.gateway_transaction_id,
+        'amount', pt.amount,
+        'currency', pt.currency,
+        'gateway_response', pt.gateway_response,
+        'processed_at', pt.processed_at,
+        'created_at', pt.created_at
+      ) AS payment_transaction,
+      
+      -- Trip stops
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'trip_stop_id', ts.trip_stop_id,
+            'stop_location_name', ts.stop_location_name,
+            'stop_location_latitude', ts.stop_location_latitude,
+            'stop_location_longitude', ts.stop_location_longitude,
+            'stop_order', ts.stop_order,
+            'stop_date', ts.stop_date
+          )
+        )
+        FROM trip_stops ts
+        WHERE ts.trip_id = t.trip_id
+        ORDER BY ts.stop_order ASC
+      ) AS stops
+      
     FROM trips t
-    JOIN car c ON t.car_id = c.car_id
-    JOIN drivers d ON c.driver_id = d.driver_id
-    JOIN users u ON t.user_id = u.user_id
-    WHERE t.status = 'completed' AND COALESCE(t.total_price, 0) > 0
-    ORDER BY t.created_at DESC
+    LEFT JOIN users u ON t.user_id = u.user_id
+    LEFT JOIN drivers d ON t.driver_id = d.driver_id
+    LEFT JOIN driver_ratings dr ON d.driver_id = dr.driver_id
+    LEFT JOIN vehicle v ON t.vehicle_id = v.vehicle_id
+    LEFT JOIN fleet_companies fc ON d.fleet_company_id = fc.fleet_company_id
+    LEFT JOIN user_payment_transactions pt ON t.trip_id = pt.trip_id
+    WHERE t.trip_id = ?
+    GROUP BY t.trip_id
   `,
+  
 };
 
 

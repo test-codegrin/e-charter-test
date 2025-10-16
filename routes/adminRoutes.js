@@ -21,7 +21,8 @@ const {
   deleteFleetCompany,
   getAllVehiclesByFleetCompany,
   getAllDriversByFleetCompany,
-  getVehicleByDriverId
+  getVehicleByDriverId,
+  getTripById
 } = require("../controller/adminController")
 const { authenticationToken } = require("../middleware/authMiddleware")
 
@@ -42,14 +43,16 @@ router.get('/fleet-company-vehicles/:fleet_company_id', getAllVehiclesByFleetCom
 router.get('/fleet-company-drivers/:fleet_company_id', getAllDriversByFleetCompany);
 router.delete('/fleet-company/:fleet_company_id', deleteFleetCompany);
 
-
 router.get("/all-trips", authenticationToken, getAllTrips);
-router.get("/all-users",authenticationToken,getAllUsers);
+router.get("/trip/:trip_id",authenticationToken,getTripById);
+
 router.get("/fleet-companies",authenticationToken,getAllFleetCompanies);
-router.delete("/delete-user/:user_id", authenticationToken,deleteUser);
-router.put("/edituser/:user_id", editUser);
-router.delete("/driver/:driver_id", authenticationToken,deleteDriver);
-router.delete("/vehicle/:vehicle_id", authenticationToken,deleteVehicle);
+
+// router.get("/all-users",authenticationToken,getAllUsers);
+// router.delete("/delete-user/:user_id", authenticationToken,deleteUser);
+// router.put("/edituser/:user_id", editUser);
+// router.delete("/driver/:driver_id", authenticationToken,deleteDriver);
+// router.delete("/vehicle/:vehicle_id", authenticationToken,deleteVehicle);
 
 
 
@@ -59,7 +62,7 @@ router.delete("/vehicle/:vehicle_id", authenticationToken,deleteVehicle);
 // router.delete( "/deletefleetpartner/:company_id",authenticationToken, deleteFleetPartnerByAdmin);
 
 // Payout management
-router.get("/payouts", authenticationToken, getPayoutSummary);
+// router.get("/payouts", authenticationToken, getPayoutSummary);
 
 // Approval management
 // router.get("/pending-approvals", authenticationToken, getPendingApprovals);
