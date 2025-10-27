@@ -78,23 +78,15 @@ const registerDriver = asyncHandler(async (req, res) => {
 const loginDriver = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // console.log("Driver login attempt:", { email });
-
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }
 
+  // Check driver credentials
   const [driver] = await db.query(driverAuthQueries.driverLogin, [email]);
 
   if (driver.length === 0) {
     return res.status(401).json({ error: "Invalid credentials" });
-  }
-
-  // Check if driver is approved
-  if (driver[0].status !== 1) {
-    return res
-      .status(403)
-      .json({ error: "Your account is not approved by the admin yet." });
   }
 
   const isMatch = await bcrypt.compare(password, driver[0].password);
@@ -102,32 +94,65 @@ const loginDriver = asyncHandler(async (req, res) => {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  // Get full driver details for response
-  const [driverDetails] = await db.query(driverAuthQueries.driverMailCheck, [
-    email,
-  ]);
+  // OPTION 1: Get driver details with separate query for fleet company
+  const [driverDetails] = await db.query(driverAuthQueries.driverMailCheck, [email]);
   const driverData = driverDetails[0];
 
+  let role = "driver";
+  let fleetCompanyDetails = null;
+
+  if (driverData.driver_type === "individual") {
+    role = "individual_driver";
+  } else if (driverData.driver_type === "fleet_partner") {
+    role = "fleet_driver";
+    
+    if (driverData.fleet_company_id) {
+      const [fleetCompany] = await db.query(
+        driverAuthQueries.getFleetCompanyById,
+        [driverData.fleet_company_id]
+      );
+      
+      if (fleetCompany.length > 0) {
+        fleetCompanyDetails = fleetCompany[0];
+      }
+    }
+  }
+
+  // Generate JWT token
   const token = jwt.sign(
     {
       driver_id: driver[0].driver_id,
       email: driver[0].email,
-      role: "driver",
+      role: role,
+      driver_type: driverData.driver_type,
     },
-    process.env.JWT_SECRET
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
   );
 
-  // Return consistent user object matching admin login format
+  // Build user object
   const user = {
     driver_id: driverData.driver_id,
-    driverName: driverData.driverName,
+    driverName: `${driverData.firstname} ${driverData.lastname}`,
+    firstname: driverData.firstname,
+    lastname: driverData.lastname,
+    profile_image: driverData.profile_image,
     email: driverData.email,
-    role: "driver",
+    phone_no: driverData.phone_no,
+    driver_type: driverData.driver_type,
+    role: role,
+    status: driverData.status,
   };
+
+  if (driverData.driver_type === "fleet_partner" && fleetCompanyDetails) {
+    user.fleet_company = fleetCompanyDetails;
+  }
 
   console.log("Driver login successful:", {
     driver_id: driver[0].driver_id,
     email: driver[0].email,
+    driver_type: driverData.driver_type,
+    role: role,
   });
 
   res.status(200).json({
@@ -136,6 +161,8 @@ const loginDriver = asyncHandler(async (req, res) => {
     user,
   });
 });
+
+
 
 // 🔹 Request Password Reset
 const requestDriverReset = asyncHandler(async (req, res) => {

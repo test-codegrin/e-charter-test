@@ -20,7 +20,7 @@ getApprovedCars : `
 `,
 
  getUserProfileById : `
-  SELECT user_id, firstName, lastName, email, address, cityName, zipCode, phoneNo, profileImage, created_at
+  SELECT user_id, firstName, lastName, email, address, city_name, zip_code, phone_no, profile_image, created_at
   FROM users
   WHERE user_id = ? AND is_deleted = 0
 `

@@ -22,7 +22,8 @@ const {
   getAllVehiclesByFleetCompany,
   getAllDriversByFleetCompany,
   getVehicleByDriverId,
-  getTripById
+  getTripById,
+  getTripByDriverId
 } = require("../controller/adminController")
 const { authenticationToken } = require("../middleware/authMiddleware")
 
@@ -45,6 +46,7 @@ router.delete('/fleet-company/:fleet_company_id', deleteFleetCompany);
 
 router.get("/all-trips", authenticationToken, getAllTrips);
 router.get("/trip/:trip_id",authenticationToken,getTripById);
+router.get("/driver-trips/:driver_id",authenticationToken,getTripByDriverId);
 
 router.get("/fleet-companies",authenticationToken,getAllFleetCompanies);
 

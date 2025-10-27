@@ -69,6 +69,7 @@ export const adminAPI = {
   approveDriver: (driverId, status) => api.put(`/verification/approve-driver/${driverId}`, { status }),
   deleteDriver: (driverId) => api.delete(`/admin/driver/${driverId}`),
   getVehicleByDriverId: (driverId) => api.get(`/admin/driver-vehicles/${driverId}`),
+  getTripByDriverId: (driverId) => api.get(`/admin/driver-trips/${driverId}`),
 
 
   // Fleet Partners
@@ -96,9 +97,8 @@ export const adminAPI = {
 
   // Notifications
   getNotifications: () => api.get('/notifications/admin'),
-  markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
-  markAllAsRead: () => api.put('/notifications/mark-all-read'),
-
+  markNotificationAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
+  deleteNotification: (notificationId) => api.delete(`/notifications/${notificationId}`),
 
   // Payouts
   getPayoutSummary: () => api.get('/admin/payouts'),
@@ -132,6 +132,8 @@ export const driverAPI = {
   // Profile
   getProfile: () => api.get('/driver/profile'),
   updateProfile: (profileData) => api.put('/driver/profile', profileData),
+  updateProfilePhoto: (profilePhoto) => api.put('/driver/profile/photo', profilePhoto),
+  uploadDocument: (documentData) => api.post('/driver/document/upload', documentData),
 
   // Settings
   getNotificationSettings: () => api.get('/driver/settings/notifications'),

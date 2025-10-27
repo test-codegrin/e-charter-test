@@ -78,6 +78,7 @@ try {
     app.use("/api/pricing", pricingRoutes)
     app.use("/api/trips", enhancedTripRoutes)
     app.use("/api/invoices", invoiceRoutes)
+    
     app.use("/api/notifications", notificationRoutes)
 
     // Settings routes

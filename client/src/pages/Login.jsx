@@ -62,9 +62,15 @@ const Login = () => {
         password: 'test',
         role: 'admin'
       })
-    } else {
+    } else if (role === 'driver') {
       setFormData({
-        email: 'test@gmail.com',
+        email: 'testdriver@gmail.com',
+        password: 'test',
+        role: 'driver'
+      })
+    } else if (role === 'fleet_driver') {
+      setFormData({
+        email: 'testfleetdriver@gmail.com',
         password: 'test',
         role: 'driver'
       })
@@ -204,6 +210,14 @@ const Login = () => {
               >
                 Driver Test
               </button>
+              <button
+                type="button"
+                onClick={() => fillTestCredentials('fleet_driver')}
+                className="text-xs bg-secondary-100 hover:bg-secondary-200 text-secondary-700 py-2 px-3 rounded-lg transition-colors duration-200"
+                disabled={loading}
+              >
+                Fleet Driver Test
+              </button>
             </div>
           </div>
         </div>
@@ -211,7 +225,7 @@ const Login = () => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-secondary-500">
-            © 2024 eCharter. All rights reserved.
+            © 2025 eCharter. All rights reserved.
           </p>
         </div>
       </div>

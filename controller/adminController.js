@@ -55,7 +55,9 @@ const getDriverById = asyncHandler(async (req, res) => {
             // Handle fleet company details - return null if not fleet partner, otherwise parse
             fleet_company_details: driver[0].fleet_company_details 
                 ? JSON.parse(driver[0].fleet_company_details) 
-                : null
+                : null,
+            // Handle leave history - return empty array if no leave history, otherwise parse
+            leave_history: driver[0].leave_history ? JSON.parse(driver[0].leave_history) : [],
         };
         
         res.status(200).json({
@@ -419,7 +421,10 @@ const getVehicleByDriverId = asyncHandler(async (req, res) => {
     }
 });
 
-// Get dashboard statistics for admin - ENHANCED with proper data formatting
+
+
+
+/// Get dashboard statistics for admin - ENHANCED with revenue and trip metrics
 const getDashboardStats = asyncHandler(async (req, res) => {
   try { 
     // Execute the dashboard stats query
@@ -428,20 +433,76 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // Get the first row which contains all the counts
     const statsData = statsRows[0];
     
+    // Calculate revenue growth percentage
+    const revenueGrowth = statsData.last_month_revenue > 0 
+      ? ((statsData.this_month_revenue - statsData.last_month_revenue) / statsData.last_month_revenue * 100).toFixed(2)
+      : 0;
+    
+    // Calculate trip growth percentage
+    const tripGrowth = statsData.last_month_trips > 0
+      ? ((statsData.this_month_trips - statsData.last_month_trips) / statsData.last_month_trips * 100).toFixed(2)
+      : 0;
+
     const stats = {
-      totalDrivers: statsData.total_drivers,
-      totalVehicles: statsData.total_vehicles,
-      
       // Driver stats
-      approvedDrivers: statsData.approved_drivers,
-      pendingDrivers: statsData.pending_drivers,
+      drivers: {
+        total: statsData.total_drivers,
+        approved: statsData.approved_drivers,
+        pending: statsData.pending_drivers,
+        rejectionRate: statsData.total_drivers > 0 
+          ? ((statsData.total_drivers - statsData.approved_drivers) / statsData.total_drivers * 100).toFixed(2)
+          : "0.00"
+      },
+      
+      // Fleet Companies stats
+      fleet_companies: {
+        total: statsData.total_fleet_companies,
+        approved: statsData.approved_fleet_companies,
+        pending: statsData.pending_fleet_companies,
+        approvalRate: statsData.total_fleet_companies > 0
+          ? ((statsData.approved_fleet_companies / statsData.total_fleet_companies) * 100).toFixed(2)
+          : "0.00"
+      },
       
       // Vehicle stats
-      approvedVehicles: statsData.approved_vehicles,
-      pendingVehicles: statsData.pending_vehicles,
+      vehicles: {
+        total: statsData.total_vehicles,
+        approved: statsData.approved_vehicles,
+        pending: statsData.pending_vehicles,
+        approvalRate: statsData.total_vehicles > 0
+          ? ((statsData.approved_vehicles / statsData.total_vehicles) * 100).toFixed(2)
+          : "0.00"
+      },
       
-      // Pending approvals
-      pendingApprovals: statsData.pending_drivers + statsData.pending_vehicles
+      // Trip stats
+      trips: {
+        total: statsData.total_trips,
+        completed: statsData.completed_trips,
+        upcoming: statsData.upcoming_trips,
+        running: statsData.running_trips,
+        canceled: statsData.canceled_trips,
+        completionRate: statsData.total_trips > 0
+          ? ((statsData.completed_trips / statsData.total_trips) * 100).toFixed(2)
+          : "0.00",
+        thisMonth: statsData.this_month_trips,
+        lastMonth: statsData.last_month_trips,
+        thisMonthCompleted: statsData.this_month_completed_trips,
+        lastMonthCompleted: statsData.last_month_completed_trips,
+        growth: parseFloat(tripGrowth)
+      },
+      
+      // Revenue stats
+      revenue: {
+        total: parseFloat(statsData.total_revenue || 0).toFixed(2),
+        thisMonth: parseFloat(statsData.this_month_revenue || 0).toFixed(2),
+        lastMonth: parseFloat(statsData.last_month_revenue || 0).toFixed(2),
+        growth: parseFloat(revenueGrowth),
+        average: parseFloat(statsData.avg_trip_price || 0).toFixed(2),
+        totalTax: parseFloat(statsData.total_tax_collected || 0).toFixed(2)
+      },
+      
+      // Pending approvals (combined - now includes fleet companies)
+      pendingApprovals: statsData.pending_drivers + statsData.pending_vehicles + statsData.pending_fleet_companies
     };
 
     console.log("Dashboard stats calculated successfully");
@@ -453,9 +514,14 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res.status(500).json({ 
+      message: "Internal server error", 
+      error: error.message 
+    });
   }
 });
+
+
 
 
 
@@ -535,6 +601,7 @@ const getAllTrips = async (req, res) => {
   }
 };
 
+
 const getTripById = async (req, res) => {
   try {
     const { trip_id } = req.params;
@@ -568,6 +635,65 @@ const getTripById = async (req, res) => {
     });
   }
 };
+
+
+const getTripByDriverId = async (req, res) => {
+  try {
+    const { driver_id } = req.params;
+
+    // Fixed: Use correct query name
+    const [result] = await db.query(adminGetQueries.getTripByDriver, [driver_id]);
+
+    if (result.length === 0) {
+      return res.status(404).json({ 
+        message: 'No trips found for this driver',
+        trips: []
+      });
+    }
+
+    // Process each trip
+    const trips = result.map(trip => {
+      // Helper function to safely parse or use data
+      const safeParse = (data) => {
+        if (!data) return null;
+        if (typeof data === 'string') {
+          try {
+            return JSON.parse(data);
+          } catch (e) {
+            return null;
+          }
+        }
+        return data;
+      };
+
+      return {
+        ...trip,
+        user_details: safeParse(trip.user_details),
+        driver_details: safeParse(trip.driver_details),
+        vehicle_details: safeParse(trip.vehicle_details),
+        payment_transaction: safeParse(trip.payment_transaction),
+        fleet_company_details: safeParse(trip.fleet_company_details),
+        stops: safeParse(trip.stops) || []
+      };
+    });
+
+    res.status(200).json({
+      message: 'Trips fetched successfully',
+      count: trips.length,
+      trips: trips
+    });
+
+  } catch (error) {
+    console.error('Error fetching trips:', error);
+    res.status(500).json({
+      message: 'Failed to fetch trips',
+      error: error.message
+    });
+  }
+};
+
+module.exports = { getTripByDriverId };
+
 
 
 
@@ -624,5 +750,6 @@ module.exports = {
     deleteVehicle,
     getAllFleetCompanies,
     getAllTrips,
+    getTripByDriverId,
     getTripById
 }

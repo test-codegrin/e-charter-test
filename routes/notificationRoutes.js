@@ -5,7 +5,8 @@ const {
   getDriverNotifications,
   getAdminNotifications,
   markAsRead,
-  markAllAsRead
+  markAllAsRead,
+  deleteNotification
 } = require("../controller/notificationController");
 const { authenticationToken } = require("../middleware/authMiddleware");
 
@@ -22,6 +23,9 @@ router.get("/admin", authenticationToken, getAdminNotifications);
 // Mark as read - Fixed parameter syntax
 router.put("/:notification_id/read", authenticationToken, markAsRead);
 router.put("/mark-all-read", authenticationToken, markAllAsRead);
+
+// Delete notification
+router.delete("/:notification_id", authenticationToken, deleteNotification);
 
 
 module.exports = router;

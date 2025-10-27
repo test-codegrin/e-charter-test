@@ -1,207 +1,322 @@
-import React from "react";
+import React from 'react';
 
 const TripReceipt = ({ trip }) => {
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
   const formatTime = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
     });
   };
 
   const formatDateTime = (dateString) => {
-    if (!dateString) return "N/A";
-    return `${formatDate(dateString)} at ${formatTime(dateString)}`;
+    if (!dateString) return 'N/A';
+    return `${formatDate(dateString)}, ${formatTime(dateString)}`;
   };
 
   const maskCardNumber = (cardNumber) => {
-    if (!cardNumber) return "N/A";
+    if (!cardNumber) return 'N/A';
     const cardStr = String(cardNumber);
     const lastFour = cardStr.slice(-4);
-    return `**** **** **** ${lastFour}`;
+    return `•••• •••• •••• ${lastFour}`;
   };
-
-  // ============= CUSTOMIZABLE SPACING VARIABLES =============
-  
-  // Container Spacing
-  const containerPadding = "40px";
-  const maxWidth = "800px";
-  
-  // Header Spacing
-  const headerMarginBottom = "30px";
-  const headerPaddingBottom = "20px";
-  const headerBorderWidth = "3px";
-  const logoWidth = "100px";
-  const logoMarginBottom = "10px";
-  
-  // Section Spacing
-  const sectionMarginBottom = "20px"; // Reduced from 30px to fit better
-  const sectionPadding = "20px";
-  const sectionBorderRadius = "none";
-  
-  // Table Spacing
-  const tableRowPaddingVertical = "4px"; // Reduced from 6px
-  const tableRowPaddingHorizontal = "0";
-  const tableTitleWidth = "25%";
-  
-  // Receipt Details Table (Top Right)
-  const receiptTableRowPadding = "3px 0";
-  
-  // Heading Spacing
-  const headingMarginBottom = "12px"; // Reduced from 15px
-  const headingFontSize = "16px";
-  
-  // Font Sizes
-  const bodyFontSize = "13px"; // Reduced from 14px
-  const smallFontSize = "12px";
-  const headerTitleFontSize = "20px";
-  const summaryTitleFontSize = "18px";
-  const summaryAmountFontSize = "20px";
-  
-  // Footer Spacing
-  const footerPaddingTop = "20px"; // Reduced from 30px
-  const footerTextMargin = "0 0 6px 0"; // Reduced from 8px
-  
-  // Amount Summary Spacing
-  const summaryRowPaddingVertical = "8px"; // Reduced from 10px
-  const summaryRowPaddingHorizontal = "0";
-  const summaryBorderWidth = "2px";
-  
-  // Colors
-  const primaryColor = "#059669";
-  const lightBackgroundColor = "#F9FAFB";
-//   const successBackgroundColor = "#ECFDF5";
-  const successBackgroundColor = "#FFFFFF";
-  const textPrimaryColor = "#111827";
-  const textSecondaryColor = "#6B7280";
-  const borderColor = "#E5E7EB";
-
-  // =========================================================
 
   return (
     <div
       style={{
-        padding: containerPadding,
-        fontFamily: "Arial, sans-serif",
-        maxWidth: maxWidth,
-        margin: "0 auto",
-        backgroundColor: "white",
+        fontFamily: "'Helvetica Neue', 'Arial', sans-serif",
+        maxWidth: '800px',
+        margin: '0 auto',
+        padding: '30px',
+        backgroundColor: '#ffffff',
+        color: '#000000',
       }}
     >
-      {/* Header */}
+      {/* Professional Header */}
       <div
         style={{
-          textAlign: "center",
-          marginBottom: headerMarginBottom,
-          borderBottom: `${headerBorderWidth} solid ${primaryColor}`,
-          paddingBottom: headerPaddingBottom,
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
+          borderBottom: '3px solid #1e293b',
+          paddingBottom: '15px',
+          marginBottom: '20px',
+          pageBreakInside: 'avoid',
         }}
       >
-        <img
-          src="/assets/images/logo.png"
-          alt="E-Charter Logo"
-          style={{ 
-            width: logoWidth, 
-            marginBottom: logoMarginBottom 
-          }}
-        />
-        <p
+        <div
           style={{
-            fontSize: headerTitleFontSize,
-            color: textPrimaryColor,
-            margin: "0",
-            fontWeight: "bold",
-            fontFamily: "Arial, sans-serif",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
           }}
         >
-          Trip Receipt & Invoice
-        </p>
-        <div>
-          <table
+          <div>
+            <img
+              src="/assets/images/logo.png"
+              alt="E-Charter Logo"
+              style={{
+                height: '45px',
+                width: 'auto',
+                marginBottom: '6px',
+                display: 'block',
+              }}
+            />
+            <p
+              style={{
+                margin: '0',
+                fontSize: '10px',
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+              }}
+            >
+              Professional Transportation Services
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ margin: '0 0 3px 0', fontSize: '22px', fontWeight: '700', color: '#1e293b' }}>INVOICE</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Invoice Details Grid with Borders */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '15px',
+          marginBottom: '20px',
+          pageBreakInside: 'avoid',
+        }}
+      >
+        {/* Bill To */}
+        <div
+          style={{
+            border: '1px solid #e2e8f0',
+            borderRadius: '4px',
+            padding: '12px',
+            backgroundColor: '#f8fafc',
+          }}
+        >
+          <p
             style={{
-              width: "100%",
-              borderCollapse: "collapse",
+              margin: '0 0 8px 0',
+              fontSize: '9px',
+              fontWeight: '600',
+              color: '#64748b',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
             }}
           >
+            Bill To
+          </p>
+          <div style={{ fontSize: '11px', color: '#1e293b', lineHeight: '1.5' }}>
+            <p style={{ margin: '0 0 3px 0', fontWeight: '600' }}>
+              {trip?.user_details?.firstname} {trip?.user_details?.lastname}
+            </p>
+            <p style={{ margin: '0 0 3px 0' }}>{trip?.user_details?.email}</p>
+            <p style={{ margin: '0' }}>{trip?.user_details?.phone_no}</p>
+          </div>
+        </div>
+
+        {/* Invoice Info */}
+        <div
+          style={{
+            border: '1px solid #e2e8f0',
+            borderRadius: '4px',
+            padding: '12px',
+            backgroundColor: '#f8fafc',
+          }}
+        >
+          <p
+            style={{
+              margin: '0 0 8px 0',
+              fontSize: '9px',
+              fontWeight: '600',
+              color: '#64748b',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+            }}
+          >
+            Invoice Details
+          </p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
             <tbody>
               <tr>
-                <td
-                  style={{
-                    padding: receiptTableRowPadding,
-                    fontSize: bodyFontSize,
-                    color: textSecondaryColor,
-                  }}
-                >
-                  Receipt Number:
-                </td>
-                <td
-                  style={{
-                    padding: "0",
-                    fontSize: bodyFontSize,
-                    color: textPrimaryColor,
-                    fontWeight: "bold",
-                    textAlign: "right",
-                  }}
-                >
-                  #
-                  {trip?.payment_transaction?.gateway_transaction_id ||
-                    trip?.trip_id}
+                <td style={{ padding: '2px 0', color: '#64748b' }}>Invoice Date:</td>
+                <td style={{ padding: '2px 0', textAlign: 'right', color: '#1e293b', fontWeight: '600' }}>
+                  {formatDate(trip?.created_at || new Date())}
                 </td>
               </tr>
               <tr>
-                <td
-                  style={{
-                    padding: receiptTableRowPadding,
-                    fontSize: bodyFontSize,
-                    color: textSecondaryColor,
-                  }}
-                >
-                  Trip ID:
+                <td style={{ padding: '2px 0', color: '#64748b' }}>Downloaded:</td>
+                <td style={{ padding: '2px 0', textAlign: 'right', color: '#1e293b', fontWeight: '600' }}>
+                  {formatDateTime(new Date())}
                 </td>
-                <td
-                  style={{
-                    padding: "0",
-                    fontSize: bodyFontSize,
-                    color: textPrimaryColor,
-                    fontWeight: "bold",
-                    textAlign: "right",
-                  }}
-                >
+              </tr>
+              <tr>
+                <td style={{ padding: '2px 0', color: '#64748b' }}>Trip ID:</td>
+                <td style={{ padding: '2px 0', textAlign: 'right', color: '#1e293b', fontWeight: '600' }}>
                   #{trip?.trip_id}
                 </td>
               </tr>
               <tr>
-                <td
-                  style={{
-                    padding: receiptTableRowPadding,
-                    fontSize: bodyFontSize,
-                    color: textSecondaryColor,
-                  }}
-                >
-                  Date Issued:
+                <td style={{ padding: '2px 0', color: '#64748b' }}>Status:</td>
+                <td style={{ padding: '2px 0', textAlign: 'right' }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '2px 6px',
+                      backgroundColor: '#22c55e',
+                      color: '#ffffff',
+                      fontSize: '9px',
+                      fontWeight: '600',
+                      borderRadius: '3px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    PAID
+                  </span>
                 </td>
-                <td
-                  style={{
-                    padding: "0",
-                    fontSize: bodyFontSize,
-                    color: textPrimaryColor,
-                    textAlign: "right",
-                  }}
-                >
-                  {formatDate(new Date())}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Service Date */}
+        <div
+          style={{
+            border: '1px solid #e2e8f0',
+            borderRadius: '4px',
+            padding: '12px',
+            backgroundColor: '#f8fafc',
+            gridColumn: 'span 2',
+          }}
+        >
+          <p
+            style={{
+              margin: '0 0 8px 0',
+              fontSize: '9px',
+              fontWeight: '600',
+              color: '#64748b',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+            }}
+          >
+            Service Date & Time
+          </p>
+          <div style={{ fontSize: '11px', color: '#1e293b', lineHeight: '1.5' }}>
+            <p style={{ margin: '0', fontWeight: '600' }}>{formatDateTime(trip?.pickup_datetime)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Service Details - Enhanced Layout */}
+      <div
+        style={{
+          marginBottom: '15px',
+          pageBreakInside: 'avoid',
+          border: '1px solid #e2e8f0',
+          borderRadius: '4px',
+          padding: '16px',
+          backgroundColor: '#f8fafc',
+        }}
+      >
+        <p
+          style={{
+            margin: '0 0 12px 0',
+            fontSize: '9px',
+            fontWeight: '600',
+            color: '#64748b',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+          }}
+        >
+          Service Description
+        </p>
+        
+        <div style={{ fontSize: '11px', color: '#1e293b', lineHeight: '1.6' }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: '600', color: '#1e293b' }}>
+            {trip?.trip_name || 'Transportation Service'}
+          </p>
+
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+            <tbody>
+              <tr>
+                <td style={{ padding: '3px 0', color: '#64748b', width: '30%' }}>Trip Type:</td>
+                <td style={{ padding: '3px 0', color: '#1e293b', fontWeight: '500' }}>
+                  {trip?.trip_type?.replace('_', ' ').toUpperCase()}
+                  {trip?.trip_event_type && ` • ${trip?.trip_event_type}`}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '3px 0', color: '#64748b' }}>Pickup Location:</td>
+                <td style={{ padding: '3px 0', color: '#1e293b', fontWeight: '500' }}>
+                  {trip?.pickup_location_name}
+                </td>
+              </tr>
+              {trip?.stops && trip.stops.length > 0 && (
+                <tr>
+                  <td style={{ padding: '3px 0', color: '#64748b', verticalAlign: 'top' }}>Stops:</td>
+                  <td style={{ padding: '3px 0', color: '#1e293b', fontWeight: '500' }}>
+                    {trip.stops.map((s, idx) => (
+                      <span key={idx}>
+                        {s.stop_location_name}
+                        {idx < trip.stops.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}
+                  </td>
+                </tr>
+              )}
+              <tr>
+                <td style={{ padding: '3px 0', color: '#64748b' }}>Dropoff Location:</td>
+                <td style={{ padding: '3px 0', color: '#1e293b', fontWeight: '500' }}>
+                  {trip?.dropoff_location_name}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '3px 0', color: '#64748b' }}>Distance:</td>
+                <td style={{ padding: '3px 0', color: '#1e293b', fontWeight: '600' }}>
+                  {trip?.total_distance} km
+                </td>
+              </tr>
+              {trip?.total_persons !== undefined && (
+                <tr>
+                  <td style={{ padding: '3px 0', color: '#64748b' }}>Passengers:</td>
+                  <td style={{ padding: '3px 0', color: '#1e293b', fontWeight: '600' }}>
+                    {trip.total_persons} {trip.total_persons === 1 ? 'person' : 'persons'}
+                  </td>
+                </tr>
+              )}
+              {trip?.total_luggages !== undefined && (
+                <tr>
+                  <td style={{ padding: '3px 0', color: '#64748b' }}>Luggage:</td>
+                  <td style={{ padding: '3px 0', color: '#1e293b', fontWeight: '600' }}>
+                    {trip.total_luggages} {trip.total_luggages === 1 ? 'piece' : 'pieces'}
+                  </td>
+                </tr>
+              )}
+              <tr>
+                <td style={{ padding: '3px 0', color: '#64748b' }}>Vehicle:</td>
+                <td style={{ padding: '3px 0', color: '#1e293b', fontWeight: '500' }}>
+                  {trip?.vehicle_details?.maker} {trip?.vehicle_details?.model} (
+                  {trip?.vehicle_details?.registration_number})
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '3px 0', color: '#64748b' }}>Driver:</td>
+                <td style={{ padding: '3px 0', color: '#1e293b', fontWeight: '500' }}>
+                  {trip?.driver_details?.firstname} {trip?.driver_details?.lastname} •{' '}
+                  {trip?.driver_details?.phone_no}
                 </td>
               </tr>
             </tbody>
@@ -209,708 +324,127 @@ const TripReceipt = ({ trip }) => {
         </div>
       </div>
 
-      {/* Customer Information */}
-      <div
-        style={{
-          marginBottom: sectionMarginBottom,
-          padding: sectionPadding,
-          backgroundColor: lightBackgroundColor,
-          borderRadius: sectionBorderRadius,
-          pageBreakInside: "avoid", // Prevent page break inside this section
-        }}
-      >
-        <h3
+      {/* Payment Information - Compact */}
+      {trip?.payment_transaction && trip?.payment_transaction?.transaction_id && (
+        <div
           style={{
-            fontSize: headingFontSize,
-            fontWeight: "bold",
-            color: textPrimaryColor,
-            marginBottom: headingMarginBottom,
-            margin: `0 0 ${headingMarginBottom} 0`,
+            backgroundColor: '#f8fafc',
+            padding: '12px',
+            borderRadius: '4px',
+            marginBottom: '15px',
+            border: '1px solid #e2e8f0',
+            pageBreakInside: 'avoid',
           }}
         >
-          Customer Information
-        </h3>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                  width: tableTitleWidth,
-                }}
-              >
-                Name:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.user_details?.firstname} {trip?.user_details?.lastname}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Email:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.user_details?.email}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Phone:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.user_details?.phone_no}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* Trip Details */}
-      <div
-        style={{
-          marginBottom: sectionMarginBottom,
-          padding: sectionPadding,
-          backgroundColor: lightBackgroundColor,
-          borderRadius: sectionBorderRadius,
-          pageBreakInside: "avoid", // Prevent page break inside this section
-        }}
-      >
-        <h3
-          style={{
-            fontSize: headingFontSize,
-            fontWeight: "bold",
-            color: textPrimaryColor,
-            marginBottom: headingMarginBottom,
-            margin: `0 0 ${headingMarginBottom} 0`,
-          }}
-        >
-          Trip Details
-        </h3>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                  width: tableTitleWidth,
-                }}
-              >
-                Trip Name:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.trip_name || "Unnamed Trip"}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Trip Type:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                  textTransform: "capitalize",
-                }}
-              >
-                {trip?.trip_type?.replace("_", " ")}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Event Type:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.trip_event_type || "N/A"}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Pickup Location:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.pickup_location_name}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Pickup Date/Time:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {formatDateTime(trip?.pickup_datetime)}
-              </td>
-            </tr>
-
-            {/* Multi-Stop Locations */}
-            {trip?.stops &&
-              trip.stops.length > 0 &&
-              trip.stops.map((stop, index) => (
-                <tr key={stop.trip_stop_id}>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textSecondaryColor,
-                    }}
-                  >
-                    Stop {index + 1}:
-                  </td>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textPrimaryColor,
-                    }}
-                  >
-                    {stop.stop_location_name} - {formatDate(stop.stop_date)}
-                  </td>
-                </tr>
-              ))}
-
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Drop-off Location:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.dropoff_location_name}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Total Distance:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.total_distance} km
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* Vehicle & Driver Details */}
-      <div
-        style={{
-          marginBottom: sectionMarginBottom,
-          padding: sectionPadding,
-          backgroundColor: lightBackgroundColor,
-          borderRadius: sectionBorderRadius,
-          pageBreakInside: "avoid", // PREVENT PAGE BREAK INSIDE THIS SECTION
-          breakInside: "avoid", // Additional support for other browsers
-        }}
-      >
-        <h3
-          style={{
-            fontSize: headingFontSize,
-            fontWeight: "bold",
-            color: textPrimaryColor,
-            marginBottom: headingMarginBottom,
-            margin: `0 0 ${headingMarginBottom} 0`,
-          }}
-        >
-          Vehicle & Driver
-        </h3>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                  width: tableTitleWidth,
-                }}
-              >
-                Driver Name:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.driver_details?.firstname}{" "}
-                {trip?.driver_details?.lastname}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Driver Phone:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.driver_details?.phone_no}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Driver Type:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                  textTransform: "capitalize",
-                }}
-              >
-                {trip?.driver_details?.driver_type?.replace("_", " ")}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Vehicle:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.vehicle_details?.maker} {trip?.vehicle_details?.model}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Registration Number:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.vehicle_details?.registration_number}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Vehicle Type:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                  textTransform: "uppercase",
-                }}
-              >
-                {trip?.vehicle_details?.vehicle_type}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Seating Capacity:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                }}
-              >
-                {trip?.vehicle_details?.number_of_seats} passengers
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Fuel Type:
-              </td>
-              <td
-                style={{
-                  padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                  textTransform: "capitalize",
-                }}
-              >
-                {trip?.vehicle_details?.fuel_type}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* Payment Information */}
-      {trip?.payment_transaction &&
-        trip?.payment_transaction?.transaction_id && (
-          <div
+          <p
             style={{
-              marginBottom: sectionMarginBottom,
-              padding: sectionPadding,
-              backgroundColor: lightBackgroundColor,
-              borderRadius: sectionBorderRadius,
-              pageBreakInside: "avoid", // Prevent page break inside this section
+              margin: '0 0 8px 0',
+              fontSize: '9px',
+              fontWeight: '600',
+              color: '#64748b',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
             }}
           >
-            <h3
-              style={{
-                fontSize: headingFontSize,
-                fontWeight: "bold",
-                color: textPrimaryColor,
-                marginBottom: headingMarginBottom,
-                margin: `0 0 ${headingMarginBottom} 0`,
-              }}
-            >
-              Payment Information
-            </h3>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <tbody>
-                <tr>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textSecondaryColor,
-                      width: tableTitleWidth,
-                    }}
-                  >
-                    Payment Gateway:
-                  </td>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textPrimaryColor,
-                    }}
-                  >
-                    {trip?.payment_transaction?.payment_gateway}
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textSecondaryColor,
-                    }}
-                  >
-                    Card Number:
-                  </td>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textPrimaryColor,
-                      fontFamily: "Courier, monospace",
-                    }}
-                  >
-                    {maskCardNumber(trip?.payment_transaction?.card_number)}
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textSecondaryColor,
-                    }}
-                  >
-                    Transaction ID:
-                  </td>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textPrimaryColor,
-                      fontFamily: "Courier, monospace",
-                    }}
-                  >
-                    {trip?.payment_transaction?.gateway_transaction_id}
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textSecondaryColor,
-                    }}
-                  >
-                    Transaction Date:
-                  </td>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textPrimaryColor,
-                    }}
-                  >
-                    {formatDateTime(trip?.payment_transaction?.processed_at)}
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textSecondaryColor,
-                    }}
-                  >
-                    Gateway Response:
-                  </td>
-                  <td
-                    style={{
-                      padding: `${tableRowPaddingVertical} ${tableRowPaddingHorizontal}`,
-                      fontSize: bodyFontSize,
-                      color: textPrimaryColor,
-                    }}
-                  >
-                    {trip?.payment_transaction?.gateway_response}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
+            Payment Information
+          </p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+            <tbody>
+              <tr>
+                <td style={{ padding: '2px 0', color: '#64748b', width: '140px' }}>Payment Method:</td>
+                <td style={{ padding: '2px 0', color: '#1e293b', fontWeight: '600' }}>
+                  {trip?.payment_transaction?.payment_gateway || 'N/A'}
+                </td>
+                <td style={{ padding: '2px 0 2px 15px', color: '#64748b', width: '120px' }}>Transaction ID:</td>
+                <td style={{ padding: '2px 0', color: '#1e293b', fontFamily: 'monospace', fontSize: '9px' }}>
+                  {trip?.payment_transaction?.gateway_transaction_id || 'N/A'}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '2px 0', color: '#64748b' }}>Card Number:</td>
+                <td style={{ padding: '2px 0', color: '#1e293b', fontFamily: 'monospace' }}>
+                  {maskCardNumber(trip?.payment_transaction?.card_number)}
+                </td>
+                <td style={{ padding: '2px 0 2px 15px', color: '#64748b' }}>Status:</td>
+                <td style={{ padding: '2px 0', color: '#1e293b', fontWeight: '600' }}>
+                  {trip?.payment_status === 'completed' ? 'Completed' : trip?.payment_status || 'N/A'}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '2px 0', color: '#64748b' }}>Payment Date:</td>
+                <td style={{ padding: '2px 0', color: '#1e293b' }} colSpan="3">
+                  {formatDateTime(trip?.payment_transaction?.processed_at)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Amount Summary */}
-      <div
-        style={{
-          marginBottom: sectionMarginBottom,
-          padding: sectionPadding,
-          backgroundColor: successBackgroundColor,
-          borderRadius: sectionBorderRadius,
-          border: `${summaryBorderWidth} solid ${primaryColor}`,
-          pageBreakInside: "avoid", // Prevent page break inside this section
-        }}
-      >
-        <h3
-          style={{
-            fontSize: headingFontSize,
-            fontWeight: "bold",
-            color: textPrimaryColor,
-            marginBottom: headingMarginBottom,
-            margin: `0 0 ${headingMarginBottom} 0`,
-          }}
-        >
-          Amount Summary
-        </h3>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
-            <tr>
-              <td
-                style={{
-                  padding: `${summaryRowPaddingVertical} ${summaryRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textSecondaryColor,
-                }}
-              >
-                Tax Amount:
-              </td>
-              <td
-                style={{
-                  padding: `${summaryRowPaddingVertical} ${summaryRowPaddingHorizontal}`,
-                  fontSize: bodyFontSize,
-                  color: textPrimaryColor,
-                  textAlign: "right",
-                }}
-              >
-                CAD ${parseFloat(trip?.tax_amount || 0).toFixed(2)}
-              </td>
-            </tr>
-            <tr style={{ borderTop: `${summaryBorderWidth} solid ${primaryColor}` }}>
-              <td
-                style={{
-                  padding: `${summaryRowPaddingVertical} ${summaryRowPaddingHorizontal}`,
-                  fontSize: summaryTitleFontSize,
-                  color: textPrimaryColor,
-                  fontWeight: "bold",
-                }}
-              >
-                Total Amount Paid:
-              </td>
-              <td
-                style={{
-                  padding: `${summaryRowPaddingVertical} ${summaryRowPaddingHorizontal}`,
-                  fontSize: summaryAmountFontSize,
-                  color: primaryColor,
-                  fontWeight: "bold",
-                  textAlign: "right",
-                }}
-              >
-                CAD ${parseFloat(trip?.total_price || 0).toFixed(2)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      {/* Payment Summary - Compact */}
+      <div style={{ marginBottom: '15px', pageBreakInside: 'avoid' }}>
+        <div style={{ maxWidth: '300px', marginLeft: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <tbody>
+              <tr>
+                <td style={{ padding: '5px 0', fontSize: '11px', color: '#64748b' }}>Subtotal:</td>
+                <td style={{ padding: '5px 0', textAlign: 'right', fontSize: '11px', color: '#1e293b' }}>
+                  CAD ${parseFloat(trip?.total_price - trip?.tax_amount || 0).toFixed(2)}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '5px 0', fontSize: '11px', color: '#64748b' }}>Tax:</td>
+                <td style={{ padding: '5px 0', textAlign: 'right', fontSize: '11px', color: '#1e293b' }}>
+                  CAD ${parseFloat(trip?.tax_amount || 0).toFixed(2)}
+                </td>
+              </tr>
+              <tr style={{ borderTop: '2px solid #1e293b' }}>
+                <td style={{ padding: '8px 0 0 0', fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                  TOTAL PAID:
+                </td>
+                <td
+                  style={{
+                    padding: '8px 0 0 0',
+                    textAlign: 'right',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: '#1e293b',
+                  }}
+                >
+                  CAD ${parseFloat(trip?.total_price || 0).toFixed(2)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Footer */}
+      {/* Terms & Footer - Compact */}
       <div
         style={{
-          textAlign: "center",
-          paddingTop: footerPaddingTop,
-          borderTop: `1px solid ${borderColor}`,
-          color: textSecondaryColor,
-          fontSize: smallFontSize,
+          borderTop: '1px solid #e2e8f0',
+          paddingTop: '12px',
+          fontSize: '9px',
+          color: '#64748b',
+          lineHeight: '1.5',
+          pageBreakInside: 'avoid',
         }}
       >
-        <p style={{ margin: footerTextMargin }}>
-          Thank you for choosing E-Charter!
+        <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#1e293b' }}>Terms & Conditions</p>
+        <p style={{ margin: '0 0 6px 0' }}>
+          Payment is due upon receipt. All services are non-refundable unless cancelled 24 hours in advance.
         </p>
-        <p style={{ margin: footerTextMargin }}>
-          For any queries, please contact us at support@echarter.com
+        <p style={{ margin: '0 0 12px 0' }}>
+          For questions, contact support@echarter.com or call +1 (555) 123-4567.
         </p>
-        <p style={{ margin: "0" }}>
-          This is a computer-generated receipt and does not require a
-          signature.
-        </p>
+        <div style={{ textAlign: 'center', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
+          <p style={{ margin: '0 0 3px 0', fontSize: '10px', color: '#1e293b', fontWeight: '600' }}>
+            Thank you for your business!
+          </p>
+          <p style={{ margin: '0', fontSize: '8px' }}>
+            This is a computer-generated invoice and does not require a signature.
+          </p>
+        </div>
       </div>
     </div>
   );

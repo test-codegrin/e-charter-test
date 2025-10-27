@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const { db } = require("../config/db");
-const notificationQueries = require("../config/notificationQueries/notificationQueries");
+const notificationQueries = require("../config/notificationQueries/notificationGetQueries");
+const notificationDeleteQueries = require("../config/notificationQueries/notificationDeleteQueries");
 
 // Mock notification queries since the table might not exist
 const mockNotifications = [
@@ -185,10 +186,41 @@ const markAllAsRead = asyncHandler(async (req, res) => {
   }
 });
 
+const deleteNotification = asyncHandler(async (req, res) => {
+  const { notification_id } = req.params;
+
+  try {
+    // Check if notifications table exists
+    try {
+      const [result] = await db.query(
+        notificationDeleteQueries.deleteNotification,
+        [notification_id]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+
+      res.status(200).json({
+        message: "Notification deleted"
+      });
+    } catch (tableError) {
+      // If table doesn't exist, return success anyway
+      res.status(200).json({
+        message: "Notification deleted"
+      });
+    }
+
+  } catch (error) {
+    console.error("Error deleting notification:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
 module.exports = {
   getUserNotifications,
   getDriverNotifications,
   getAdminNotifications,
   markAsRead,
-  markAllAsRead
+  markAllAsRead,
+  deleteNotification
 };

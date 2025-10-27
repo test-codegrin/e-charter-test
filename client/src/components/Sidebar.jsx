@@ -14,21 +14,22 @@ import {
   DollarSign,
   Settings
 } from 'lucide-react'
+import { ADMIN_ROUTES } from '../constants/routes'
 
 const Sidebar = () => {
   const { user } = useAuth()
   const location = useLocation()
 
   const adminMenuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
-    { icon: Users, label: 'Drivers', path: '/admin/drivers' },
-    { icon: Building, label: 'Fleet Partners', path: '/admin/fleet-partners' },
-    { icon: Car, label: 'Vehicles', path: '/admin/vehicles' },
-    { icon: MapPin, label: 'Trips', path: '/admin/trips' },
-    { icon: DollarSign, label: 'Payouts', path: '/admin/payouts' },
-    { icon: FileText, label: 'Invoices', path: '/admin/invoices' },
-    { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
-    { icon: Settings, label: 'Settings', path: '/admin/settings' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: ADMIN_ROUTES.DASHBOARD },
+    { icon: Users, label: 'Drivers', path: ADMIN_ROUTES.DRIVERS.ALL_DRIVERS },
+    { icon: Building, label: 'Fleet Partners', path: ADMIN_ROUTES.FLEET_PARTNER.ALL_FLEET_PARTNER },
+    { icon: Car, label: 'Vehicles', path: ADMIN_ROUTES.VEHICLES.ALL_VEHICLES },
+    { icon: MapPin, label: 'Trips', path: ADMIN_ROUTES.TRIPS.ALL_TRIPS },
+    { icon: DollarSign, label: 'Payouts', path: ADMIN_ROUTES.PAYOUTS },
+    { icon: FileText, label: 'Invoices', path: ADMIN_ROUTES.INVOICES },
+    { icon: Bell, label: 'Notifications', path: ADMIN_ROUTES.NOTIFICATIONS },
+    { icon: Settings, label: 'Settings', path: ADMIN_ROUTES.SETTINGS },
   ]
 
   const driverMenuItems = [

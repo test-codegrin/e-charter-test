@@ -6,4 +6,11 @@ const imagekit = new ImageKit({
     urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
 });
 
-module.exports = imagekit;
+
+const ImagekitFolder = {
+    driver_documents: '/echarter/driver-documents/',
+    vehicle_documents: '/echarter/vehicle-documents/',
+    trip_documents: '/echarter/trip-documents/',
+    driver_profile: '/echarter/driver-profile/'
+}
+module.exports = {imagekit,ImagekitFolder};

@@ -8,14 +8,58 @@ const Header = () => {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [userData, setUserData] = useState(null)
+
+  // Load user data from localStorage
+  const loadUserData = () => {
+    try {
+      const storedUser = localStorage.getItem('user')
+      if (storedUser) {
+        setUserData(JSON.parse(storedUser))
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error)
+    }
+  }
+
+  // Listen for user updates
+  useEffect(() => {
+    // Initial load
+    loadUserData()
+
+    // Listen for custom storage event
+    const handleStorageUpdate = () => {
+      loadUserData()
+    }
+
+    window.addEventListener('userUpdated', handleStorageUpdate)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('userUpdated', handleStorageUpdate)
+    }
+  }, [])
 
   // Get user display name
   const getUserDisplayName = () => {
+    // First check updated userData from localStorage
+    if (userData?.driverName) return userData.driverName
+    if (userData?.name) return userData.name
+    if (userData?.adminName) return userData.adminName
+    if (userData?.firstname && userData?.lastname) return `${userData.firstname} ${userData.lastname}`
+    
+    // Fallback to auth context user
     if (user?.name) return user.name
     if (user?.adminName) return user.adminName
     if (user?.driverName) return user.driverName
     if (user?.firstName && user?.lastName) return `${user.firstName} ${user.lastName}`
+    
     return 'User'
+  }
+
+  // Get profile image
+  const getProfileImage = () => {
+    return userData?.profile_image || user?.profile_image
   }
 
   // Fetch notifications count
@@ -71,12 +115,17 @@ const Header = () => {
         {/* Right side */}
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <button className="relative p-2 text-gray-300 hover:text-white hover:bg-dark-700 rounded-lg transition-colors duration-200">
+          <a
+            href={user?.role === 'admin' ? '/admin/notifications' : '/driver/notifications'} 
+            className="relative p-2 text-gray-300 rounded-lg transition-colors duration-200 hover:bg-dark-700"
+          >
             <Bell className="w-6 h-6 animated-icon" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full pulse-dot"></span>
+              <span className="absolute top-0 right-0 w-5 h-5 bg-danger-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
+                {unreadCount}
+              </span>
             )}
-          </button>
+          </a>
 
           {/* User Menu */}
           <div className="relative">
@@ -84,15 +133,29 @@ const Header = () => {
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center space-x-3 p-2 hover:bg-dark-700 rounded-lg transition-colors duration-200"
             >
-              <div className="w-8 h-8 bg-ice-500 rounded-full flex items-center justify-center shadow-glow">
-                <User className="w-5 h-5 text-white" />
+              {/* Profile Image - Updates automatically */}
+              <div className="w-8 h-8 bg-ice-500 rounded-full flex items-center justify-center shadow-glow overflow-hidden">
+                {getProfileImage() ? (
+                  <img 
+                    src={getProfileImage()} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <User className="w-5 h-5 text-white" />
+                )}
               </div>
+              
+              {/* User Name - Updates automatically */}
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium text-white">
                   {getUserDisplayName()}
                 </p>
-                <p className="text-xs text-ice-400 capitalize">{user?.role || 'User'}</p>
+                <p className="text-xs text-ice-400 capitalize">
+                  {userData?.role || user?.role || 'User'}
+                </p>
               </div>
+              
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
                 showUserMenu ? 'rotate-180' : ''
               }`} />
@@ -103,7 +166,7 @@ const Header = () => {
               <div className="absolute right-0 mt-2 w-48 bg-dark-800 rounded-lg shadow-lg border border-dark-700 py-1 z-50 scale-in">
                 <div className="px-4 py-2 border-b border-dark-700">
                   <p className="text-sm font-medium text-white">{getUserDisplayName()}</p>
-                  <p className="text-xs text-gray-400">{user?.email}</p>
+                  <p className="text-xs text-gray-400">{userData?.email || user?.email}</p>
                 </div>
                 
                 {/* Profile Link */}

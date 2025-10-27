@@ -19,8 +19,7 @@ const notificationQueries = {
   `,
 
   getAdminNotifications: `
-    SELECT * FROM notifications 
-    WHERE admin_id IS NOT NULL 
+    SELECT * FROM notifications WHERE for_admin = 1
     ORDER BY created_at DESC
   `,
 

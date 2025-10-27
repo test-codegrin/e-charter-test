@@ -29,6 +29,7 @@ import ViewDriver from './pages/admin/ViewDriver'
 import ViewVehicle from './pages/admin/ViewVehicle'
 import ViewFleetPartner from './pages/admin/ViewFleetPartner'
 import ViewTripDetails from './pages/admin/ViewTripDetails'
+import { ADMIN_ROUTES } from './constants/routes'
 
 function App() {
   const { user, loading } = useAuth()
@@ -64,22 +65,25 @@ function App() {
         {user.role === 'admin' && (
           <>
             <Route path="/" element={<AdminDashboard />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/drivers" element={<AdminDrivers />} />
-            <Route path="/admin/add-driver" element={<AddDriver />} />
-            <Route path="/admin/view-driver/:driver_id" element={<ViewDriver />} />
-            <Route path="/admin/vehicles" element={<AdminVehicles />} />
-            <Route path="/admin/view-vehicle/:vehicle_id" element={<ViewVehicle />} />
+            <Route path={ADMIN_ROUTES.DASHBOARD} element={<AdminDashboard />} />
+            +
+            <Route path={ADMIN_ROUTES.DRIVERS.ALL_DRIVERS} element={<AdminDrivers />} />
+            <Route path={ADMIN_ROUTES.DRIVERS.ADD_DRIVER} element={<AddDriver />} />
+            <Route path={ADMIN_ROUTES.DRIVERS.VIEW_DRIVER+":driver_id"} element={<ViewDriver />} />
 
-            <Route path="/admin/trips" element={<AdminTrips />} />
-            <Route path="/admin/view-trip/:trip_id" element={<ViewTripDetails />} />
+            <Route path={ADMIN_ROUTES.VEHICLES.ALL_VEHICLES} element={<AdminVehicles />} />
+            <Route path={ADMIN_ROUTES.VEHICLES.VIEW_VEHICLE+":vehicle_id"} element={<ViewVehicle />} />
 
-            <Route path="/admin/invoices" element={<AdminInvoices />} />
-            <Route path="/admin/notifications" element={<AdminNotifications />} />
-            <Route path="/admin/fleet-partners" element={<FleetPartners />} />
-            <Route path="/admin/view-fleet-partner/:fleet_company_id" element={<ViewFleetPartner />} />
-            <Route path="/admin/payouts" element={<Payouts />} />
-            <Route path="/admin/settings" element={<Settings />} />
+            <Route path={ADMIN_ROUTES.TRIPS.ALL_TRIPS} element={<AdminTrips />} />
+            <Route path={ADMIN_ROUTES.TRIPS.VIEW_TRIP+":trip_id"} element={<ViewTripDetails />} />
+            
+            <Route path={ADMIN_ROUTES.FLEET_PARTNER.ALL_FLEET_PARTNER} element={<FleetPartners />} />
+            <Route path={ADMIN_ROUTES.FLEET_PARTNER.VIEW_FLEET_PARTNER+":fleet_company_id"} element={<ViewFleetPartner />} />
+
+            <Route path={ADMIN_ROUTES.INVOICES} element={<AdminInvoices />} />
+            <Route path={ADMIN_ROUTES.NOTIFICATIONS} element={<AdminNotifications />} />
+            <Route path={ADMIN_ROUTES.PAYOUTS} element={<Payouts />} />
+            <Route path={ADMIN_ROUTES.SETTINGS} element={<Settings />} />
           </>
         )}
 
