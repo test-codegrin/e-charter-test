@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const { db } = require("../config/db");
 const tripBookingPostQueries = require("../config/tripBookingQueries/tripBookingPostQueries");
-const PricingService = require('../services/PricingService');
+const pricingService = require("../services/pricingService");
 
 // Haversine formula to calculate distance in kilometers
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
@@ -195,7 +195,7 @@ const recommendCars = asyncHandler(async (req, res) => {
     };
 
     // Pricing calculation
-    const carsWithPrice = PricingService.getVehicleQuote(carsMapped, tripData).map(car => ({
+    const carsWithPrice = pricingService.getVehicleQuote(carsMapped, tripData).map(car => ({
       car_id: car.car_id,
       carName: car.carName,
       carSize: car.carSize,
