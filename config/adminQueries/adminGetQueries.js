@@ -172,6 +172,7 @@ SELECT
     d.phone_no,
     d.firstname,
     d.lastname,
+    d.profile_image, 
     d.gender,
     d.driver_type,
     d.fleet_company_id,

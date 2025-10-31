@@ -1,279 +1,551 @@
-import React, { useState, useEffect } from 'react'
-import { Search, Filter, Play, CheckCircle, Eye, MapPin, Clock, Phone } from 'lucide-react'
-import { driverAPI } from '../../services/api'
-import toast from 'react-hot-toast'
+import React, { useState, useEffect } from 'react';
+import {
+  Search,
+  Filter,
+  MapPin,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Car,
+  User,
+  Phone,
+  Mail,
+  Navigation,
+  DollarSign,
+  Building2,
+  ArrowRight,
+  Star,
+  Users,
+  Briefcase,
+} from 'lucide-react';
+import { adminAPI, driverAPI } from '../../services/api';
+import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
+import Loader from '../../components/Loader';
+import { ADMIN_ROUTES, DRIVER_ROUTES } from '../../constants/routes';
 
-const Trips = () => {
-  const [trips, setTrips] = useState([])
-  const [filteredTrips, setFilteredTrips] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [selectedTrip, setSelectedTrip] = useState(null)
-  const [showModal, setShowModal] = useState(false)
+const DriverTrips = () => {
+  const [trips, setTrips] = useState([]);
+  const [filteredTrips, setFilteredTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [tripTypeFilter, setTripTypeFilter] = useState('all');
 
   useEffect(() => {
-    fetchTrips()
-  }, [])
+    fetchTrips();
+  }, []);
 
   useEffect(() => {
-    filterTrips()
-  }, [trips, searchTerm, statusFilter])
+    filterTrips();
+  }, [trips, searchTerm, statusFilter, paymentFilter, tripTypeFilter]);
 
   const fetchTrips = async () => {
     try {
-      setLoading(true)
-      const response = await driverAPI.getTrips()
-      setTrips(response.data.trips || [])
+      setLoading(true);
+      const response = await driverAPI.getTrips();
+      console.log('Trips response:', response.data);
+      setTrips(response.data.trips || []);
     } catch (error) {
-      console.error('Error fetching trips:', error)
-      toast.error('Failed to fetch trips')
+      console.error('Error fetching trips:', error);
+      toast.error('Failed to fetch trips');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const filterTrips = () => {
-    let filtered = trips
+    let filtered = trips;
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(trip =>
-        trip.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        trip.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        trip.pickupLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        trip.dropLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        trip.trip_id.toString().includes(searchTerm)
-      )
+      filtered = filtered.filter((trip) => {
+        const userName = `${trip.user_firstname} ${trip.user_lastname}`.toLowerCase();
+        const driverName = `${trip.driver_firstname} ${trip.driver_lastname}`.toLowerCase();
+        const pickupLocation = trip.pickup_location_name?.toLowerCase() || '';
+        const dropoffLocation = trip.dropoff_location_name?.toLowerCase() || '';
+        const tripName = trip.trip_name?.toLowerCase() || '';
+
+        return (
+          userName.includes(searchTerm.toLowerCase()) ||
+          driverName.includes(searchTerm.toLowerCase()) ||
+          pickupLocation.includes(searchTerm.toLowerCase()) ||
+          dropoffLocation.includes(searchTerm.toLowerCase()) ||
+          tripName.includes(searchTerm.toLowerCase()) ||
+          trip.trip_id?.toString().includes(searchTerm)
+        );
+      });
     }
 
     // Status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(trip => trip.status === statusFilter)
+      filtered = filtered.filter((trip) => trip.trip_status === statusFilter);
     }
 
-    setFilteredTrips(filtered)
-  }
-
-  const startTrip = async (tripId) => {
-    try {
-      await driverAPI.startTrip(tripId)
-      toast.success('Trip started successfully!')
-      fetchTrips()
-    } catch (error) {
-      console.error('Error starting trip:', error)
-      toast.error('Failed to start trip')
+    // Payment filter
+    if (paymentFilter !== 'all') {
+      filtered = filtered.filter((trip) => trip.payment_status === paymentFilter);
     }
-  }
 
-  const completeTrip = async (tripId) => {
-    try {
-      await driverAPI.completeTrip(tripId)
-      toast.success('Trip completed successfully!')
-      fetchTrips()
-    } catch (error) {
-      console.error('Error completing trip:', error)
-      toast.error('Failed to complete trip')
+    // Trip type filter
+    if (tripTypeFilter !== 'all') {
+      filtered = filtered.filter((trip) => trip.trip_type === tripTypeFilter);
     }
-  }
+
+    setFilteredTrips(filtered);
+  };
 
   const getStatusBadge = (status) => {
-    const statusMap = {
-      'pending': 'status-pending',
-      'confirmed': 'status-confirmed',
-      'in_progress': 'status-in-progress',
-      'completed': 'status-completed',
-      'cancelled': 'status-cancelled'
+    const normalizedStatus = status || 'upcoming';
+
+    switch (normalizedStatus) {
+      case 'upcoming':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <Clock className="w-3 h-3 mr-1" />
+            Upcoming
+          </span>
+        );
+      case 'running':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            <Navigation className="w-3 h-3 mr-1" />
+            Running
+          </span>
+        );
+      case 'completed':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Completed
+          </span>
+        );
+      case 'canceled':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <XCircle className="w-3 h-3 mr-1" />
+            Canceled
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            {status}
+          </span>
+        );
     }
-    
-    return (
-      <span className={`status-badge ${statusMap[status] || 'status-pending'}`}>
-        {status?.replace('_', ' ') || 'Unknown'}
+  };
+
+  const getPaymentBadge = (status) => {
+    return status === 'completed' ? (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        <CheckCircle className="w-3 h-3 mr-1" />
+        Paid
       </span>
-    )
-  }
+    ) : (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        <Clock className="w-3 h-3 mr-1" />
+        Pending
+      </span>
+    );
+  };
 
-  const openTripModal = (trip) => {
-    setSelectedTrip(trip)
-    setShowModal(true)
-  }
+  const getTripTypeBadge = (type) => {
+    const typeMap = {
+      single_trip: { label: 'Single Trip', color: 'bg-blue-100 text-blue-800' },
+      round_trip: { label: 'Round Trip', color: 'bg-purple-100 text-purple-800' },
+      multi_stop: { label: 'Multi-Stop', color: 'bg-orange-100 text-orange-800' },
+    };
 
-  // Helper function to safely format currency
-  const formatCurrency = (value) => {
-    const numValue = Number(value) || 0
-    return numValue.toFixed(2)
-  }
+    const typeInfo = typeMap[type] || { label: type, color: 'bg-gray-100 text-gray-800' };
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeInfo.color}`}>
+        {typeInfo.label}
+      </span>
+    );
+  };
+
+  const StarRating = ({ rating }) => {
+    const numericRating = parseFloat(rating) || 0;
+    const fullStars = Math.floor(numericRating);
+    const hasHalfStar = numericRating - fullStars >= 0.5;
+
+    return (
+      <div className="flex items-center space-x-1">
+        {[...Array(5)].map((_, index) => {
+          const isFilled = index < fullStars;
+          const isHalf = index === fullStars && hasHalfStar;
+          return (
+            <div key={index} className="relative">
+              {isHalf ? (
+                <div className="relative">
+                  <Star className="w-3 h-3 text-gray-300 fill-current" />
+                  <div className="absolute inset-0 overflow-hidden w-1/2">
+                    <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                  </div>
+                </div>
+              ) : (
+                <Star className={`w-3 h-3 ${isFilled ? 'text-yellow-400' : 'text-gray-300'} fill-current`} />
+              )}
+            </div>
+          );
+        })}
+        <span className="text-xs font-semibold text-gray-700 ml-1">{numericRating.toFixed(1)}</span>
+      </div>
+    );
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatDuration = (seconds) => {
+    if (!seconds) return 'N/A';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    )
+    return <Loader />;
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-secondary-900">My Trips</h1>
-          <p className="text-secondary-600">Manage your assigned trips and bookings</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-secondary-600">Total: {trips.length}</span>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-secondary-900">Trip Management</h1>
+        <p className="text-secondary-600">Monitor and manage all trip bookings</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-blue-600">
-            {trips.filter(t => t.status === 'confirmed').length}
-          </div>
-          <div className="text-sm text-secondary-600">Upcoming</div>
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div className="bg-white rounded-lg shadow p-4">
+          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Trips</p>
+          <p className="text-2xl font-bold text-gray-900">{trips.length}</p>
         </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-purple-600">
-            {trips.filter(t => t.status === 'in_progress').length}
-          </div>
-          <div className="text-sm text-secondary-600">In Progress</div>
+        <div className="bg-blue-50 rounded-lg shadow p-4 border border-blue-200">
+          <p className="text-xs text-blue-700 uppercase tracking-wide mb-1">Upcoming</p>
+          <p className="text-2xl font-bold text-blue-600">
+            {trips.filter((t) => t.trip_status === 'upcoming').length}
+          </p>
         </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-success-600">
-            {trips.filter(t => t.status === 'completed').length}
-          </div>
-          <div className="text-sm text-secondary-600">Completed</div>
+        <div className="bg-purple-50 rounded-lg shadow p-4 border border-purple-200">
+          <p className="text-xs text-purple-700 uppercase tracking-wide mb-1">Running</p>
+          <p className="text-2xl font-bold text-purple-600">
+            {trips.filter((t) => t.trip_status === 'running').length}
+          </p>
         </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-green-600">
-            ${trips.filter(t => t.status === 'completed').reduce((sum, trip) => sum + (parseFloat(trip.total_price) || 0), 0).toFixed(2)}
-          </div>
-          <div className="text-sm text-secondary-600">Total Earnings</div>
+        <div className="bg-green-50 rounded-lg shadow p-4 border border-green-200">
+          <p className="text-xs text-green-700 uppercase tracking-wide mb-1">Completed</p>
+          <p className="text-2xl font-bold text-green-600">
+            {trips.filter((t) => t.trip_status === 'completed').length}
+          </p>
+        </div>
+        <div className="bg-red-50 rounded-lg shadow p-4 border border-red-200">
+          <p className="text-xs text-red-700 uppercase tracking-wide mb-1">Canceled</p>
+          <p className="text-2xl font-bold text-red-600">
+            {trips.filter((t) => t.trip_status === 'canceled').length}
+          </p>
+        </div>
+        <div className="bg-yellow-50 rounded-lg shadow p-4 border border-yellow-200">
+          <p className="text-xs text-yellow-700 uppercase tracking-wide mb-1 flex items-center">
+            <Clock className="w-3 h-3 mr-1" />
+            Payment Pending
+          </p>
+          <p className="text-2xl font-bold text-yellow-600">
+            {trips.filter((t) => t.payment_status === 'pending').length}
+          </p>
+        </div>
+        <div className="bg-emerald-50 rounded-lg shadow p-4 border border-emerald-200">
+          <p className="text-xs text-emerald-700 uppercase tracking-wide mb-1 flex items-center">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Payment Completed
+          </p>
+          <p className="text-2xl font-bold text-emerald-600">
+            {trips.filter((t) => t.payment_status === 'completed').length}
+          </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="card">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 gap-4">
           {/* Search */}
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
-              placeholder="Search trips..."
+              placeholder="Search by trip name, user, driver, location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Filter className="w-5 h-5 text-secondary-400" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-secondary-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="all">All Status</option>
-                <option value="confirmed">Upcoming</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+          {/* Filters Row */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Clear Filters */}
+            {(searchTerm || statusFilter !== 'all' || paymentFilter !== 'all' || tripTypeFilter !== 'all') && (
+              <div className="mt-5">
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                    setPaymentFilter('all');
+                    setTripTypeFilter('all');
+                  }}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+
+            {/* Trip Status Filter */}
+            <div className="relative">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Trip Status</label>
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 cursor-pointer"
+                >
+                  <option value="all">All Status</option>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="running">Running</option>
+                  <option value="completed">Completed</option>
+                  <option value="canceled">Canceled</option>
+                </select>
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Status Filter */}
+            <div className="relative">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Payment</label>
+              <div className="relative">
+                <select
+                  value={paymentFilter}
+                  onChange={(e) => setPaymentFilter(e.target.value)}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 cursor-pointer"
+                >
+                  <option value="all">All Payments</option>
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                </select>
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Trip Type Filter */}
+            <div className="relative">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Trip Type</label>
+              <div className="relative">
+                <select
+                  value={tripTypeFilter}
+                  onChange={(e) => setTripTypeFilter(e.target.value)}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 cursor-pointer"
+                >
+                  <option value="all">All Types</option>
+                  <option value="single_trip">Single Trip</option>
+                  <option value="round_trip">Round Trip</option>
+                  <option value="multi_stop">Multi-Stop</option>
+                </select>
+                <Navigation className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Trips Table */}
-      <div className="card">
+      <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-secondary-200">
-                <th className="table-header">Trip ID</th>
-                <th className="table-header">Customer</th>
-                <th className="table-header">Route</th>
-                <th className="table-header">Date & Time</th>
-                <th className="table-header">Status</th>
-                <th className="table-header">Earnings</th>
-                <th className="table-header">Actions</th>
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Trip Details
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Route
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Schedule
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Vehicle
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary-200">
+            <tbody className="bg-white divide-y divide-gray-200">
               {filteredTrips.map((trip) => (
-                <tr key={trip.trip_id} className="hover:bg-secondary-50">
-                  <td className="table-cell font-medium">
-                    #{trip.trip_id}
-                  </td>
-                  <td className="table-cell">
+                <tr key={trip.trip_id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
                     <div>
-                      <p className="font-medium text-secondary-900">
-                        {trip.firstName} {trip.lastName}
-                      </p>
-                      <p className="text-sm text-secondary-500">{trip.userEmail}</p>
+                      <p className="font-semibold text-gray-900">#{trip.trip_id}</p>
+                      <p className="text-sm text-gray-600">{trip.trip_name || 'Unnamed Trip'}</p>
+                      <div className="mt-1">{getTripTypeBadge(trip.trip_type)}</div>
                     </div>
                   </td>
-                  <td className="table-cell">
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-4 h-4 text-green-500" />
-                        <span className="text-sm truncate max-w-32">{trip.pickupLocation}</span>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-primary-600" />
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-4 h-4 text-red-500" />
-                        <span className="text-sm truncate max-w-32">{trip.dropLocation}</span>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {trip.user_firstname} {trip.user_lastname}
+                        </p>
+                        <div className="flex items-center space-x-1 text-sm text-gray-500">
+                          <Mail className="w-3 h-3" />
+                          <span>{trip.user_email}</span>
+                        </div>
+                        {/* Persons and Luggage */}
+                        <div className="flex items-center space-x-3 mt-1">
+                          {trip.total_persons !== undefined && (
+                            <div className="flex items-center space-x-1 text-xs text-blue-600">
+                              <Users className="w-3 h-3" />
+                              <span className="font-medium">{trip.total_persons} person{trip.total_persons !== 1 ? 's' : ''}</span>
+                            </div>
+                          )}
+                          {trip.total_luggages !== undefined && (
+                            <div className="flex items-center space-x-1 text-xs text-orange-600">
+                              <Briefcase className="w-3 h-3" />
+                              <span className="font-medium">{trip.total_luggages} luggage{trip.total_luggages !== 1 ? 's' : ''}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="table-cell">
-                    <div className="space-y-1">
+                  <td className="px-6 py-4">
+                    <div className="space-y-2">
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-gray-900">{trip.pickup_location_name}</span>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-gray-900">{trip.dropoff_location_name}</span>
+                      </div>
+                      {trip.stops && trip.stops.length > 0 && (
+                        <span className="text-xs text-blue-600 font-medium">
+                          +{trip.stops.length} stop{trip.stops.length > 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-2">
                       <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4 text-secondary-400" />
-                        <span className="text-sm">
-                          {new Date(trip.tripStartDate).toLocaleDateString()}
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-900">{formatDate(trip.pickup_datetime)}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-900">{formatTime(trip.pickup_datetime)}</span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {trip.total_distance} km • {formatDuration(trip.total_travel_time)}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Car className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {trip.vehicle_maker} {trip.vehicle_model}
                         </span>
                       </div>
-                      <div className="text-sm text-secondary-500">{trip.tripTime}</div>
-                    </div>
-                  </td>
-                  <td className="table-cell">
-                    {getStatusBadge(trip.status)}
-                  </td>
-                  <td className="table-cell font-medium">
-                    ${formatCurrency(trip.total_price)}
-                  </td>
-                  <td className="table-cell">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => openTripModal(trip)}
-                        className="p-2 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 rounded-lg transition-colors"
-                        title="View Details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      {trip.status === 'confirmed' && (
-                        <button
-                          onClick={() => startTrip(trip.trip_id)}
-                          className="p-2 text-success-600 hover:text-success-700 hover:bg-success-100 rounded-lg transition-colors"
-                          title="Start Trip"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
-                      )}
-                      {trip.status === 'in_progress' && (
-                        <button
-                          onClick={() => completeTrip(trip.trip_id)}
-                          className="p-2 text-primary-600 hover:text-primary-700 hover:bg-primary-100 rounded-lg transition-colors"
-                          title="Complete Trip"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
+                      
+                      {/* Trip Rating */}
+                      {trip.trip_rating && (
+                        <div className="pt-1 border-t border-gray-200">
+                          <StarRating rating={trip.trip_rating} />
+                          {trip.trip_review && (
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{trip.trip_review}</p>
+                          )}
+                        </div>
                       )}
                     </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Trip Status:</p>
+                        {getStatusBadge(trip.trip_status)}
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Payment:</p>
+                        {getPaymentBadge(trip.payment_status)}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div>
+                      <p className="text-lg font-bold text-gray-900">
+                        CA$ {parseFloat(trip.total_price || 0).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-gray-500">Tax: CA$ {parseFloat(trip.tax_amount || 0).toFixed(2)}</p>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link
+                      to={DRIVER_ROUTES.VIEW_TRIP + trip.trip_id}
+                      className="flex items-center space-x-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors font-medium"
+                      title="View Details"
+                    >
+                      <span>View</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
                   </td>
                 </tr>
               ))}
@@ -282,147 +554,14 @@ const Trips = () => {
 
           {filteredTrips.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-secondary-500">No trips found matching your criteria.</p>
+              <Navigation className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">No trips found matching your criteria.</p>
             </div>
           )}
         </div>
       </div>
-
-      {/* Trip Details Modal */}
-      {showModal && selectedTrip && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-secondary-900">
-                  Trip Details - #{selectedTrip.trip_id}
-                </h3>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-secondary-100 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                {/* Customer Information */}
-                <div>
-                  <h4 className="font-semibold text-secondary-900 mb-3">Customer Information</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-secondary-700">Name</label>
-                      <p className="text-secondary-900">
-                        {selectedTrip.firstName} {selectedTrip.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-secondary-700">Email</label>
-                      <p className="text-secondary-900">{selectedTrip.userEmail}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-secondary-700">Phone</label>
-                      <div className="flex items-center space-x-2">
-                        <p className="text-secondary-900">{selectedTrip.userPhone}</p>
-                        <a
-                          href={`tel:${selectedTrip.userPhone}`}
-                          className="p-1 text-primary-600 hover:text-primary-700"
-                        >
-                          <Phone className="w-4 h-4" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Trip Information */}
-                <div>
-                  <h4 className="font-semibold text-secondary-900 mb-3">Trip Information</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-secondary-700">Pickup Location</label>
-                      <p className="text-secondary-900">{selectedTrip.pickupLocation}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-secondary-700">Drop Location</label>
-                      <p className="text-secondary-900">{selectedTrip.dropLocation}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-secondary-700">Date</label>
-                        <p className="text-secondary-900">
-                          {new Date(selectedTrip.tripStartDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-secondary-700">Time</label>
-                        <p className="text-secondary-900">{selectedTrip.tripTime}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-secondary-700">Distance</label>
-                        <p className="text-secondary-900">{selectedTrip.distance_km} km</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-secondary-700">Duration</label>
-                        <p className="text-secondary-900">{selectedTrip.durationHours} hours</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-secondary-700">Status</label>
-                        {getStatusBadge(selectedTrip.status)}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-secondary-700">Earnings</label>
-                        <p className="text-lg font-bold text-green-600">
-                          ${formatCurrency(selectedTrip.total_price)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex space-x-3 pt-4 border-t border-secondary-200">
-                  {selectedTrip.status === 'confirmed' && (
-                    <button
-                      onClick={() => {
-                        startTrip(selectedTrip.trip_id)
-                        setShowModal(false)
-                      }}
-                      className="btn-success flex-1"
-                    >
-                      Start Trip
-                    </button>
-                  )}
-                  {selectedTrip.status === 'in_progress' && (
-                    <button
-                      onClick={() => {
-                        completeTrip(selectedTrip.trip_id)
-                        setShowModal(false)
-                      }}
-                      className="btn-primary flex-1"
-                    >
-                      Complete Trip
-                    </button>
-                  )}
-                  <a
-                    href={`tel:${selectedTrip.userPhone}`}
-                    className="btn-secondary flex items-center justify-center space-x-2"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>Call Customer</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  )
-}
+  );
+};
 
-export default Trips
+export default DriverTrips;

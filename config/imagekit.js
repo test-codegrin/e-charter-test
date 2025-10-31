@@ -11,6 +11,7 @@ const ImagekitFolder = {
     driver_documents: '/echarter/driver-documents/',
     vehicle_documents: '/echarter/vehicle-documents/',
     trip_documents: '/echarter/trip-documents/',
-    driver_profile: '/echarter/driver-profile/'
+    driver_profile: '/echarter/driver-profile/',
+    vehicle_images: '/echarter/vehicle-images/'
 }
 module.exports = {imagekit,ImagekitFolder};

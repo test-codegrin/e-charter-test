@@ -641,10 +641,14 @@ const ViewDriver = () => {
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-3xl">
-                    {driver.firstname?.charAt(0).toUpperCase()}
-                    {driver.lastname?.charAt(0).toUpperCase()}
-                  </span>
+                  {driver.profile_image ? (
+                    <img src={driver.profile_image} alt="Profile" className="rounded-full" />
+                  ) : (
+                    <span className="text-white font-bold text-3xl">
+                      {driver.firstname?.charAt(0).toUpperCase()}
+                      {driver.lastname?.charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">

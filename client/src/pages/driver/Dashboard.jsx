@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Car, MapPin, DollarSign, Clock, TrendingUp, Calendar, Building2, CheckCircle } from 'lucide-react'
+import { Car, MapPin, DollarSign, Clock, TrendingUp, Calendar, Building2, CheckCircle, AlertTriangle, XCircle, Info } from 'lucide-react'
 import { driverAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { DRIVER_ROUTES } from '../../constants/routes'
+import Loader from '../../components/Loader'
+import { Link } from 'react-router-dom'
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null)
@@ -43,12 +46,123 @@ const Dashboard = () => {
     return change >= 0 ? `+${change}%` : `${change}%`
   }
 
+  // Function to render status warning banner
+  const renderStatusWarning = () => {
+    const status = stats?.driver_status
+
+    if (status === 'in_review') {
+      return (
+        <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6 shadow-md">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <AlertTriangle className="h-8 w-8 text-yellow-600" />
+            </div>
+            <div className="ml-4 flex-1">
+              <h3 className="text-lg font-bold text-yellow-900">Account Under Review</h3>
+              <p className="mt-2 text-sm text-yellow-800">
+                Your account is currently under review by our admin team. You cannot accept new trips until your account is approved.
+              </p>
+              {stats.driver_status_description && (
+                <div className="mt-3 p-3 bg-yellow-100 rounded-md border border-yellow-300">
+                  <p className="text-sm font-medium text-yellow-900">
+                    <Info className="w-4 h-4 inline mr-2" />
+                    Reason: {stats.driver_status_description}
+                  </p>
+                </div>
+              )}
+              <div className="mt-4">
+                <Link
+                  to={DRIVER_ROUTES.PROFILE}
+                  className="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all font-medium text-sm shadow-sm"
+                >
+                  View Profile
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (status === 'rejected') {
+      return (
+        <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-6 shadow-md">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <XCircle className="h-8 w-8 text-red-600" />
+            </div>
+            <div className="ml-4 flex-1">
+              <h3 className="text-lg font-bold text-red-900">Account Rejected</h3>
+              <p className="mt-2 text-sm text-red-800">
+                Your account has been rejected. You are no longer able to accept trips. Please contact support for more information.
+              </p>
+              {stats.driver_status_description && (
+                <div className="mt-3 p-3 bg-red-100 rounded-md border border-red-300">
+                  <p className="text-sm font-medium text-red-900">
+                    <Info className="w-4 h-4 inline mr-2" />
+                    Reason: {stats.driver_status_description}
+                  </p>
+                </div>
+              )}
+              <div className="mt-4 flex items-center space-x-3">
+                <Link
+                  to={DRIVER_ROUTES.PROFILE}
+                  className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium text-sm shadow-sm"
+                >
+                  View Profile
+                </Link>
+                <a
+                  href="mailto:support@echarter.com"
+                  className="inline-flex items-center px-4 py-2 bg-white text-red-700 border-2 border-red-300 rounded-lg hover:bg-red-50 transition-all font-medium text-sm"
+                >
+                  Contact Support
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (status === 'suspended') {
+      return (
+        <div className="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-6 shadow-md">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <AlertTriangle className="h-8 w-8 text-orange-600" />
+            </div>
+            <div className="ml-4 flex-1">
+              <h3 className="text-lg font-bold text-orange-900">Account Suspended</h3>
+              <p className="mt-2 text-sm text-orange-800">
+                Your account has been temporarily suspended. You cannot accept new trips during this period.
+              </p>
+              {stats.driver_status_description && (
+                <div className="mt-3 p-3 bg-orange-100 rounded-md border border-orange-300">
+                  <p className="text-sm font-medium text-orange-900">
+                    <Info className="w-4 h-4 inline mr-2" />
+                    Reason: {stats.driver_status_description}
+                  </p>
+                </div>
+              )}
+              <div className="mt-4">
+                <a
+                  href="mailto:support@echarter.com"
+                  className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-all font-medium text-sm shadow-sm"
+                >
+                  Contact Support
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    return null
+  }
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    )
+    return <Loader text='Preparing Dashboard...' />
   }
 
   if (!stats) {
@@ -145,6 +259,9 @@ const Dashboard = () => {
         </p>
       </div>
 
+      {/* Status Warning Banner */}
+      {renderStatusWarning()}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, index) => {
@@ -176,7 +293,7 @@ const Dashboard = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Performance Overview - REMOVED onTimeRate */}
+        {/* Performance Overview */}
         <div className="card">
           <h3 className="text-lg font-semibold text-secondary-900 mb-4">Performance</h3>
           <div className="space-y-4">
@@ -314,7 +431,7 @@ const Dashboard = () => {
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-secondary-900">Recent Trips</h3>
-          <button className="btn-secondary text-sm">View All</button>
+          <Link to={DRIVER_ROUTES.TRIPS} className="btn-secondary text-sm">View All</Link>
         </div>
         
         <div className="overflow-x-auto">

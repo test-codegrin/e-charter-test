@@ -7,7 +7,6 @@ const driverGetQueries = require("../config/driverQueries/driverGetQueries");
 const { imagekit, ImagekitFolder } = require("../config/imagekit");
 const driverUpdateQueries = require("../config/driverQueries/driverUpdateQueries");
 
-// Get driver dashboard statistics
 const getDashboardStats = asyncHandler(async (req, res) => {
   const driver_id = req.user?.driver_id;
 
@@ -46,7 +45,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
       driver_type: driverData.driver_type,
       driver_name: `${driverData.firstname} ${driverData.lastname}`,
       driver_status: driverData.status,
-      
+      driver_status_description: driverData.status_description,
       totalTrips: trips.length,
       confirmedTrips: trips.filter(t => t.trip_status === 'upcoming').length,
       completedTrips: trips.filter(t => t.trip_status === 'completed').length,
@@ -144,87 +143,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   }
 });
 
-
-// Get driver trips
-const getDriverTrips = asyncHandler(async (req, res) => {
-  const driver_id = req.user?.driver_id;
-  const { status } = req.query;
-
-  console.log('Driver trips request for driver_id:', driver_id, 'status filter:', status);
-
-  if (!driver_id) {
-    return res.status(401).json({ message: "Driver authentication required" });
-  }
-
-  try {
-    let trips = [];
-    
-    // Try enhanced query first
-    try {
-      let query = driverDashboardQueries.getTripsWithStatusEnhanced;
-      
-      let params = [driver_id];
-
-      if (status) {
-        query += ` AND t.status = ?`;
-        params.push(status);
-      }
-
-      query += ` ORDER BY t.created_at DESC`;
-
-      const [tripsResult] = await db.query(query, params);
-      trips = tripsResult;
-    } catch (enhancedError) {
-      console.log('Enhanced trips query failed, using basic query:', enhancedError.message);
-      
-      // Fallback to basic query
-      let basicQuery = driverDashboardQueries.getTripsWithStatusBasic;
-      
-      let params = [driver_id];
-
-      if (status) {
-        basicQuery += ` AND t.status = ?`;
-        params.push(status);
-      }
-
-      basicQuery += ` ORDER BY t.created_at DESC`;
-
-      const [basicTrips] = await db.query(basicQuery, params);
-      trips = basicTrips;
-    }
-
-    // Get mid stops for each trip (if table exists)
-    for (let trip of trips) {
-      try {
-        const [midStops] = await db.query(
-          driverDashboardQueries.getMidStopsByTripId,
-          [trip.trip_id]
-        );
-        trip.midStops = midStops;
-      } catch (midStopError) {
-        trip.midStops = [];
-      }
-    }
-
-    console.log('Driver trips fetched:', {
-      driver_id,
-      tripCount: trips.length,
-      statusFilter: status
-    });
-
-    res.status(200).json({
-      message: "Driver trips fetched successfully",
-      count: trips.length,
-      trips
-    });
-
-  } catch (error) {
-    console.error("Error fetching driver trips:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
-  }
-});
-
-// Get driver profile
 const getDriverProfile = asyncHandler(async (req, res) => {
   const driver_id = req.user?.driver_id;
 
@@ -296,8 +214,6 @@ const getDriverProfile = asyncHandler(async (req, res) => {
   }
 });
 
-
-// Update profile (text fields) - Returns updated data
 const updateDriverProfile = asyncHandler(async (req, res) => {
   const driver_id = req.user?.driver_id;
   const { firstname, lastname, phone_no, address, city_name, zip_code, year_of_experiance, gender } = req.body;
@@ -333,7 +249,6 @@ const updateDriverProfile = asyncHandler(async (req, res) => {
   }
 });
 
-// Update profile photo - Returns updated photo URL
 const updateProfilePhoto = asyncHandler(async (req, res) => {
   const driver_id = req.user?.driver_id;
   const file = req.file;
@@ -372,8 +287,6 @@ const updateProfilePhoto = asyncHandler(async (req, res) => {
   }
 });
 
-
-// Upload document with expiry date
 const uploadDriverDocument = asyncHandler(async (req, res) => {
   const driver_id = req.user?.driver_id;
   const { document_type, document_number, document_expiry_date } = req.body;
@@ -387,11 +300,44 @@ const uploadDriverDocument = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
+  // Validate file type
+  const allowedMimeTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return res.status(400).json({ 
+      message: "Invalid file type. Only PDF, JPG, and PNG files are allowed." 
+    });
+  }
+
+  // Validate file size (max 5MB)
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    return res.status(400).json({ 
+      message: "File size too large. Maximum allowed size is 5MB." 
+    });
+  }
+
   try {
-    // Upload to ImageKit
+    // Get file extension from mimetype
+    const fileExtension = file.mimetype === 'application/pdf' 
+      ? 'pdf' 
+      : file.originalname.split('.').pop().toLowerCase();
+    
+    // Convert buffer to base64 string
+    const fileBase64 = file.buffer.toString('base64');
+    
+    // Validate document expiry date
+    const expiryDate = new Date(document_expiry_date);
+    const today = new Date();
+    if (expiryDate <= today) {
+      return res.status(400).json({ 
+        message: "Document expiry date must be in the future." 
+      });
+    }
+
+    // Upload to ImageKit with proper file extension and metadata
     const uploadResponse = await imagekit.upload({
-      file: file.buffer,
-      fileName: `driver_${driver_id}_${document_type}_${Date.now()}`,
+      file: fileBase64,
+      fileName: `driver_${driver_id}_${document_type}_${Date.now()}.${fileExtension}`,
       folder: ImagekitFolder.driver_documents,
     });
 
@@ -402,20 +348,24 @@ const uploadDriverDocument = asyncHandler(async (req, res) => {
     );
 
     if (existing.length > 0) {
-      // Update existing
+      // Update existing document
       await db.query(
         driverUpdateQueries.updateExistingDocument,
         [uploadResponse.url, document_number, document_expiry_date, existing[0].driver_document_id]
       );
+      
+      console.log(`Updated driver document: ${document_type} for driver_id: ${driver_id}`);
     } else {
-      // Insert new
+      // Insert new document
       await db.query(
         driverUpdateQueries.insertNewDocument,
         [driver_id, document_type, uploadResponse.url, document_number, document_expiry_date]
       );
+      
+      console.log(`Inserted new driver document: ${document_type} for driver_id: ${driver_id}`);
     }
 
-    // Set driver status to in_review
+    // Set driver status to in_review with description
     await db.query(
       driverUpdateQueries.updateDriverStatus,
       [driver_id]
@@ -423,6 +373,287 @@ const uploadDriverDocument = asyncHandler(async (req, res) => {
 
     res.status(200).json({
       message: "Document uploaded successfully. Your profile is now under review.",
+      document: {
+        document_type: document_type,
+        document_url: uploadResponse.url,
+        document_number: document_number,
+        expiry_date: document_expiry_date
+      }
+    });
+  } catch (error) {
+    console.error("Error uploading driver document:", error);
+    res.status(500).json({ 
+      message: "Internal server error", 
+      error: error.message 
+    });
+  }
+});
+
+
+const getDriverTrips = asyncHandler(async (req, res) => {
+  const driver_id = req.user?.driver_id;
+
+  if (!driver_id) {
+    return res.status(401).json({ message: "Driver authentication required" });
+  }
+
+  try {
+    const [trips] = await db.query(driverGetQueries.getTripsByDriver, [driver_id]);
+
+    // Parse stops JSON string for each trip
+    const formattedTrips = trips.map(trip => {
+      // Parse stops if it's a string
+      if (trip.stops && typeof trip.stops === 'string') {
+        try {
+          trip.stops = JSON.parse(trip.stops);
+        } catch (error) {
+          console.error('Error parsing stops for trip_id:', trip.trip_id, error);
+          trip.stops = [];
+        }
+      } else if (!trip.stops) {
+        trip.stops = [];
+      }
+
+      return trip;
+    });
+
+    res.status(200).json({
+      message: "Driver trips fetched successfully",
+      count: formattedTrips.length,
+      trips: formattedTrips
+    });
+
+  } catch (error) {
+    console.error("Error fetching driver trips:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+});
+
+const getTripById = async (req, res) => {
+  try {
+    const { trip_id } = req.params;
+
+    const [result] = await db.query(driverGetQueries.getTripById, [trip_id]);
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    const trip = result[0];
+
+    // Parse JSON objects
+    trip.user_details = JSON.parse(trip.user_details);
+    trip.driver_details = JSON.parse(trip.driver_details);
+    trip.vehicle_details = JSON.parse(trip.vehicle_details);
+    trip.payment_transaction = JSON.parse(trip.payment_transaction);
+    trip.fleet_company_details = JSON.parse(trip.fleet_company_details);
+    trip.stops = JSON.parse(trip.stops) || [];
+
+    res.status(200).json({
+      message: 'Trip fetched successfully',
+      trip: trip
+    });
+
+  } catch (error) {
+    console.error('Error fetching trip:', error);
+    res.status(500).json({
+      message: 'Failed to fetch trip',
+      error: error.message
+    });
+  }
+};
+
+const getVehicleByDriverId = asyncHandler(async (req, res) => {
+    try {
+        const driver_id = req.user?.driver_id;
+        const [vehicles] = await db.query(driverGetQueries.getVehicleByDriverId, [driver_id]);
+
+        // Parse documents JSON for each vehicle
+        const parsedVehicles = vehicles.map(vehicle => ({
+            ...vehicle,
+            documents: vehicle.documents ? JSON.parse(vehicle.documents) : null,
+            features: vehicle.features ? JSON.parse(vehicle.features) : null
+        }));
+
+        res.status(200).json({
+            message: "Vehicles fetched successfully",
+            count: parsedVehicles.length,
+            vehicles: parsedVehicles
+        });
+    } catch (error) {
+        console.error("Error fetching vehicles:", error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+});
+
+const getDriverVehicleById = asyncHandler(async (req, res) => {
+    const { vehicle_id } = req.params;
+    
+    if (!vehicle_id) {
+        return res.status(400).json({ message: "Vehicle ID is required" });
+    }
+    
+    try {
+        const [vehicle] = await db.query(driverGetQueries.getVehicleById, [vehicle_id]);
+        
+        if (vehicle.length === 0) {
+            return res.status(404).json({ message: "Vehicle not found" });
+        }
+        
+        // Parse JSON strings to actual JSON objects
+        const parsedVehicle = {
+            ...vehicle[0],
+            documents: vehicle[0].documents ? JSON.parse(vehicle[0].documents) : null,
+            features: vehicle[0].features ? JSON.parse(vehicle[0].features) : null,
+            fleet_company_details: vehicle[0].fleet_company_details 
+                ? JSON.parse(vehicle[0].fleet_company_details) 
+                : null
+        };
+        
+        res.status(200).json({
+            message: "Vehicle fetched successfully",
+            vehicle: parsedVehicle
+        });
+    } catch (error) {
+        console.error("Error fetching vehicle:", error);
+        res.status(500).json({ 
+            message: "Internal server error", 
+            error: error.message 
+        });
+    }
+});
+
+const updateVehicleImage = asyncHandler(async (req, res) => {
+  const { vehicle_id } = req.body;
+  const file = req.file;
+
+  if (!vehicle_id) {
+    return res.status(401).json({ message: "Vehicle ID is required" });
+  }
+
+  if (!file) {
+    return res.status(400).json({ message: "File is required" });
+  }
+
+  // Validate file type
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return res.status(400).json({ 
+      message: "Invalid file type. Only JPG and PNG files are allowed." 
+    });
+  }
+
+  // Validate file size (max 5MB)
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    return res.status(400).json({ 
+      message: "File size too large. Maximum allowed size is 5MB." 
+    });
+  }
+
+  try {
+    // Get file extension from mimetype
+    const fileExtension = file.mimetype === 'image/jpeg' 
+      ? 'jpg' 
+      : file.mimetype === 'image/png' 
+      ? 'png' 
+      : file.originalname.split('.').pop().toLowerCase();
+    
+    // Convert buffer to base64 string
+    const fileBase64 = file.buffer.toString('base64');
+    
+
+    // Upload to ImageKit with proper file extension and metadata
+    const uploadResponse = await imagekit.upload({
+      file: fileBase64,
+      fileName: `vehicle_${vehicle_id}_${Date.now()}.${fileExtension}`,
+      folder: ImagekitFolder.vehicle_images,
+    });
+
+      await db.query(
+        driverUpdateQueries.updateVehicleImage,
+        [uploadResponse.url, vehicle_id]
+      );
+      console.log(`Updated vehicle image for vehicle_id: ${vehicle_id}`);
+  
+
+    // Set driver status to in_review with description
+    await db.query(
+      driverUpdateQueries.updateVehicleStatus,
+      ["Vehicle image updated.", vehicle_id]
+    );
+
+    res.status(200).json({
+      message: "Vehicle image updated successfully. Your profile is now under review.",
+      vehicle_id: vehicle_id,
+      image_url: uploadResponse.url
+    });
+  } catch (error) {
+    console.error("Error uploading driver document:", error);
+    res.status(500).json({ 
+      message: "Internal server error", 
+      error: error.message 
+    });
+  }
+});
+
+
+const uploadVehicleDocument = asyncHandler(async (req, res) => {
+  const { vehicle_id, document_type, document_number, document_expiry_date } = req.body;
+  const file = req.file;
+
+  if (!vehicle_id) {
+    return res.status(401).json({ message: "Vehicle authentication required" });
+  }
+
+  if (!file || !document_type || !document_number || !document_expiry_date) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    // Get file extension
+    const fileExtension = file.originalname.split('.').pop().toLowerCase();
+    
+    // Convert buffer to base64 string
+    const fileBase64 = file.buffer.toString('base64');
+    
+    // Upload to ImageKit with proper file extension
+    const uploadResponse = await imagekit.upload({
+      file: fileBase64,
+      fileName: `vehicle_${vehicle_id}_${document_type}_${Date.now()}.${fileExtension}`,
+      folder: ImagekitFolder.vehicle_documents,
+      // Optional: Add tags for better organization
+      tags: [`vehicle_${vehicle_id}`, document_type, 'vehicle_document']
+    });
+
+    // Check if document exists
+    const [existing] = await db.query(
+      driverUpdateQueries.documentExist,
+      [vehicle_id, document_type]
+    );
+
+    if (existing.length > 0) {
+      // Update existing
+      await db.query(
+        driverUpdateQueries.updateExistingVehicleDocument,
+        [uploadResponse.url, document_number, document_expiry_date, existing[0].vehicle_document_id]
+      );
+    } else {
+      // Insert new
+      await db.query(
+        driverUpdateQueries.insertNewVehicleDocument,
+        [vehicle_id, document_type, uploadResponse.url, document_number, document_expiry_date]
+      );
+    }
+
+    // Set vehicle status to in_review
+    await db.query(
+      driverUpdateQueries.updateVehicleStatus,
+      ["Vehicle document updated", vehicle_id]
+    );
+
+    res.status(200).json({
+      message: "Document uploaded successfully. Your vehicle is now under review.",
       document_url: uploadResponse.url
     });
   } catch (error) {
@@ -431,9 +662,137 @@ const uploadDriverDocument = asyncHandler(async (req, res) => {
   }
 });
 
+const updateVehicleFeatures = asyncHandler(async (req, res) => {
+  const { vehicle_id } = req.params;
+  const driver_id = req.user?.driver_id;
+  const {
+    has_air_conditioner,
+    has_charging_port,
+    has_wifi,
+    has_entertainment_system,
+    has_gps,
+    has_recliner_seats,
+    is_wheelchair_accessible
+  } = req.body;
+
+  console.log('Update vehicle features request:', {
+    vehicle_id,
+    driver_id,
+    features: req.body
+  });
+
+  // Validate driver authentication
+  if (!driver_id) {
+    return res.status(401).json({ message: "Driver authentication required" });
+  }
+
+  // Validate vehicle_id
+  if (!vehicle_id) {
+    return res.status(400).json({ message: "Vehicle ID is required" });
+  }
+
+  try {
+    // Verify vehicle belongs to driver
+    const [vehicleCheck] = await db.query(
+      driverUpdateQueries.checkVehicleDriver,
+      [vehicle_id, driver_id]
+    );
+
+    if (vehicleCheck.length === 0) {
+      return res.status(404).json({ 
+        message: "Vehicle not found or you don't have permission to update it" 
+      });
+    }
+
+    // Convert boolean values to 0 or 1 (handle undefined as 0)
+    const features = {
+      has_air_conditioner: has_air_conditioner ? 1 : 0,
+      has_charging_port: has_charging_port ? 1 : 0,
+      has_wifi: has_wifi ? 1 : 0,
+      has_entertainment_system: has_entertainment_system ? 1 : 0,
+      has_gps: has_gps ? 1 : 0,
+      has_recliner_seats: has_recliner_seats ? 1 : 0,
+      is_wheelchair_accessible: is_wheelchair_accessible ? 1 : 0
+    };
+
+    // Check if vehicle features already exist
+    const [existing] = await db.query(
+      driverUpdateQueries.checkVehicleFeatures,
+      [vehicle_id]
+    );
+
+    if (existing.length > 0) {
+      // Update existing features
+      await db.query(
+        driverUpdateQueries.updateVehicleFeatures,
+        [
+          features.has_air_conditioner,
+          features.has_charging_port,
+          features.has_wifi,
+          features.has_entertainment_system,
+          features.has_gps,
+          features.has_recliner_seats,
+          features.is_wheelchair_accessible,
+          vehicle_id
+        ]
+      );
+
+      console.log(`Updated vehicle features for vehicle_id: ${vehicle_id}`);
+      await db.query(
+        driverUpdateQueries.updateVehicleStatus,
+        ["Vehicle features updated", vehicle_id]
+      );
+
+      res.status(200).json({
+        message: "Vehicle features updated successfully",
+        features: features
+      });
+    } else {
+      // Insert new features
+      const [result] = await db.query(
+        driverUpdateQueries.insertVehicleFeatures,
+        [
+          vehicle_id,
+          features.has_air_conditioner,
+          features.has_charging_port,
+          features.has_wifi,
+          features.has_entertainment_system,
+          features.has_gps,
+          features.has_recliner_seats,
+          features.is_wheelchair_accessible
+        ]
+      );
+
+      console.log(`Created new vehicle features for vehicle_id: ${vehicle_id}`);
+      await db.query(
+        driverUpdateQueries.updateVehicleStatus,
+        ["Vehicle features updated", vehicle_id]
+      );
+
+      res.status(201).json({
+        message: "Vehicle features created successfully",
+        vehicle_features_id: result.insertId,
+        features: features
+      });
+    }
+  } catch (error) {
+    console.error("Error updating vehicle features:", error);
+    res.status(500).json({ 
+      message: "Internal server error", 
+      error: error.message 
+    });
+  }
+});
 
 
-// Get driver notification settings
+
+
+
+
+
+
+
+
 const getDriverNotificationSettings = asyncHandler(async (req, res) => {
   const driver_id = req.user?.driver_id;
 
@@ -474,6 +833,7 @@ const getDriverNotificationSettings = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
+
 
 // Update driver notification settings
 const updateDriverNotificationSettings = asyncHandler(async (req, res) => {
@@ -698,11 +1058,17 @@ const getDefaultPaymentSettings = () => {
 
 module.exports = {
   getDashboardStats,
-  getDriverTrips,
   getDriverProfile,
   updateDriverProfile,
   updateProfilePhoto,
   uploadDriverDocument,
+  getDriverTrips,
+  getTripById,
+  getVehicleByDriverId,
+  getDriverVehicleById,
+  uploadVehicleDocument,
+  updateVehicleFeatures,
+  updateVehicleImage,
   getDriverNotificationSettings,
   updateDriverNotificationSettings,
   getDriverFleetSettings,

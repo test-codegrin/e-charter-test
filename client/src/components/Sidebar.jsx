@@ -14,7 +14,7 @@ import {
   DollarSign,
   Settings
 } from 'lucide-react'
-import { ADMIN_ROUTES } from '../constants/routes'
+import { ADMIN_ROUTES, DRIVER_ROUTES } from '../constants/routes'
 
 const Sidebar = () => {
   const { user } = useAuth()
@@ -33,14 +33,21 @@ const Sidebar = () => {
   ]
 
   const driverMenuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/driver/dashboard' },
-    { icon: MapPin, label: 'My Trips', path: '/driver/trips' },
-    { icon: Truck, label: 'My Vehicles', path: '/driver/vehicles' },
-    { icon: User, label: 'Profile', path: '/driver/profile' },
-    { icon: Settings, label: 'Settings', path: '/driver/settings' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: DRIVER_ROUTES.DASHBOARD },
+    { icon: MapPin, label: 'My Trips', path: DRIVER_ROUTES.TRIPS },
+    { icon: Truck, label: 'My Vehicles', path: DRIVER_ROUTES.VEHICLES },
+    { icon: User, label: 'Profile', path: DRIVER_ROUTES.PROFILE },
+    { icon: Settings, label: 'Settings', path: DRIVER_ROUTES.SETTINGS },
   ]
 
-  const menuItems = user?.role === 'admin' ? adminMenuItems : driverMenuItems
+  const fleertDriverMenuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: DRIVER_ROUTES.DASHBOARD },
+    { icon: MapPin, label: 'My Trips', path: DRIVER_ROUTES.TRIPS },
+    { icon: User, label: 'Profile', path: DRIVER_ROUTES.PROFILE },
+    { icon: Settings, label: 'Settings', path: DRIVER_ROUTES.SETTINGS },
+  ]
+
+  const menuItems = user?.role === 'admin' ? adminMenuItems : user?.driver_type === 'individual' ? driverMenuItems : fleertDriverMenuItems
 
   const isActive = (path) => {
     return location.pathname === path || (path === '/' && location.pathname === '/')

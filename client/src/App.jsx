@@ -29,7 +29,10 @@ import ViewDriver from './pages/admin/ViewDriver'
 import ViewVehicle from './pages/admin/ViewVehicle'
 import ViewFleetPartner from './pages/admin/ViewFleetPartner'
 import ViewTripDetails from './pages/admin/ViewTripDetails'
-import { ADMIN_ROUTES } from './constants/routes'
+import { ADMIN_ROUTES, DRIVER_ROUTES } from './constants/routes'
+import Loader from './components/Loader'
+import DriverViewTripDetails from './pages/driver/ViewTripDetails'
+import DriverViewVehicle from './pages/driver/ViewVehicle'
 
 function App() {
   const { user, loading } = useAuth()
@@ -39,9 +42,7 @@ function App() {
   // Show loading spinner while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-50">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
+     <Loader/>
     )
   }
 
@@ -91,11 +92,13 @@ function App() {
         {user.role === 'driver' && (
           <>
             <Route path="/" element={<DriverDashboard />} />
-            <Route path="/driver/dashboard" element={<DriverDashboard />} />
-            <Route path="/driver/trips" element={<DriverTrips />} />
-            <Route path="/driver/vehicles" element={<DriverVehicles />} />
-            <Route path="/driver/profile" element={<DriverProfile />} />
-            <Route path="/driver/settings" element={<DriverSettings />} />
+            <Route path={DRIVER_ROUTES.DASHBOARD} element={<DriverDashboard />} />
+            <Route path={DRIVER_ROUTES.TRIPS} element={<DriverTrips />} />
+            <Route path={DRIVER_ROUTES.VIEW_TRIP+":trip_id"} element={<DriverViewTripDetails />} />
+            <Route path={DRIVER_ROUTES.VEHICLES} element={<DriverVehicles />} />
+            <Route path={DRIVER_ROUTES.VIEW_VEHICLE+":vehicle_id"} element={<DriverViewVehicle />} />
+            <Route path={DRIVER_ROUTES.PROFILE} element={<DriverProfile />} />
+            <Route path={DRIVER_ROUTES.SETTINGS} element={<DriverSettings />} />
           </>
         )}
 

@@ -612,10 +612,14 @@ const Drivers = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                          <span className="text-primary-600 font-medium text-lg">
-                            {driver.firstname?.charAt(0).toUpperCase()}
-                            {driver.lastname?.charAt(0).toUpperCase()}
-                          </span>
+                          {driver.profile_image ? (
+                            <img src={driver.profile_image} alt="Profile" className="rounded-full" />
+                          ) : (
+                            <span className="text-primary-600 font-medium text-lg">
+                              {driver.firstname?.charAt(0).toUpperCase()}
+                              {driver.lastname?.charAt(0).toUpperCase()}
+                            </span>
+                          )}
                         </div>
                         <div>
                           <div className="flex items-center space-x-2">

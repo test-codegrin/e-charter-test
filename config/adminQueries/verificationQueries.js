@@ -18,7 +18,7 @@ const verificationQueries = {
     WHERE vehicle_id = ?
   `,
   updateVehicleStatus: `
-    UPDATE vehicle SET status = ? WHERE vehicle_id = ?
+    UPDATE vehicle SET status = ?, status_description = '' WHERE vehicle_id = ?
   `,
 
   // Fleet company queries

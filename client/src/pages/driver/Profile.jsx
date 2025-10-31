@@ -391,7 +391,7 @@ const Profile = () => {
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="bg-primary-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-start space-x-3">
                       <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                       <div className="text-sm text-blue-800">
@@ -515,7 +515,7 @@ const Profile = () => {
         {!editing && (
           <button
             onClick={() => setEditing(true)}
-            className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all font-semibold flex items-center space-x-2 shadow-lg hover:shadow-xl"
+            className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-all font-semibold flex items-center space-x-2 shadow-lg hover:shadow-xl"
           >
             <Edit className="w-5 h-5" />
             <span>Edit Profile</span>
@@ -646,7 +646,7 @@ const Profile = () => {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all font-semibold flex items-center space-x-2 shadow-lg disabled:opacity-50"
+                className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-all font-semibold flex items-center space-x-2 shadow-lg disabled:opacity-50"
               >
                 <Save className="w-5 h-5" />
                 <span>{saving ? 'Saving...' : 'Save Changes'}</span>
@@ -871,8 +871,8 @@ const Profile = () => {
       )}
 
       {/* Performance Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl shadow-lg p-6 border-2 border-yellow-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-yellow-50 rounded-2xl shadow p-6 border-2 border-yellow-200">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center shadow-md">
               <Star className="w-8 h-8 text-white fill-white" />
@@ -885,7 +885,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-lg p-6 border-2 border-green-200">
+        <div className="bg-green-50 rounded-2xl shadow p-6 border-2 border-green-200">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-green-400 rounded-full flex items-center justify-center shadow-md">
               <CheckCircle className="w-8 h-8 text-white" />
@@ -898,26 +898,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-lg p-6 border-2 border-blue-200">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-blue-400 rounded-full flex items-center justify-center shadow-md">
-              <span className="text-2xl font-bold text-white">
-                {profile.ratings?.total_ratings > 0 
-                  ? Math.round((profile.ratings?.positive_ratings / profile.ratings?.total_ratings) * 100)
-                  : 0}%
-              </span>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-blue-900">
-                {profile.ratings?.total_ratings > 0 
-                  ? Math.round((profile.ratings?.positive_ratings / profile.ratings?.total_ratings) * 100)
-                  : 0}%
-              </div>
-              <div className="text-sm text-blue-700 font-medium">Satisfaction Rate</div>
-              <div className="text-xs text-blue-600 mt-1">Customer satisfaction</div>
-            </div>
-          </div>
-        </div>
+      
       </div>
 
       {/* Required Documents */}
@@ -947,10 +928,10 @@ const Profile = () => {
                 key={reqDoc.type}
                 className={`p-6 border-2 rounded-xl transition-all shadow-sm hover:shadow-lg ${
                   uploadedDoc && !isExpired
-                    ? 'border-green-300 bg-gradient-to-br from-green-50 to-green-100'
+                    ? 'border-green-300 bg-green-50'
                     : isExpired
-                    ? 'border-red-300 bg-gradient-to-br from-red-50 to-red-100'
-                    : 'border-secondary-200 bg-gradient-to-br from-secondary-50 to-gray-50'
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-secondary-200 bg-secondary-50'
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">
@@ -1003,7 +984,7 @@ const Profile = () => {
                           href={uploadedDoc.document_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 text-center px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm"
+                          className="flex-1 text-center px-3 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition-colors font-semibold shadow-sm"
                         >
                           View
                         </a>
@@ -1030,7 +1011,7 @@ const Profile = () => {
           })}
         </div>
 
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mt-6 p-4 bg-primary-50 border border-blue-200 rounded-lg">
           <div className="flex items-start space-x-3">
             <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-800">

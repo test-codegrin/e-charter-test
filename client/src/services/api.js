@@ -117,17 +117,18 @@ export const driverAPI = {
 
   // Trips
   getTrips: () => api.get('/driver/trips'),
-  getTripDetails: (tripId) => api.get(`/trips/${tripId}`),
-  startTrip: (tripId) => api.post(`/trips/${tripId}/start`),
-  completeTrip: (tripId) => api.post(`/trips/${tripId}/complete`),
-  updateLocation: (tripId, location) => api.put(`/trips/${tripId}/location`, location),
+  getTripById: (tripId) => api.get(`/driver/trip/${tripId}`),
+
+
 
   // Vehicles - ENHANCED CRUD operations
-  getVehicles: () => api.get('/driver/getdrivercar'),
-  addVehicle: (vehicleData) => api.post('/driver/addcar', vehicleData),
-  getVehicleDetails: (carId) => api.get(`/driver/car/${carId}`),
-  updateVehicle: (carId, vehicleData) => api.put(`/driver/car/${carId}`, vehicleData),
-  deleteVehicle: (carId) => api.delete(`/driver/car/${carId}`),
+  getVehicles: () => api.get('/driver/vehicles'),
+  getVehicleByDriverId: (driverId) => api.get(`/driver/vehicles/${driverId}`),
+  getVehicleById: (vehicleId) => api.get(`/driver/vehicle/${vehicleId}`),
+  uploadVehicleDocument : (documentData) => api.post(`/driver/vehicle/document/upload`, documentData),
+  updateVehicleFeatures: (vehicleId, features) => api.put(`/driver/vehicle/features/${vehicleId}`, features),
+  updateVehicleImage: (image) => api.put(`/driver/vehicle/image/upload`, image),
+  
 
   // Profile
   getProfile: () => api.get('/driver/profile'),

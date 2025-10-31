@@ -8,6 +8,7 @@ const driverDashboardQueries = {
       firstname,
       lastname,
       status,
+      status_description,
       email,
       phone_no
     FROM drivers 

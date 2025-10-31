@@ -24,3 +24,17 @@ export const ADMIN_ROUTES = {
     USERS: '/admin/users',
     PAYOUTS: '/admin/payouts'
 }
+
+export const DRIVER_ROUTES = {
+    DASHBOARD: '/driver/dashboard',
+    TRIPS: '/driver/trips',
+    VIEW_TRIP: '/driver/view-trip/',
+    VEHICLES: '/driver/vehicle',
+    VIEW_VEHICLE: '/driver/view-vehicle/',
+    SETTINGS: '/driver/settings',
+    PROFILE: '/driver/profile',
+    NOTIFICATIONS: '/driver/notifications',
+    FLEET_PARTNER: '/driver/fleet-partner',
+    INVOICES: '/driver/invoices',
+    PAYOUTS: '/driver/payouts'
+}
