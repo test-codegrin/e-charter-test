@@ -16,6 +16,7 @@ import {
   ArrowRight,
   AlertTriangle,
   FileText,
+  X,
 } from "lucide-react";
 import { adminAPI } from "../../services/api";
 import toast from "react-hot-toast";
@@ -30,6 +31,12 @@ const Drivers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [documentFilter, setDocumentFilter] = useState("all");
+
+  // Modal state
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
+  const [statusReason, setStatusReason] = useState("");
+  const [loadingStatusChange, setLoadingStatusChange] = useState(false);
 
   useEffect(() => {
     fetchDrivers();
@@ -56,7 +63,6 @@ const Drivers = () => {
   const filterDrivers = () => {
     let filtered = drivers;
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter((driver) => {
         const fullName = `${driver.firstname} ${driver.lastname}`.toLowerCase();
@@ -73,12 +79,10 @@ const Drivers = () => {
       });
     }
 
-    // Status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((driver) => driver.status === statusFilter);
     }
 
-    // Document expiry filter
     if (documentFilter !== "all") {
       filtered = filtered.filter((driver) => {
         const docStatus = checkDocumentExpiry(driver.documents);
@@ -96,18 +100,17 @@ const Drivers = () => {
     setFilteredDrivers(filtered);
   };
 
-  const handleStatusChange = async (driverId, newStatus) => {
+  const handleStatusChange = async (driverId, newStatus, statusReason) => {
+    if (newStatus === "rejected" || newStatus === "in_review") {
+      setPendingStatusChange({ driverId, newStatus });
+      setStatusReason("");
+      setShowReasonModal(true);
+      return;
+    }
+
     try {
-      await adminAPI.approveDriver(driverId, newStatus);
-
-      const statusText =
-        newStatus === "approved"
-          ? "approved"
-          : newStatus === "rejected"
-          ? "rejected"
-          : "marked as in review";
-
-      toast.success(`Driver ${statusText} successfully`);
+      await adminAPI.approveDriver(driverId, newStatus, "");
+      toast.success(`Driver approved successfully`);
       fetchDrivers();
     } catch (error) {
       console.error("Error updating driver status:", error);
@@ -115,7 +118,37 @@ const Drivers = () => {
     }
   };
 
-  // Check document expiry status
+  const handleConfirmStatusChange = async () => {
+    if (!pendingStatusChange) return;
+    if (!statusReason.trim()) {
+      toast.error("Please provide a reason");
+      return;
+    }
+    setLoadingStatusChange(true); // Begin loading
+    try {
+      const { driverId, newStatus } = pendingStatusChange;
+      await adminAPI.approveDriver(driverId, newStatus, statusReason);
+      const statusText =
+        newStatus === "rejected" ? "rejected" : "marked as in review";
+      toast.success(`Driver ${statusText} successfully`);
+      setShowReasonModal(false);
+      setPendingStatusChange(null);
+      setStatusReason("");
+      fetchDrivers();
+    } catch (error) {
+      console.error("Error updating driver status:", error);
+      toast.error("Failed to update driver status");
+    } finally {
+      setLoadingStatusChange(false); // End loading
+    }
+  };
+
+  const handleCancelStatusChange = () => {
+    setShowReasonModal(false);
+    setPendingStatusChange(null);
+    setStatusReason("");
+  };
+
   const checkDocumentExpiry = (documents) => {
     if (!documents || documents.length === 0)
       return { hasExpired: false, expiredCount: 0, expiringCount: 0 };
@@ -150,7 +183,6 @@ const Drivers = () => {
     };
   };
 
-  // Count drivers by document status
   const getDocumentStatusCounts = () => {
     let expired = 0;
     let expiring = 0;
@@ -172,7 +204,6 @@ const Drivers = () => {
 
   const docCounts = getDocumentStatusCounts();
 
-  // Status badge component
   const getStatusBadge = (status) => {
     const normalizedStatus = status || "in_review";
 
@@ -202,11 +233,12 @@ const Drivers = () => {
     }
   };
 
-  // Status dropdown component with Portal
-  const StatusDropdown = ({ currentStatus, driverId, driverName }) => {
+  const StatusDropdown = ({ currentStatus, driverId }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
+    const [placement, setPlacement] = useState("bottom");
     const buttonRef = useRef(null);
+    const dropdownHeight = 140;
     const normalizedStatus = currentStatus || "in_review";
 
     const statusOptions = [
@@ -240,8 +272,20 @@ const Drivers = () => {
     const handleToggle = () => {
       if (!isOpen && buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+
+        const spaceBelow = viewportHeight - rect.bottom;
+        const spaceAbove = rect.top;
+
+        const shouldPlaceAbove =
+          spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+
+        setPlacement(shouldPlaceAbove ? "top" : "bottom");
+
         setPosition({
-          top: rect.bottom + window.scrollY + 8,
+          top: shouldPlaceAbove
+            ? rect.top + window.scrollY - dropdownHeight - 5
+            : rect.bottom + window.scrollY + 5,
           left: rect.right + window.scrollX - 192,
         });
       }
@@ -303,7 +347,102 @@ const Drivers = () => {
     );
   };
 
-  // Star Rating Component
+  // FIXED: Controlled Textarea Component
+  const ControlledTextarea = ({ value, onChange, ...props }) => {
+    const ref = useRef(null);
+
+    const handleChange = (e) => {
+      onChange(e); // simply pass event upward
+    };
+
+    useEffect(() => {
+      // Always keep cursor at end after update, prevents reversed typing
+      if (ref.current) {
+        const len = value?.length || 0;
+        ref.current.selectionStart = len;
+        ref.current.selectionEnd = len;
+      }
+    }, [value]);
+
+    return (
+      <textarea ref={ref} value={value} onChange={handleChange} {...props} />
+    );
+  };
+
+  // Reason Modal Component
+  const ReasonModal = () => {
+    if (!showReasonModal || !pendingStatusChange) return null;
+
+    const modalTitle =
+      pendingStatusChange.newStatus === "rejected"
+        ? "Rejection Reason"
+        : "Review Reason";
+
+    return createPortal(
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50"
+          onClick={handleCancelStatusChange}
+        />
+        <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 z-[10001]">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {modalTitle}
+            </h3>
+            <button
+              onClick={handleCancelStatusChange}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Please provide a reason: <span className="text-red-500">*</span>
+            </label>
+            <ControlledTextarea
+              value={statusReason}
+              onChange={(e) => setStatusReason(e.target.value)}
+              placeholder="Enter reason..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+              autoFocus
+            />
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end space-x-3 p-4 border-t border-gray-200">
+                                <button
+                                  onClick={handleConfirmStatusChange}
+                                  disabled={loadingStatusChange}
+                                  className={`px-4 py-2 flex items-center space-x-2 text-sm font-medium text-white rounded-lg transition-colors ${
+                                    pendingStatusChange.newStatus === "rejected"
+                                      ? statusReason.trim() === "" ? "bg-gray-400 hover:bg-gray-500 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+                                      : statusReason.trim() === "" ? "bg-gray-400 hover:bg-gray-500 cursor-not-allowed" : "bg-yellow-600 hover:bg-yellow-700"
+                                  } ${loadingStatusChange ? "opacity-70 cursor-not-allowed" : ""}`}
+                                >
+                                  {loadingStatusChange ? (
+                                    <span>Processing...</span>
+                                  ) : (
+                                    <>
+                                      Confirm{" "}
+                                      {pendingStatusChange.newStatus === "rejected"
+                                        ? "Reject"
+                                        : "In Review"}
+                                      <ArrowRight className="w-4 h-4 ml-2" />
+                                    </>
+                                  )}
+                                </button>
+                    </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
   const StarRating = ({
     rating,
     totalRatings,
@@ -376,6 +515,8 @@ const Drivers = () => {
 
   return (
     <div className="space-y-6">
+      <ReasonModal />
+
       {/* Header */}
       <div className="fade-in">
         <h1 className="text-2xl font-bold text-secondary-900">
@@ -407,7 +548,10 @@ const Drivers = () => {
             In Review
           </p>
           <p className="text-2xl font-bold text-yellow-600">
-            {drivers.filter((d) => !d.status || d.status === "in_review").length}
+            {
+              drivers.filter((d) => !d.status || d.status === "in_review")
+                .length
+            }
           </p>
         </div>
         <div className="bg-red-50 rounded-lg shadow p-4 border border-red-200">
@@ -443,21 +587,9 @@ const Drivers = () => {
         </div>
       </div>
 
-      {/* Action Bar */}
-      {/* <div className="flex items-center justify-between">
-        <Link
-          to="/admin/add-driver"
-          className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium shadow-md"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Driver</span>
-        </Link>
-      </div> */}
-
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-md p-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 gap-4">
-          {/* Search */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -469,11 +601,10 @@ const Drivers = () => {
             />
           </div>
 
-          {/* Filters Row */}
           <div className="flex flex-wrap items-center gap-3">
-
-            {/* Clear Filters */}
-            {(searchTerm || statusFilter !== "all" || documentFilter !== "all") && (
+            {(searchTerm ||
+              statusFilter !== "all" ||
+              documentFilter !== "all") && (
               <div className="mt-5">
                 <button
                   onClick={() => {
@@ -488,7 +619,6 @@ const Drivers = () => {
               </div>
             )}
 
-            {/* Status Filter */}
             <div className="relative">
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Status
@@ -523,7 +653,6 @@ const Drivers = () => {
               </div>
             </div>
 
-            {/* Document Status Filter */}
             <div className="relative">
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Documents
@@ -554,11 +683,9 @@ const Drivers = () => {
                       d="M19 9l-7 7-7-7"
                     />
                   </svg>
-                  </div>
+                </div>
               </div>
             </div>
-
-            
           </div>
         </div>
       </div>
@@ -582,7 +709,7 @@ const Drivers = () => {
                   Rating
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Experience
+                  Status Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -613,7 +740,11 @@ const Drivers = () => {
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                           {driver.profile_image ? (
-                            <img src={driver.profile_image} alt="Profile" className="rounded-full" />
+                            <img
+                              src={driver.profile_image}
+                              alt="Profile"
+                              className="rounded-full w-10 h-10 object-cover"
+                            />
                           ) : (
                             <span className="text-primary-600 font-medium text-lg">
                               {driver.firstname?.charAt(0).toUpperCase()}
@@ -695,17 +826,23 @@ const Drivers = () => {
                         totalRatings={driver.total_ratings}
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900">
-                        {driver.year_of_experiance}{" "}
-                        {driver.year_of_experiance === 1 ? "year" : "years"}
-                      </span>
+                    <td className="px-6 py-4">
+                      {driver.status_description ? (
+                        <p className="text-sm text-gray-900 max-w-xs">
+                          {driver.status_description}
+                        </p>
+                      ) : (
+                        <span className="text-sm text-gray-400">
+                          {driver.year_of_experiance}{" "}
+                          {driver.year_of_experiance === 1 ? "year" : "years"}{" "}
+                          exp
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusDropdown
                         currentStatus={driver.status}
                         driverId={driver.driver_id}
-                        driverName={`${driver.firstname} ${driver.lastname}`}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

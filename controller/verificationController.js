@@ -5,9 +5,9 @@ const verificationQueries = require("../config/adminQueries/verificationQueries"
 // Approve or Reject Driver
 const approveDriver = asyncHandler(async (req, res) => {
   const { driver_id } = req.params;
-  const { status } = req.body;
+  const { status, reason } = req.body;
 
-  console.log('Approve driver request:', { driver_id, status });
+  console.log('Approve driver request:', { driver_id, status, reason });
 
   if (!['in_review', 'approved', 'rejected'].includes(status) || !driver_id) {
     return res.status(400).json({ 
@@ -31,7 +31,7 @@ const approveDriver = asyncHandler(async (req, res) => {
     // FIXED: Update driver status with string value
     const [result] = await db.query(
       verificationQueries.updateDriverStatus,
-      [status, driver_id]
+      [status, reason,driver_id]
     );
 
     if (result.affectedRows === 0) {
@@ -60,9 +60,9 @@ const approveDriver = asyncHandler(async (req, res) => {
 // Approve or Reject Company
 const approveFleetCompany = asyncHandler(async (req, res) => {
   const { fleet_company_id } = req.params;
-  const { status } = req.body;
+  const { status, reason } = req.body;
 
-  console.log('Approve fleet company request:', { fleet_company_id, status });
+  console.log('Approve fleet company request:', { fleet_company_id, status, reason });
 
   // Validate status
   if (!['in_review', 'approved', 'rejected'].includes(status) || !fleet_company_id) {
@@ -104,7 +104,7 @@ const approveFleetCompany = asyncHandler(async (req, res) => {
     // Update fleet company status
     const [result] = await db.query(
       verificationQueries.updateFleetCompanyStatus,
-      [status, fleet_company_id]
+      [status, reason, fleet_company_id]
     );
 
     if (result.affectedRows === 0) {
@@ -145,9 +145,9 @@ const approveFleetCompany = asyncHandler(async (req, res) => {
 // Approve or Reject Vehicle
 const approveVehicle = asyncHandler(async (req, res) => {
   const { vehicle_id } = req.params;
-  const { status } = req.body;
+  const { status, reason } = req.body;
 
-  console.log('Approve vehicle request:', { vehicle_id, status });
+  console.log('Approve vehicle request:', { vehicle_id, status, reason });
 
   if (!['in_review', 'approved', 'rejected'].includes(status) || !vehicle_id) {
     return res.status(400).json({ 
@@ -171,7 +171,7 @@ const approveVehicle = asyncHandler(async (req, res) => {
     // FIXED: Update driver status with string value
     const [result] = await db.query(
       verificationQueries.updateVehicleStatus,
-      [status, vehicle_id]
+      [status, reason, vehicle_id]
     );
 
     if (result.affectedRows === 0) {

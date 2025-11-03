@@ -8,7 +8,7 @@ const verificationQueries = {
   `,
 
   updateDriverStatus: `
-    UPDATE drivers SET status = ? WHERE driver_id = ?
+    UPDATE drivers SET status = ?, status_description = ? WHERE driver_id = ?
   `,
 
 
@@ -18,12 +18,13 @@ const verificationQueries = {
     WHERE vehicle_id = ?
   `,
   updateVehicleStatus: `
-    UPDATE vehicle SET status = ?, status_description = '' WHERE vehicle_id = ?
+    UPDATE vehicle SET status = ?, status_description = ? WHERE vehicle_id = ?
   `,
 
   // Fleet company queries
   checkFleetCompanyExists: 'SELECT * FROM fleet_companies WHERE fleet_company_id = ? AND is_deleted = 0',
-  updateFleetCompanyStatus: 'UPDATE fleet_companies SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE fleet_company_id = ?',
+
+  updateFleetCompanyStatus: 'UPDATE fleet_companies SET status = ?, status_description = ? WHERE fleet_company_id = ?',
 
 
 

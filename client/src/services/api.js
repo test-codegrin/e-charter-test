@@ -66,7 +66,7 @@ export const adminAPI = {
   getAllDrivers: () => api.get('/admin/all-drivers'),
   addDriver: (driverData) => api.post('/driver/register', driverData),
   getDriverById: (driverId) => api.get(`/admin/driver/${driverId}`),
-  approveDriver: (driverId, status) => api.put(`/verification/approve-driver/${driverId}`, { status }),
+  approveDriver: (driverId, status, reason) => api.put(`/verification/approve-driver/${driverId}`, { status, reason }),
   deleteDriver: (driverId) => api.delete(`/admin/driver/${driverId}`),
   getVehicleByDriverId: (driverId) => api.get(`/admin/driver-vehicles/${driverId}`),
   getTripByDriverId: (driverId) => api.get(`/admin/driver-trips/${driverId}`),
@@ -77,12 +77,12 @@ export const adminAPI = {
   getFleetPartnerById: (fleetCompanyId) => api.get(`/admin/fleet-company/${fleetCompanyId}`),
   getAllFleetPartnersVehicles: (fleetCompanyId) => api.get(`/admin/fleet-company-vehicles/${fleetCompanyId}`),
   getAllFleetPartnersDrivers: (fleetCompanyId) => api.get(`/admin/fleet-company-drivers/${fleetCompanyId}`),
-  updateFleetPartnerStatus: (companyId, status) => api.put(`/verification/approve-fleet-company/${companyId}`, { status }),
+  updateFleetPartnerStatus: (companyId, status, reason) => api.put(`/verification/approve-fleet-company/${companyId}`, { status, reason }),
 
   // Vehicles
   getAllVehicles: () => api.get('/admin/all-vehicles'),
   getVehicleById: (vehicleId) => api.get(`/admin/vehicle/${vehicleId}`),  
-  approveVehicle: (vehicleId, status) => api.put(`/verification/approve-vehicle/${vehicleId}`, { status }),
+  approveVehicle: (vehicleId, status, reason) => api.put(`/verification/approve-vehicle/${vehicleId}`, { status, reason }),
   deleteVehicle: (vehicleId) => api.delete(`/admin/vehicle/${vehicleId}`),
 
   // Trips

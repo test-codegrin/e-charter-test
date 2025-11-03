@@ -27,7 +27,6 @@ const Sidebar = () => {
     { icon: Car, label: 'Vehicles', path: ADMIN_ROUTES.VEHICLES.ALL_VEHICLES },
     { icon: MapPin, label: 'Trips', path: ADMIN_ROUTES.TRIPS.ALL_TRIPS },
     { icon: DollarSign, label: 'Payouts', path: ADMIN_ROUTES.PAYOUTS },
-    { icon: FileText, label: 'Invoices', path: ADMIN_ROUTES.INVOICES },
     { icon: Bell, label: 'Notifications', path: ADMIN_ROUTES.NOTIFICATIONS },
     { icon: Settings, label: 'Settings', path: ADMIN_ROUTES.SETTINGS },
   ]

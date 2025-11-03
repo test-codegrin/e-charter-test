@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Search, Bell, User, LogOut, Settings, ChevronDown } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { Link } from 'react-router-dom'
+import { DRIVER_ROUTES } from '../constants/routes'
 
 const Header = () => {
   const { user, logout } = useAuth()
@@ -170,14 +172,16 @@ const Header = () => {
                 </div>
                 
                 {/* Profile Link */}
-                <a
-                  href={user?.role === 'admin' ? '/admin/profile' : '/driver/profile'}
-                  className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-300 hover:bg-dark-700 transition-colors"
-                  onClick={() => setShowUserMenu(false)}
-                >
-                  <User className="w-4 h-4" />
-                  <span>Profile</span>
-                </a>
+                {user?.role !== 'admin' && (
+                  <Link
+                    to={DRIVER_ROUTES.PROFILE}
+                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-300 hover:bg-dark-700 transition-colors"
+                    onClick={() => setShowUserMenu(false)}
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Profile</span>
+                  </Link>
+                )}
 
                 {/* Settings Link */}
                 <a
