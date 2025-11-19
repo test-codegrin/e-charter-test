@@ -1,6 +1,9 @@
 const adminGetQueries = {
 
-  getDriverExists: `SELECT * FROM drivers WHERE driver_id = ? AND is_deleted = 0`,
+getDriverExists: `SELECT * FROM drivers WHERE driver_id = ? AND is_deleted = 0`,
+
+
+
 
 getAllDrivers: `SELECT 
     d.*,
@@ -27,12 +30,14 @@ getAllDrivers: `SELECT
     LIMIT ? OFFSET ?;
 `,
 
+
+
 getTotalDriversCount: `SELECT COUNT(DISTINCT d.driver_id) as total
     FROM drivers d
     WHERE d.is_deleted = 0;
 `,
 
-  getAllDriversByFleetCompany: `SELECT 
+getAllDriversByFleetCompany: `SELECT 
     d.*,
     COALESCE(ROUND(AVG(dr.rating), 1), 0.0) AS average_rating,
     COUNT(DISTINCT dr.driver_rating_id) AS total_ratings,
@@ -57,7 +62,7 @@ getTotalDriversCount: `SELECT COUNT(DISTINCT d.driver_id) as total
 `,
 
 
-  getAllVehicles: `
+getAllVehicles: `
   SELECT
       v.*,
       CASE 
@@ -110,10 +115,13 @@ getTotalDriversCount: `SELECT COUNT(DISTINCT d.driver_id) as total
   LEFT JOIN fleet_companies fc ON v.fleet_company_id = fc.fleet_company_id
   LEFT JOIN vehicle_features vf ON v.vehicle_id = vf.vehicle_id
   WHERE v.is_deleted = 0
-  ORDER BY v.created_at DESC;
-  `,
+  ORDER BY v.created_at DESC
+  LIMIT ? OFFSET ?;
+`,
 
- getAllVehiclesByFleetCompany: `
+
+
+getAllVehiclesByFleetCompany: `
   SELECT
       v.*,
       CASE 
@@ -168,7 +176,6 @@ getTotalDriversCount: `SELECT COUNT(DISTINCT d.driver_id) as total
   WHERE v.is_deleted = 0 and v.ownership="fleet_company" and v.fleet_company_id=?
   ORDER BY v.created_at DESC;
   `,
-
 
 
 getDriverById: `
@@ -282,7 +289,8 @@ WHERE d.is_deleted = 0 AND d.driver_id = ?
 GROUP BY d.driver_id;
 `,
 
-  getVehicleById: `SELECT 
+getVehicleById: `
+SELECT 
     v.*,
     CASE 
         WHEN v.fleet_company_id IS NOT NULL 
@@ -355,8 +363,8 @@ GROUP BY v.vehicle_id;
 
 `,
 
-getVehicleByDriverId:`SELECT
-      v.*,
+getVehicleByDriverId:`
+SELECT v.*,
       CASE 
           WHEN v.fleet_company_id IS NOT NULL 
           THEN JSON_OBJECT(

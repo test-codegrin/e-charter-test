@@ -27,7 +27,9 @@ import {
   Armchair,
   Accessibility,
   DollarSign,
-  CreditCard,
+  Package,
+  Shield,
+  Edit,
 } from "lucide-react";
 import { adminAPI } from "../../services/api";
 import toast from "react-hot-toast";
@@ -53,7 +55,6 @@ const ViewVehicle = () => {
     try {
       setLoading(true);
       const response = await adminAPI.getVehicleById(vehicle_id);
-      console.log("Vehicle details:", response.data);
       setVehicle(response.data.vehicle);
     } catch (error) {
       console.error("Error fetching vehicle details:", error);
@@ -159,23 +160,23 @@ const ViewVehicle = () => {
     switch (expiryStatus.status) {
       case "expired":
         return (
-          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-            <XCircle className="w-3 h-3 mr-1" />
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+            <XCircle className="w-3 h-3" />
             Expired {expiryStatus.days} day{expiryStatus.days !== 1 ? "s" : ""}{" "}
             ago
           </span>
         );
       case "today":
         return (
-          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
-            <AlertTriangle className="w-3 h-3 mr-1" />
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+            <AlertTriangle className="w-3 h-3" />
             Expires Today!
           </span>
         );
       case "expiring":
         return (
-          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
-            <Clock className="w-3 h-3 mr-1" />
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+            <Clock className="w-3 h-3" />
             Expires in {expiryStatus.days} day
             {expiryStatus.days !== 1 ? "s" : ""}
           </span>
@@ -190,23 +191,23 @@ const ViewVehicle = () => {
     switch (normalizedStatus) {
       case "approved":
         return (
-          <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <CheckCircle className="w-4 h-4 mr-1.5" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <CheckCircle className="w-4 h-4" />
             Approved
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-red-50 text-red-700 border border-red-200">
-            <XCircle className="w-4 h-4 mr-1.5" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-700 border border-red-200">
+            <XCircle className="w-4 h-4" />
             Rejected
           </span>
         );
       case "in_review":
       default:
         return (
-          <span className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
-            <Clock className="w-4 h-4 mr-1.5" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
+            <Clock className="w-4 h-4" />
             In Review
           </span>
         );
@@ -220,7 +221,7 @@ const ViewVehicle = () => {
           title: "Approve Vehicle",
           message:
             "Are you sure you want to approve this vehicle? It will be available for bookings.",
-          color: "green",
+          color: "emerald",
         };
       case "rejected":
         return {
@@ -234,7 +235,7 @@ const ViewVehicle = () => {
           title: "Mark as In Review",
           message:
             "Are you sure you want to mark this vehicle as in review? Its status will be pending approval.",
-          color: "yellow",
+          color: "amber",
         };
       default:
         return {
@@ -249,19 +250,22 @@ const ViewVehicle = () => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
     });
   };
 
   if (loading) {
     return <Loader />;
-  }
+  };
 
   if (!vehicle) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Vehicle not found</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">Vehicle not found</p>
+        </div>
       </div>
     );
   }
@@ -269,25 +273,25 @@ const ViewVehicle = () => {
   const statusInfo = getStatusInfo(pendingStatus);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1600px]">
       {/* Status Change Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex items-center justify-center mb-4">
                 <div
-                  className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    statusInfo.color === "green"
-                      ? "bg-emerald-50"
+                  className={`w-14 h-14 rounded-full flex items-center justify-center ${
+                    statusInfo.color === "emerald"
+                      ? "bg-emerald-100"
                       : statusInfo.color === "red"
-                      ? "bg-red-50"
-                      : "bg-amber-50"
+                      ? "bg-red-100"
+                      : "bg-amber-100"
                   }`}
                 >
                   <AlertTriangle
-                    className={`w-8 h-8 ${
-                      statusInfo.color === "green"
+                    className={`w-7 h-7 ${
+                      statusInfo.color === "emerald"
                         ? "text-emerald-600"
                         : statusInfo.color === "red"
                         ? "text-red-600"
@@ -301,29 +305,29 @@ const ViewVehicle = () => {
                 {statusInfo.title}
               </h3>
 
-              <p className="text-gray-600 text-center mb-6">
+              <p className="text-gray-600 text-center mb-6 text-sm">
                 {statusInfo.message}
               </p>
 
-              <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-                <p className="text-sm text-gray-600 mb-1">Vehicle</p>
+              <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+                <p className="text-xs text-gray-500 mb-1">Vehicle</p>
                 <p className="font-semibold text-gray-900">
                   {vehicle.maker} {vehicle.model}
                 </p>
                 <p className="text-sm text-gray-500">ID: #{vehicle.vehicle_id}</p>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex gap-3">
                 <button
                   onClick={handleCancelStatusChange}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmStatusChange}
-                  className={`flex-1 px-4 py-2.5 text-white rounded-lg transition-colors font-medium ${
-                    statusInfo.color === "green"
+                  className={`flex-1 px-4 py-2.5 text-white rounded-lg transition-colors font-medium text-sm ${
+                    statusInfo.color === "emerald"
                       ? "bg-emerald-600 hover:bg-emerald-700"
                       : statusInfo.color === "red"
                       ? "bg-red-600 hover:bg-red-700"
@@ -340,12 +344,12 @@ const ViewVehicle = () => {
 
       {/* First Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center">
-                  <AlertTriangle className="w-8 h-8 text-orange-600" />
+                <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center">
+                  <AlertTriangle className="w-7 h-7 text-orange-600" />
                 </div>
               </div>
 
@@ -353,13 +357,13 @@ const ViewVehicle = () => {
                 Delete Vehicle?
               </h3>
 
-              <p className="text-gray-600 text-center mb-6">
+              <p className="text-gray-600 text-center mb-6 text-sm">
                 Are you sure you want to delete this vehicle? This will remove all
                 vehicle data from the system.
               </p>
 
-              <div className="bg-orange-50 rounded-lg p-4 mb-6 border border-orange-200">
-                <p className="text-sm text-orange-700 font-medium mb-1">
+              <div className="bg-orange-50 rounded-xl p-4 mb-6 border border-orange-200">
+                <p className="text-xs text-orange-700 font-medium mb-1">
                   Vehicle:
                 </p>
                 <p className="font-semibold text-gray-900">
@@ -369,16 +373,16 @@ const ViewVehicle = () => {
                 <p className="text-sm text-gray-600">{vehicle.registration_number}</p>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex gap-3">
                 <button
                   onClick={handleCancelDelete}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleFirstDeleteConfirm}
-                  className="flex-1 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-sm"
                 >
                   Continue
                 </button>
@@ -390,12 +394,12 @@ const ViewVehicle = () => {
 
       {/* Final Delete Confirmation Modal */}
       {showFinalDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
-                  <Trash2 className="w-8 h-8 text-red-600" />
+                <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+                  <Trash2 className="w-7 h-7 text-red-600" />
                 </div>
               </div>
 
@@ -403,17 +407,17 @@ const ViewVehicle = () => {
                 ⚠️ Final Confirmation
               </h3>
 
-              <p className="text-gray-900 font-semibold text-center mb-4">
+              <p className="text-gray-900 font-semibold text-center mb-2 text-sm">
                 This action CANNOT be undone!
               </p>
 
-              <p className="text-gray-600 text-center mb-6">
+              <p className="text-gray-600 text-center mb-6 text-sm">
                 You are about to permanently delete this vehicle. All associated
                 data including documents will be lost forever.
               </p>
 
-              <div className="bg-red-50 rounded-lg p-4 mb-6 border border-red-200">
-                <p className="text-sm text-red-700 font-semibold mb-2">
+              <div className="bg-red-50 rounded-xl p-4 mb-6 border border-red-200">
+                <p className="text-xs text-red-700 font-semibold mb-2">
                   ⛔ PERMANENT DELETION
                 </p>
                 <p className="font-semibold text-gray-900">
@@ -423,18 +427,18 @@ const ViewVehicle = () => {
                 <p className="text-sm text-gray-600">ID: #{vehicle.vehicle_id}</p>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex gap-3">
                 <button
                   onClick={handleCancelFinalDelete}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                 >
                   {deleting ? (
                     <>
@@ -455,457 +459,288 @@ const ViewVehicle = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Vehicle Details
-            </h1>
-            <p className="text-gray-600 text-sm mt-0.5">
-              View and manage vehicle information
-            </p>
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Vehicle Details
+              </h1>
+              <p className="text-gray-500 text-sm mt-0.5">
+                Complete information about {vehicle.maker} {vehicle.model}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center space-x-3">
-          {getStatusBadge(vehicle.status)}
-          <button
-            onClick={handleDeleteRequest}
-            className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-            title="Delete Vehicle"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>Delete Vehicle</span>
-          </button>
+          <div className="flex items-center gap-3 flex-wrap">
+            {getStatusBadge(vehicle.status)}
+            <button
+              onClick={handleDeleteRequest}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
+              title="Delete Vehicle"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Vehicle Info */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Vehicle Image Card */}
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* Left Column - Main Info */}
+        <div className="xl:col-span-8 space-y-6">
+          {/* Vehicle Image */}
           {vehicle.car_image && (
-            <div className="bg-white rounded-xl border border-gray-200 p-8">
-              <img
-                src={vehicle.car_image}
-                alt={`${vehicle.maker} ${vehicle.model}`}
-                className="w-full h-80 object-contain rounded-lg"
-              />
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="aspect-video bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                <img
+                  src={vehicle.car_image}
+                  alt={`${vehicle.maker} ${vehicle.model}`}
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
           )}
 
-          {/* Basic Information Card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          {/* Vehicle Overview */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
             <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 bg-slate-900 rounded-lg flex items-center justify-center">
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-slate-900 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Car className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-1">
                     {vehicle.maker} {vehicle.model}
                   </h2>
                   {vehicle.name && (
-                    <p className="text-gray-500 text-sm">{vehicle.name}</p>
+                    <p className="text-gray-600 text-sm mb-2">{vehicle.name}</p>
                   )}
-                  <p className="text-gray-500 text-sm">
-                    Vehicle ID: #{vehicle.vehicle_id}
-                  </p>
-                  <div className="flex items-center space-x-2 mt-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                      ID: #{vehicle.vehicle_id}
+                    </span>
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border ${
                         vehicle.ownership === "fleet_company"
-                          ? "bg-blue-50 text-blue-700 border border-blue-200"
-                          : "bg-purple-50 text-purple-700 border border-purple-200"
+                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                          : "bg-purple-50 text-purple-700 border-purple-200"
                       }`}
                     >
                       {vehicle.ownership === "fleet_company" ? (
                         <>
-                          <Building2 className="w-3 h-3 mr-1" />
+                          <Building2 className="w-3 h-3" />
                           Fleet Company
                         </>
                       ) : (
                         <>
-                          <User className="w-3 h-3 mr-1" />
+                          <User className="w-3 h-3" />
                           Individual
                         </>
                       )}
                     </span>
+                    {vehicle.is_available ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <CheckCircle className="w-3 h-3" />
+                        Available
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                        <XCircle className="w-3 h-3" />
+                        Not Available
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Vehicle Specifications */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-4">
-                Vehicle Specifications
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                <div>
-                  <label className="block text-sm text-gray-500 mb-1">
-                    Registration Number
-                  </label>
-                  <span className="font-mono text-sm text-gray-900 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-200 inline-block">
-                    {vehicle.registration_number}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Registration Number
+                </label>
+                <span className="font-mono text-sm font-semibold text-gray-900">
+                  {vehicle.registration_number}
+                </span>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Vehicle Type
+                </label>
+                <span className="text-sm font-semibold text-gray-900 capitalize">
+                  {vehicle.vehicle_type}
+                </span>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Seats
+                </label>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-semibold text-gray-900">
+                    {vehicle.number_of_seats} Passengers
                   </span>
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-500 mb-1">
-                    Vehicle Type
-                  </label>
-                  <span className="text-sm text-gray-900 capitalize">
-                    {vehicle.vehicle_type}
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Fuel Type
+                </label>
+                <div className="flex items-center gap-2">
+                  <Fuel className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-semibold text-gray-900 capitalize">
+                    {vehicle.fuel_type}
                   </span>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-500 mb-1">
-                    Number of Seats
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-900">{vehicle.number_of_seats}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-500 mb-1">
-                    Fuel Type
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    <Fuel className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-900 capitalize">
-                      {vehicle.fuel_type}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-500 mb-1">
-                    Availability
-                  </label>
-                  {vehicle.is_available ? (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Available
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-                      <XCircle className="w-3 h-3 mr-1" />
-                      Not Available
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Pricing Information Card */}
+          {/* Pricing Information */}
           {vehicle.pricing && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <DollarSign className="w-5 h-5 mr-2 text-gray-700" />
-                Pricing Information
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Base Rates */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Base Rates</h4>
-                  
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-sm text-gray-600">Base Rate</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      ₹{vehicle.pricing.base_rate}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-sm text-gray-600">Per KM Rate</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      ₹{vehicle.pricing.per_km_rate}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-sm text-gray-600">Waiting (per min)</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      ₹{vehicle.pricing.waiting_per_min_rate}
-                    </span>
-                  </div>
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
                 </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Pricing Information
+                </h3>
+              </div>
 
-                {/* Trip Rates */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Trip Rates</h4>
-                  
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-sm text-gray-600">Parking to Customer</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      ₹{vehicle.pricing.parking_to_customer_rate}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-sm text-gray-600">Customer to Parking</span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      ₹{vehicle.pricing.customer_to_parking_rate}
-                    </span>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Base Rate
+                  </label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    CA${vehicle.pricing.base_rate}
+                  </p>
                 </div>
-
-                {/* Additional Charges */}
-                <div className="space-y-3 md:col-span-2">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Additional Charges</h4>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <span className="text-sm text-gray-600">Tax</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {vehicle.pricing.tax_per}%
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <span className="text-sm text-gray-600">Gratuities</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {vehicle.pricing.gratuities_per}%
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <span className="text-sm text-gray-600">Cancellation</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {vehicle.pricing.cancellation_per}%
-                      </span>
-                    </div>
-                  </div>
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Per KM
+                  </label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    CA${vehicle.pricing.per_km_rate}
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Waiting (per min)
+                  </label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    CA${vehicle.pricing.waiting_per_min_rate}
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Parking to Customer
+                  </label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    CA${vehicle.pricing.parking_to_customer_rate}
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Customer to Parking
+                  </label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    CA${vehicle.pricing.customer_to_parking_rate}
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Tax
+                  </label>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {vehicle.pricing.tax_per}%
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Vehicle Features Card */}
+          {/* Vehicle Features */}
           {vehicle.features && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <CheckCircle className="w-5 h-5 mr-2 text-gray-700" />
-                Vehicle Features
-              </h3>
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Features & Amenities
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {Object.values(vehicle.features).filter((v) => v === 1).length - 1} of 7 features available
+                  </p>
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {/* Air Conditioner */}
-                <div
-                  className={`flex flex-col items-center p-4 rounded-lg border transition-colors ${
-                    vehicle.features.has_air_conditioner
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <Wind
-                    className={`w-6 h-6 mb-2 ${
-                      vehicle.features.has_air_conditioner
-                        ? "text-emerald-600"
-                        : "text-gray-400"
-                    }`}
-                  />
-                  <p
-                    className={`text-xs font-medium text-center ${
-                      vehicle.features.has_air_conditioner
-                        ? "text-emerald-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    Air Conditioner
-                  </p>
-                </div>
-
-                {/* Charging Port */}
-                <div
-                  className={`flex flex-col items-center p-4 rounded-lg border transition-colors ${
-                    vehicle.features.has_charging_port
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <Zap
-                    className={`w-6 h-6 mb-2 ${
-                      vehicle.features.has_charging_port
-                        ? "text-emerald-600"
-                        : "text-gray-400"
-                    }`}
-                  />
-                  <p
-                    className={`text-xs font-medium text-center ${
-                      vehicle.features.has_charging_port
-                        ? "text-emerald-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    Charging Port
-                  </p>
-                </div>
-
-                {/* WiFi */}
-                <div
-                  className={`flex flex-col items-center p-4 rounded-lg border transition-colors ${
-                    vehicle.features.has_wifi
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <Wifi
-                    className={`w-6 h-6 mb-2 ${
-                      vehicle.features.has_wifi
-                        ? "text-emerald-600"
-                        : "text-gray-400"
-                    }`}
-                  />
-                  <p
-                    className={`text-xs font-medium text-center ${
-                      vehicle.features.has_wifi
-                        ? "text-emerald-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    WiFi
-                  </p>
-                </div>
-
-                {/* Entertainment System */}
-                <div
-                  className={`flex flex-col items-center p-4 rounded-lg border transition-colors ${
-                    vehicle.features.has_entertainment_system
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <Monitor
-                    className={`w-6 h-6 mb-2 ${
-                      vehicle.features.has_entertainment_system
-                        ? "text-emerald-600"
-                        : "text-gray-400"
-                    }`}
-                  />
-                  <p
-                    className={`text-xs font-medium text-center ${
-                      vehicle.features.has_entertainment_system
-                        ? "text-emerald-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    Entertainment
-                  </p>
-                </div>
-
-                {/* GPS */}
-                <div
-                  className={`flex flex-col items-center p-4 rounded-lg border transition-colors ${
-                    vehicle.features.has_gps
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <Navigation
-                    className={`w-6 h-6 mb-2 ${
-                      vehicle.features.has_gps
-                        ? "text-emerald-600"
-                        : "text-gray-400"
-                    }`}
-                  />
-                  <p
-                    className={`text-xs font-medium text-center ${
-                      vehicle.features.has_gps
-                        ? "text-emerald-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    GPS
-                  </p>
-                </div>
-
-                {/* Recliner Seats */}
-                <div
-                  className={`flex flex-col items-center p-4 rounded-lg border transition-colors ${
-                    vehicle.features.has_recliner_seats
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <Armchair
-                    className={`w-6 h-6 mb-2 ${
-                      vehicle.features.has_recliner_seats
-                        ? "text-emerald-600"
-                        : "text-gray-400"
-                    }`}
-                  />
-                  <p
-                    className={`text-xs font-medium text-center ${
-                      vehicle.features.has_recliner_seats
-                        ? "text-emerald-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    Recliner Seats
-                  </p>
-                </div>
-
-                {/* Wheelchair Accessible */}
-                <div
-                  className={`flex flex-col items-center p-4 rounded-lg border transition-colors ${
-                    vehicle.features.is_wheelchair_accessible
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <Accessibility
-                    className={`w-6 h-6 mb-2 ${
-                      vehicle.features.is_wheelchair_accessible
-                        ? "text-emerald-600"
-                        : "text-gray-400"
-                    }`}
-                  />
-                  <p
-                    className={`text-xs font-medium text-center ${
-                      vehicle.features.is_wheelchair_accessible
-                        ? "text-emerald-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    Wheelchair
-                  </p>
-                </div>
-              </div>
-
-              {/* Summary */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">
-                    {Object.values(vehicle.features).filter((v) => v === 1).length - 1}
-                  </span>{" "}
-                  of 7 features available
-                </p>
+                {[
+                  { key: 'has_air_conditioner', label: 'Air Conditioner', icon: Wind },
+                  { key: 'has_charging_port', label: 'Charging Port', icon: Zap },
+                  { key: 'has_wifi', label: 'WiFi', icon: Wifi },
+                  { key: 'has_entertainment_system', label: 'Entertainment', icon: Monitor },
+                  { key: 'has_gps', label: 'GPS', icon: Navigation },
+                  { key: 'has_recliner_seats', label: 'Recliner Seats', icon: Armchair },
+                  { key: 'is_wheelchair_accessible', label: 'Wheelchair', icon: Accessibility },
+                ].map(({ key, label, icon: Icon }) => {
+                  const isAvailable = vehicle.features[key];
+                  return (
+                    <div
+                      key={key}
+                      className={`flex flex-col items-center p-4 rounded-xl border transition-all ${
+                        isAvailable
+                          ? "bg-emerald-50 border-emerald-200"
+                          : "bg-gray-50 border-gray-200 opacity-40"
+                      }`}
+                    >
+                      <Icon
+                        className={`w-6 h-6 mb-2 ${
+                          isAvailable ? "text-emerald-600" : "text-gray-400"
+                        }`}
+                      />
+                      <p
+                        className={`text-xs font-medium text-center ${
+                          isAvailable ? "text-emerald-900" : "text-gray-500"
+                        }`}
+                      >
+                        {label}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* Fleet Company Details Card */}
+          {/* Fleet Company Details */}
           {vehicle.ownership === "fleet_company" &&
             vehicle.fleet_company_details && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <Building2 className="w-5 h-5 mr-2 text-gray-700" />
-                  Fleet Company Information
-                </h3>
+              <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Fleet Company Information
+                  </h3>
+                </div>
 
                 {vehicle.fleet_company_details.profile_image && (
                   <div className="flex justify-center mb-6">
-                    <div className="w-20 h-20 bg-gray-50 rounded-lg border border-gray-200 p-3 flex items-center justify-center">
+                    <div className="w-20 h-20 bg-gray-50 rounded-xl border border-gray-200 p-3 flex items-center justify-center">
                       <img
                         src={vehicle.fleet_company_details.profile_image}
                         alt={vehicle.fleet_company_details.company_name}
@@ -915,72 +750,67 @@ const ViewVehicle = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                  <div>
-                    <label className="block text-sm text-gray-500 mb-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
                       Company Name
                     </label>
-                    <p className="text-sm text-gray-900 font-medium">
+                    <p className="text-sm font-semibold text-gray-900">
                       {vehicle.fleet_company_details.company_name}
                     </p>
                   </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-500 mb-1">
-                      Company Status
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      Status
                     </label>
                     {getStatusBadge(vehicle.fleet_company_details.status)}
                   </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-500 mb-1">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
                       Email
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <Mail className="w-4 h-4 text-gray-400" />
-                      <p className="text-sm text-gray-900">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <p className="text-sm text-gray-900 truncate">
                         {vehicle.fleet_company_details.email}
                       </p>
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-500 mb-1">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
                       Phone
                     </label>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-gray-400" />
                       <p className="text-sm text-gray-900">
                         {vehicle.fleet_company_details.phone_no}
                       </p>
                     </div>
                   </div>
-
                   {vehicle.fleet_company_details.website && (
-                    <div className="col-span-2">
-                      <label className="block text-sm text-gray-500 mb-1">
+                    <div className="sm:col-span-2 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
                         Website
                       </label>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         <Globe className="w-4 h-4 text-gray-400" />
                         <a
                           href={`https://${vehicle.fleet_company_details.website}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:underline"
+                          className="text-sm text-blue-600 hover:underline truncate"
                         >
                           {vehicle.fleet_company_details.website}
                         </a>
                       </div>
                     </div>
                   )}
-
-                  <div className="col-span-2">
-                    <label className="block text-sm text-gray-500 mb-1">
+                  <div className="sm:col-span-2 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
                       Address
                     </label>
-                    <div className="flex items-start space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-sm text-gray-900">
                           {vehicle.fleet_company_details.address}
@@ -998,43 +828,25 @@ const ViewVehicle = () => {
         </div>
 
         {/* Right Sidebar */}
-        <div className="space-y-6">
-          {/* Registration Info Card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-gray-700" />
-              Registration Details
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-500 mb-1">
-                  Registered On
-                </label>
-                <p className="text-sm text-gray-900">{formatDate(vehicle.created_at)}</p>
+        <div className="xl:col-span-4 space-y-6">
+          {/* Quick Actions */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center">
+                <Shield className="w-5 h-5 text-slate-700" />
               </div>
-              <div>
-                <label className="block text-sm text-gray-500 mb-1">
-                  Last Updated
-                </label>
-                <p className="text-sm text-gray-900">{formatDate(vehicle.updated_at)}</p>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Update Status
+              </h3>
             </div>
-          </div>
-
-          {/* Status Actions Card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <AlertCircle className="w-5 h-5 mr-2 text-gray-700" />
-              Update Status
-            </h3>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <button
                 onClick={() => handleStatusChangeRequest("approved")}
                 disabled={vehicle.status === "approved"}
-                className={`w-full px-4 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2 ${
+                className={`w-full px-4 py-3 rounded-lg transition-all font-medium flex items-center justify-center gap-2 text-sm ${
                   vehicle.status === "approved"
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md"
                 }`}
               >
                 <CheckCircle className="w-4 h-4" />
@@ -1043,10 +855,10 @@ const ViewVehicle = () => {
               <button
                 onClick={() => handleStatusChangeRequest("in_review")}
                 disabled={vehicle.status === "in_review"}
-                className={`w-full px-4 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2 ${
+                className={`w-full px-4 py-3 rounded-lg transition-all font-medium flex items-center justify-center gap-2 text-sm ${
                   vehicle.status === "in_review"
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-amber-600 text-white hover:bg-amber-700"
+                    : "bg-amber-600 text-white hover:bg-amber-700 hover:shadow-md"
                 }`}
               >
                 <Clock className="w-4 h-4" />
@@ -1055,10 +867,10 @@ const ViewVehicle = () => {
               <button
                 onClick={() => handleStatusChangeRequest("rejected")}
                 disabled={vehicle.status === "rejected"}
-                className={`w-full px-4 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2 ${
+                className={`w-full px-4 py-3 rounded-lg transition-all font-medium flex items-center justify-center gap-2 text-sm ${
                   vehicle.status === "rejected"
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-red-600 text-white hover:bg-red-700 hover:shadow-md"
                 }`}
               >
                 <XCircle className="w-4 h-4" />
@@ -1066,18 +878,57 @@ const ViewVehicle = () => {
               </button>
             </div>
           </div>
+
+          {/* Registration Info */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-gray-700" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Registration
+              </h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Registered On
+                </label>
+                <p className="text-sm font-medium text-gray-900">
+                  {formatDate(vehicle.created_at)}
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Last Updated
+                </label>
+                <p className="text-sm font-medium text-gray-900">
+                  {formatDate(vehicle.updated_at)}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Documents Card - Full Width */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <FileText className="w-5 h-5 mr-2 text-gray-700" />
-          Vehicle Documents
-        </h3>
+      {/* Documents Section - Full Width */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+            <FileText className="w-5 h-5 text-amber-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Vehicle Documents
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {vehicle.documents?.filter((d) => d.vehicle_document_id !== null).length || 0} documents uploaded
+            </p>
+          </div>
+        </div>
 
         {vehicle.documents && vehicle.documents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {vehicle.documents
               .filter((doc) => doc.vehicle_document_id !== null)
               .map((doc) => {
@@ -1090,43 +941,51 @@ const ViewVehicle = () => {
                 return (
                   <div
                     key={doc.vehicle_document_id}
-                    className={`flex flex-col justify-between p-4 rounded-lg border transition-all ${
+                    className={`flex flex-col p-4 rounded-xl border transition-all ${
                       expiryStatus.status === "expired"
                         ? "bg-red-50 border-red-200"
                         : expiryStatus.status === "today"
                         ? "bg-orange-50 border-orange-200"
                         : expiryStatus.status === "expiring"
                         ? "bg-yellow-50 border-yellow-200"
-                        : "bg-white border-gray-200"
+                        : "bg-white border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="flex-1 mb-4">
-                      <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start justify-between mb-3">
                         <p className="font-medium text-gray-900 capitalize text-sm">
                           {doc.document_type.replace(/_/g, " ")}
                         </p>
                         {isExpiredOrExpiring &&
                           getExpiryBadge(doc.document_expiry_date)}
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-xs text-gray-600">
-                          <span className="font-medium">Number:</span>{" "}
-                          {doc.document_number}
-                        </p>
-                        <p
-                          className={`text-xs ${
-                            expiryStatus.status === "expired"
-                              ? "text-red-700 font-medium"
-                              : expiryStatus.status === "today"
-                              ? "text-orange-700 font-medium"
-                              : expiryStatus.status === "expiring"
-                              ? "text-yellow-700 font-medium"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          <span className="font-medium">Expires:</span>{" "}
-                          {formatDate(doc.document_expiry_date)}
-                        </p>
+                      <div className="space-y-2">
+                        <div className="p-2 bg-white/50 rounded-lg border border-gray-200/50">
+                          <p className="text-xs text-gray-500 mb-0.5">
+                            Number
+                          </p>
+                          <p className="text-xs font-medium text-gray-900">
+                            {doc.document_number}
+                          </p>
+                        </div>
+                        <div className="p-2 bg-white/50 rounded-lg border border-gray-200/50">
+                          <p className="text-xs text-gray-500 mb-0.5">
+                            Expires
+                          </p>
+                          <p
+                            className={`text-xs font-medium ${
+                              expiryStatus.status === "expired"
+                                ? "text-red-700"
+                                : expiryStatus.status === "today"
+                                ? "text-orange-700"
+                                : expiryStatus.status === "expiring"
+                                ? "text-yellow-700"
+                                : "text-gray-900"
+                            }`}
+                          >
+                            {formatDate(doc.document_expiry_date)}
+                          </p>
+                        </div>
                       </div>
                     </div>
                     {doc.document_url && (
@@ -1134,8 +993,9 @@ const ViewVehicle = () => {
                         href={doc.document_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium"
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium"
                       >
+                        <FileText className="w-4 h-4" />
                         View Document
                       </a>
                     )}
@@ -1144,12 +1004,14 @@ const ViewVehicle = () => {
               })}
           </div>
         ) : (
-          <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium text-sm">
+          <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-8 h-8 text-gray-300" />
+            </div>
+            <p className="text-gray-500 font-medium text-sm mb-1">
               No documents uploaded yet
             </p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-400">
               Vehicle needs required documents to be uploaded
             </p>
           </div>

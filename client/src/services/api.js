@@ -83,7 +83,11 @@ export const adminAPI = {
   updateFleetPartnerStatus: (companyId, status, reason) => api.put(`/verification/approve-fleet-company/${companyId}`, { status, reason }),
 
   // Vehicles
-  getAllVehicles: () => api.get('/admin/all-vehicles'),
+  getAllVehicles: (params = {}) => {
+    const { page = 1, limit = 10 } = params;
+    return api.get(`/admin/all-vehicles?page=${page}&limit=${limit}`);
+  },
+
   getVehicleById: (vehicleId) => api.get(`/admin/vehicle/${vehicleId}`),  
   approveVehicle: (vehicleId, status, reason) => api.put(`/verification/approve-vehicle/${vehicleId}`, { status, reason }),
   deleteVehicle: (vehicleId) => api.delete(`/admin/vehicle/${vehicleId}`),

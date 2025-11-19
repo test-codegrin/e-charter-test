@@ -121,7 +121,27 @@ const getDriverById = asyncHandler(async (req, res) => {
 
 const getAllVehicles = asyncHandler(async (req, res) => {
   try {
-    const [vehicles] = await db.query(adminGetQueries.getAllVehicles);
+    // Get pagination parameters from query string
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Get total count of vehicles
+    const [countResult] = await db.query(
+      'SELECT COUNT(*) as total FROM vehicle WHERE is_deleted = 0'
+    );
+    const totalVehicles = countResult[0].total;
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalVehicles / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    // Get paginated vehicles
+    const [vehicles] = await db.query(
+      adminGetQueries.getAllVehicles,
+      [limit, offset]
+    );
     
     // Parse JSON fields and handle null documents properly
     const parsedVehicles = vehicles.map(vehicle => {
@@ -169,15 +189,24 @@ const getAllVehicles = asyncHandler(async (req, res) => {
     });
 
     res.status(200).json({
-      message: "All vehicles fetched successfully",
+      message: "Vehicles fetched successfully",
       count: parsedVehicles.length,
-      vehicles: parsedVehicles
+      vehicles: parsedVehicles,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalVehicles: totalVehicles,
+        itemsPerPage: limit,
+        hasNextPage: hasNextPage,
+        hasPrevPage: hasPrevPage
+      }
     });
   } catch (error) {
     console.error("Error fetching vehicles:", error);
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
+
 
 const getVehicleById = asyncHandler(async (req, res) => {
     const { vehicle_id } = req.params;

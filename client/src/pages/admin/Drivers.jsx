@@ -436,154 +436,163 @@ const Drivers = () => {
     );
   };
 
-  const Pagination = () => {
-    if (!paginationInfo) return null;
+const Pagination = () => {
+  if (!paginationInfo) return null;
 
-    const { currentPage, totalPages, hasNextPage, hasPrevPage } =
-      paginationInfo;
+  const { currentPage, totalPages, hasNextPage, hasPrevPage } = paginationInfo;
 
-    const getPageNumbers = () => {
-      const pages = [];
-      const maxVisible = 5;
+  const itemsPerPageOptions = [
+    { value: 5, label: "5" },
+    { value: 10, label: "10" },
+    { value: 20, label: "20" },
+    { value: 50, label: "50" },
+  ];
 
-      if (totalPages <= maxVisible) {
-        for (let i = 1; i <= totalPages; i++) {
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
           pages.push(i);
         }
       } else {
-        if (currentPage <= 3) {
-          for (let i = 1; i <= 4; i++) {
-            pages.push(i);
-          }
-          pages.push("...");
-          pages.push(totalPages);
-        } else if (currentPage >= totalPages - 2) {
-          pages.push(1);
-          pages.push("...");
-          for (let i = totalPages - 3; i <= totalPages; i++) {
-            pages.push(i);
-          }
-        } else {
-          pages.push(1);
-          pages.push("...");
-          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-            pages.push(i);
-          }
-          pages.push("...");
-          pages.push(totalPages);
+        pages.push(1);
+        pages.push("...");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
         }
+        pages.push("...");
+        pages.push(totalPages);
       }
+    }
 
-      return pages;
-    };
+    return pages;
+  };
 
-    const handlePageChange = (page) => {
-      if (page >= 1 && page <= totalPages) {
-        setCurrentPage(page);
-      }
-    };
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
-    return (
-      <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-700 font-medium">Show</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </select>
-          <span className="text-sm text-gray-700 font-medium">entries</span>
-        </div>
+  return (
+    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+      {/* Left - Showing info */}
+      <div className="flex items-center">
+        <span className="text-sm text-gray-600">
+          Showing{" "}
+          <span className="font-semibold text-gray-900">
+            {(currentPage - 1) * itemsPerPage + 1}
+          </span>{" "}
+          to{" "}
+          <span className="font-semibold text-gray-900">
+            {Math.min(currentPage * itemsPerPage, totalDrivers)}
+          </span>{" "}
+          of{" "}
+          <span className="font-semibold text-gray-900">{totalDrivers}</span>{" "}
+          drivers
+        </span>
+      </div>
 
-        <div className="hidden md:flex items-center gap-2">
-          <span className="text-sm text-gray-600">
-            Showing{" "}
-            <span className="font-semibold text-gray-900">
-              {(currentPage - 1) * itemsPerPage + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-semibold text-gray-900">
-              {Math.min(currentPage * itemsPerPage, totalDrivers)}
-            </span>{" "}
-            of <span className="font-semibold text-gray-900">{totalDrivers}</span>{" "}
-            drivers
-          </span>
-        </div>
+      {/* Middle - Page numbers */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => handlePageChange(1)}
+          disabled={!hasPrevPage}
+          className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          title="First Page"
+        >
+          <ChevronsLeft className="w-4 h-4 text-gray-600" />
+        </button>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={!hasPrevPage}
+          className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          title="Previous Page"
+        >
+          <ChevronLeft className="w-4 h-4 text-gray-600" />
+        </button>
 
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => handlePageChange(1)}
-            disabled={!hasPrevPage}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            title="First Page"
-          >
-            <ChevronsLeft className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={!hasPrevPage}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            title="Previous Page"
-          >
-            <ChevronLeft className="w-4 h-4 text-gray-600" />
-          </button>
-
-          <div className="flex items-center gap-1">
-            {getPageNumbers().map((page, index) => {
-              if (page === "...") {
-                return (
-                  <span
-                    key={`ellipsis-${index}`}
-                    className="px-3 py-2 text-gray-500 text-sm"
-                  >
-                    ...
-                  </span>
-                );
-              }
+          {getPageNumbers().map((page, index) => {
+            if (page === "...") {
               return (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`min-w-[36px] px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentPage === page
-                      ? "bg-slate-900 text-white shadow-sm"
-                      : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
+                <span
+                  key={`ellipsis-${index}`}
+                  className="px-3 py-2 text-gray-500 text-sm"
                 >
-                  {page}
-                </button>
+                  ...
+                </span>
               );
-            })}
-          </div>
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={!hasNextPage}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            title="Next Page"
-          >
-            <ChevronRight className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handlePageChange(totalPages)}
-            disabled={!hasNextPage}
-            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            title="Last Page"
-          >
-            <ChevronsRight className="w-4 h-4 text-gray-600" />
-          </button>
+            }
+            return (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`min-w-[36px] px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentPage === page
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            );
+          })}
         </div>
+
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={!hasNextPage}
+          className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          title="Next Page"
+        >
+          <ChevronRight className="w-4 h-4 text-gray-600" />
+        </button>
+        <button
+          onClick={() => handlePageChange(totalPages)}
+          disabled={!hasNextPage}
+          className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          title="Last Page"
+        >
+          <ChevronsRight className="w-4 h-4 text-gray-600" />
+        </button>
       </div>
-    );
-  };
+
+      {/* Right - Items per page dropdown */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-700 font-medium">Show</span>
+        <CustomDropdown
+          options={itemsPerPageOptions}
+          value={itemsPerPage}
+          onChange={(value) => {
+            setItemsPerPage(Number(value));
+            setCurrentPage(1);
+          }}
+          className="w-20"
+          buttonClassName="px-3 py-1.5 bg-white border border-gray-300 rounded-lg hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-colors text-sm font-medium text-gray-700 flex items-center justify-between"
+          minDropdownWidth="button"
+        />
+        <span className="text-sm text-gray-700 font-medium">entries</span>
+      </div>
+    </div>
+  );
+};
+
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
