@@ -63,7 +63,10 @@ export const adminAPI = {
   getDashboardStats: () => api.get('/admin/dashboard/stats'),
 
   // Drivers
-  getAllDrivers: () => api.get('/admin/all-drivers'),
+  getAllDrivers: (params = {}) => {
+  const { page = 1, limit = 10 } = params;
+  return api.get(`/admin/all-drivers?page=${page}&limit=${limit}`);
+},
   addDriver: (driverData) => api.post('/driver/register', driverData),
   getDriverById: (driverId) => api.get(`/admin/driver/${driverId}`),
   approveDriver: (driverId, status, reason) => api.put(`/verification/approve-driver/${driverId}`, { status, reason }),

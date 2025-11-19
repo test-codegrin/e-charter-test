@@ -2,7 +2,7 @@ const adminGetQueries = {
 
   getDriverExists: `SELECT * FROM drivers WHERE driver_id = ? AND is_deleted = 0`,
 
-  getAllDrivers: `SELECT 
+getAllDrivers: `SELECT 
     d.*,
     COALESCE(ROUND(AVG(dr.rating), 1), 0.0) AS average_rating,
     COUNT(DISTINCT dr.driver_rating_id) AS total_ratings,
@@ -23,7 +23,13 @@ const adminGetQueries = {
     LEFT JOIN fleet_companies fc ON d.fleet_company_id = fc.fleet_company_id
     WHERE d.is_deleted = 0
     GROUP BY d.driver_id
-    ORDER BY d.created_at DESC;
+    ORDER BY d.created_at DESC
+    LIMIT ? OFFSET ?;
+`,
+
+getTotalDriversCount: `SELECT COUNT(DISTINCT d.driver_id) as total
+    FROM drivers d
+    WHERE d.is_deleted = 0;
 `,
 
   getAllDriversByFleetCompany: `SELECT 
@@ -279,35 +285,50 @@ GROUP BY d.driver_id;
   getVehicleById: `SELECT 
     v.*,
     CASE 
-          WHEN v.fleet_company_id IS NOT NULL 
-          THEN JSON_OBJECT(
-              'fleet_company_id', fc.fleet_company_id,
-              'company_name', fc.company_name,
-              'email', fc.email,
-              'phone_no', fc.phone_no,
-              'address', fc.address,
-              'city', fc.city_name,
-              'postal_code', fc.postal_code,
-              'website', fc.website,
-              'profile_image', fc.profile_image,
-              'status', fc.status
-          )
-          ELSE NULL
-      END AS fleet_company_details,
+        WHEN v.fleet_company_id IS NOT NULL 
+        THEN JSON_OBJECT(
+            'fleet_company_id', fc.fleet_company_id,
+            'company_name', fc.company_name,
+            'email', fc.email,
+            'phone_no', fc.phone_no,
+            'address', fc.address,
+            'city', fc.city_name,
+            'postal_code', fc.postal_code,
+            'website', fc.website,
+            'profile_image', fc.profile_image,
+            'status', fc.status
+        )
+        ELSE NULL
+    END AS fleet_company_details,
     CASE 
         WHEN COUNT(vf.vehicle_features_id) > 0 THEN
-                JSON_OBJECT(
-                    'vehicle_features_id', vf.vehicle_features_id,
-                    'has_air_conditioner', vf.has_air_conditioner,
-                    'has_charging_port', vf.has_charging_port,
-                    'has_wifi', vf.has_wifi,
-                    'has_entertainment_system', vf.has_entertainment_system,
-                    'has_gps', vf.has_gps,
-                    'has_recliner_seats', vf.has_recliner_seats,
-                    'is_wheelchair_accessible', vf.is_wheelchair_accessible
+            JSON_OBJECT(
+                'vehicle_features_id', vf.vehicle_features_id,
+                'has_air_conditioner', vf.has_air_conditioner,
+                'has_charging_port', vf.has_charging_port,
+                'has_wifi', vf.has_wifi,
+                'has_entertainment_system', vf.has_entertainment_system,
+                'has_gps', vf.has_gps,
+                'has_recliner_seats', vf.has_recliner_seats,
+                'is_wheelchair_accessible', vf.is_wheelchair_accessible
             )
         ELSE NULL
     END AS features,
+    CASE 
+        WHEN COUNT(vp.vehicle_pricing_id) > 0 THEN
+            JSON_OBJECT(
+                'vehicle_pricing_id', vp.vehicle_pricing_id,
+                'base_rate', vp.base_rate,
+                'parking_to_customer_rate', vp.parking_to_customer_rate,
+                'customer_to_parking_rate', vp.customer_to_parking_rate,
+                'per_km_rate', vp.per_km_rate,
+                'waiting_per_min_rate', vp.waiting_per_min_rate,
+                'cancellation_per', vp.cancellation_per,
+                'tax_per', vp.tax_per,
+                'gratuities_per', vp.gratuities_per
+            )
+        ELSE NULL
+    END AS pricing,
     CASE 
         WHEN COUNT(vd.vehicle_document_id) > 0 THEN
             JSON_ARRAYAGG(
@@ -317,7 +338,6 @@ GROUP BY d.driver_id;
                     'document_number', vd.document_number,
                     'document_expiry_date', vd.document_expiry_date,
                     'document_url', vd.document_url,
-                    'document_expiry_date', vd.document_expiry_date,
                     'is_delete', vd.is_deleted,
                     'created_at', vd.created_at,
                     'updated_at', vd.updated_at
@@ -328,10 +348,11 @@ GROUP BY d.driver_id;
 FROM vehicle v
 LEFT JOIN vehicle_documents vd ON v.vehicle_id = vd.vehicle_id AND (vd.is_deleted = 0 OR vd.is_deleted IS NULL)
 LEFT JOIN fleet_companies fc ON v.fleet_company_id = fc.fleet_company_id AND fc.is_deleted = 0
-LEFT JOIN vehicle_features vf ON v.vehicle_id = vf.vehicle_id 
-
+LEFT JOIN vehicle_features vf ON v.vehicle_id = vf.vehicle_id
+LEFT JOIN vehicle_pricing vp ON v.vehicle_id = vp.vehicle_id
 WHERE v.is_deleted = 0 AND v.vehicle_id = ?
 GROUP BY v.vehicle_id;
+
 `,
 
 getVehicleByDriverId:`SELECT

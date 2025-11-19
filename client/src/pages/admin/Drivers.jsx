@@ -12,17 +12,21 @@ import {
   XCircle,
   Clock,
   Building2,
-  Plus,
   ArrowRight,
   AlertTriangle,
   FileText,
   X,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { adminAPI } from "../../services/api";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import Loader from "../../components/Loader";
 import { ADMIN_ROUTES } from "../../constants/routes";
+import CustomDropdown from "../../components/CustomDropdown";
 
 const Drivers = () => {
   const [drivers, setDrivers] = useState([]);
@@ -32,15 +36,67 @@ const Drivers = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [documentFilter, setDocumentFilter] = useState("all");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalDrivers, setTotalDrivers] = useState(0);
+  const [paginationInfo, setPaginationInfo] = useState(null);
+
   // Modal state
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [pendingStatusChange, setPendingStatusChange] = useState(null);
   const [statusReason, setStatusReason] = useState("");
   const [loadingStatusChange, setLoadingStatusChange] = useState(false);
 
+  // Dropdown options
+  const statusOptions = [
+    { value: "all", label: "All Status" },
+    { value: "in_review", label: "In Review" },
+    { value: "approved", label: "Approved" },
+    { value: "rejected", label: "Rejected" },
+  ];
+
+  const documentOptions = [
+    { value: "all", label: "All Documents" },
+    { value: "expired", label: "Expired" },
+    { value: "expiring", label: "Expiring Soon" },
+    { value: "valid", label: "Valid" },
+  ];
+
+  // Status dropdown options with icons
+  const driverStatusOptions = [
+    {
+      value: "in_review",
+      label: "In Review",
+      icon: Clock,
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-200",
+      textColor: "text-amber-700",
+    },
+    {
+      value: "approved",
+      label: "Approved",
+      icon: CheckCircle,
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-200",
+      textColor: "text-emerald-700",
+    },
+    {
+      value: "rejected",
+      label: "Reject",
+      icon: XCircle,
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      borderColor: "border-red-200",
+      textColor: "text-red-700",
+    },
+  ];
+
   useEffect(() => {
     fetchDrivers();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   useEffect(() => {
     filterDrivers();
@@ -49,9 +105,14 @@ const Drivers = () => {
   const fetchDrivers = async () => {
     try {
       setLoading(true);
-      const response = await adminAPI.getAllDrivers();
+      const response = await adminAPI.getAllDrivers({
+        page: currentPage,
+        limit: itemsPerPage,
+      });
       console.log("Drivers response:", response.data);
       setDrivers(response.data.drivers || []);
+      setPaginationInfo(response.data.pagination);
+      setTotalDrivers(response.data.pagination?.totalDrivers || 0);
     } catch (error) {
       console.error("Error fetching drivers:", error);
       toast.error("Failed to fetch drivers");
@@ -100,7 +161,7 @@ const Drivers = () => {
     setFilteredDrivers(filtered);
   };
 
-  const handleStatusChange = async (driverId, newStatus, statusReason) => {
+  const handleStatusChange = async (driverId, newStatus) => {
     if (newStatus === "rejected" || newStatus === "in_review") {
       setPendingStatusChange({ driverId, newStatus });
       setStatusReason("");
@@ -124,7 +185,7 @@ const Drivers = () => {
       toast.error("Please provide a reason");
       return;
     }
-    setLoadingStatusChange(true); // Begin loading
+    setLoadingStatusChange(true);
     try {
       const { driverId, newStatus } = pendingStatusChange;
       await adminAPI.approveDriver(driverId, newStatus, statusReason);
@@ -139,7 +200,7 @@ const Drivers = () => {
       console.error("Error updating driver status:", error);
       toast.error("Failed to update driver status");
     } finally {
-      setLoadingStatusChange(false); // End loading
+      setLoadingStatusChange(false);
     }
   };
 
@@ -206,157 +267,32 @@ const Drivers = () => {
 
   const getStatusBadge = (status) => {
     const normalizedStatus = status || "in_review";
+    const statusConfig = driverStatusOptions.find(
+      (opt) => opt.value === normalizedStatus
+    );
 
-    switch (normalizedStatus) {
-      case "approved":
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Approved
-          </span>
-        );
-      case "rejected":
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <XCircle className="w-3 h-3 mr-1" />
-            Rejected
-          </span>
-        );
-      case "in_review":
-      default:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <Clock className="w-3 h-3 mr-1" />
-            In Review
-          </span>
-        );
-    }
-  };
+    if (!statusConfig) return null;
 
-  const StatusDropdown = ({ currentStatus, driverId }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [position, setPosition] = useState({ top: 0, left: 0 });
-    const [placement, setPlacement] = useState("bottom");
-    const buttonRef = useRef(null);
-    const dropdownHeight = 140;
-    const normalizedStatus = currentStatus || "in_review";
-
-    const statusOptions = [
-      {
-        value: "in_review",
-        label: "In Review",
-        icon: Clock,
-        color: "text-yellow-600",
-      },
-      {
-        value: "approved",
-        label: "Approved",
-        icon: CheckCircle,
-        color: "text-green-600",
-      },
-      {
-        value: "rejected",
-        label: "Reject",
-        icon: XCircle,
-        color: "text-red-600",
-      },
-    ];
-
-    const handleStatusSelect = (status) => {
-      if (status !== normalizedStatus) {
-        handleStatusChange(driverId, status);
-      }
-      setIsOpen(false);
-    };
-
-    const handleToggle = () => {
-      if (!isOpen && buttonRef.current) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-
-        const spaceBelow = viewportHeight - rect.bottom;
-        const spaceAbove = rect.top;
-
-        const shouldPlaceAbove =
-          spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
-
-        setPlacement(shouldPlaceAbove ? "top" : "bottom");
-
-        setPosition({
-          top: shouldPlaceAbove
-            ? rect.top + window.scrollY - dropdownHeight - 5
-            : rect.bottom + window.scrollY + 5,
-          left: rect.right + window.scrollX - 192,
-        });
-      }
-      setIsOpen(!isOpen);
-    };
+    const Icon = statusConfig.icon;
 
     return (
-      <>
-        <button
-          ref={buttonRef}
-          onClick={handleToggle}
-          className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-        >
-          {getStatusBadge(normalizedStatus)}
-        </button>
-
-        {isOpen &&
-          createPortal(
-            <>
-              <div
-                className="fixed inset-0 z-[9998]"
-                onClick={() => setIsOpen(false)}
-              />
-              <div
-                className="fixed w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-[9999]"
-                style={{
-                  top: `${position.top}px`,
-                  left: `${position.left}px`,
-                }}
-              >
-                <div className="p-2">
-                  {statusOptions.map((option) => {
-                    const Icon = option.icon;
-                    const isSelected = option.value === normalizedStatus;
-
-                    return (
-                      <button
-                        key={option.value}
-                        onClick={() => handleStatusSelect(option.value)}
-                        className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
-                          isSelected
-                            ? "bg-gray-100 font-medium"
-                            : "hover:bg-gray-50"
-                        }`}
-                      >
-                        <Icon className={`w-4 h-4 ${option.color}`} />
-                        <span className="text-sm text-gray-700">
-                          {option.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </>,
-            document.body
-          )}
-      </>
+      <span
+        className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor} border ${statusConfig.borderColor}`}
+      >
+        <Icon className="w-3 h-3 mr-1" />
+        {statusConfig.label}
+      </span>
     );
   };
 
-  // FIXED: Controlled Textarea Component
   const ControlledTextarea = ({ value, onChange, ...props }) => {
     const ref = useRef(null);
 
     const handleChange = (e) => {
-      onChange(e); // simply pass event upward
+      onChange(e);
     };
 
     useEffect(() => {
-      // Always keep cursor at end after update, prevents reversed typing
       if (ref.current) {
         const len = value?.length || 0;
         ref.current.selectionStart = len;
@@ -369,7 +305,6 @@ const Drivers = () => {
     );
   };
 
-  // Reason Modal Component
   const ReasonModal = () => {
     if (!showReasonModal || !pendingStatusChange) return null;
 
@@ -379,85 +314,89 @@ const Drivers = () => {
         : "Review Reason";
 
     return createPortal(
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center">
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
         <div
-          className="fixed inset-0 bg-black bg-opacity-50"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200"
           onClick={handleCancelStatusChange}
         />
-        <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 z-[10001]">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md z-[10001] transform transition-all duration-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">
               {modalTitle}
             </h3>
             <button
               onClick={handleCancelStatusChange}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
 
-          {/* Body */}
-          <div className="p-4">
+          <div className="p-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Please provide a reason: <span className="text-red-500">*</span>
+              Please provide a reason <span className="text-red-600">*</span>
             </label>
             <ControlledTextarea
               value={statusReason}
               onChange={(e) => setStatusReason(e.target.value)}
               placeholder="Enter reason..."
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 resize-none text-sm"
               autoFocus
             />
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end space-x-3 p-4 border-t border-gray-200">
-                                <button
-                                  onClick={handleConfirmStatusChange}
-                                  disabled={loadingStatusChange}
-                                  className={`px-4 py-2 flex items-center space-x-2 text-sm font-medium text-white rounded-lg transition-colors ${
-                                    pendingStatusChange.newStatus === "rejected"
-                                      ? statusReason.trim() === "" ? "bg-gray-400 hover:bg-gray-500 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
-                                      : statusReason.trim() === "" ? "bg-gray-400 hover:bg-gray-500 cursor-not-allowed" : "bg-yellow-600 hover:bg-yellow-700"
-                                  } ${loadingStatusChange ? "opacity-70 cursor-not-allowed" : ""}`}
-                                >
-                                  {loadingStatusChange ? (
-                                    <span>Processing...</span>
-                                  ) : (
-                                    <>
-                                      Confirm{" "}
-                                      {pendingStatusChange.newStatus === "rejected"
-                                        ? "Reject"
-                                        : "In Review"}
-                                      <ArrowRight className="w-4 h-4 ml-2" />
-                                    </>
-                                  )}
-                                </button>
-                    </div>
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+            <button
+              onClick={handleCancelStatusChange}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmStatusChange}
+              disabled={loadingStatusChange || !statusReason.trim()}
+              className={`px-4 py-2 flex items-center gap-2 text-sm font-medium text-white rounded-lg transition-colors ${
+                pendingStatusChange.newStatus === "rejected"
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-amber-600 hover:bg-amber-700"
+              } ${
+                loadingStatusChange || !statusReason.trim()
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+            >
+              {loadingStatusChange ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <span>
+                    Confirm{" "}
+                    {pendingStatusChange.newStatus === "rejected"
+                      ? "Reject"
+                      : "In Review"}
+                  </span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>,
       document.body
     );
   };
 
-  const StarRating = ({
-    rating,
-    totalRatings,
-    showCount = true,
-    size = "sm",
-  }) => {
+  const StarRating = ({ rating, totalRatings, showCount = true }) => {
     const numericRating = parseFloat(rating) || 0;
     const fullStars = Math.floor(numericRating);
     const hasHalfStar = numericRating % 1 >= 0.5;
 
-    const starSize =
-      size === "lg" ? "w-6 h-6" : size === "md" ? "w-5 h-5" : "w-4 h-4";
-
     return (
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center gap-1.5">
         <div className="flex items-center">
           {[...Array(5)].map((_, index) => {
             const isFilled = index < fullStars;
@@ -467,20 +406,17 @@ const Drivers = () => {
               <div key={index} className="relative">
                 {isHalf ? (
                   <div className="relative">
-                    <Star
-                      className={`${starSize} text-gray-300`}
-                      fill="currentColor"
-                    />
+                    <Star className="w-4 h-4 text-gray-300" fill="currentColor" />
                     <div className="absolute inset-0 overflow-hidden w-1/2">
                       <Star
-                        className={`${starSize} text-yellow-400`}
+                        className="w-4 h-4 text-yellow-400"
                         fill="currentColor"
                       />
                     </div>
                   </div>
                 ) : (
                   <Star
-                    className={`${starSize} ${
+                    className={`w-4 h-4 ${
                       isFilled ? "text-yellow-400" : "text-gray-300"
                     }`}
                     fill="currentColor"
@@ -496,6 +432,155 @@ const Drivers = () => {
         {showCount && totalRatings > 0 && (
           <span className="text-xs text-gray-500">({totalRatings})</span>
         )}
+      </div>
+    );
+  };
+
+  const Pagination = () => {
+    if (!paginationInfo) return null;
+
+    const { currentPage, totalPages, hasNextPage, hasPrevPage } =
+      paginationInfo;
+
+    const getPageNumbers = () => {
+      const pages = [];
+      const maxVisible = 5;
+
+      if (totalPages <= maxVisible) {
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (currentPage <= 3) {
+          for (let i = 1; i <= 4; i++) {
+            pages.push(i);
+          }
+          pages.push("...");
+          pages.push(totalPages);
+        } else if (currentPage >= totalPages - 2) {
+          pages.push(1);
+          pages.push("...");
+          for (let i = totalPages - 3; i <= totalPages; i++) {
+            pages.push(i);
+          }
+        } else {
+          pages.push(1);
+          pages.push("...");
+          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+            pages.push(i);
+          }
+          pages.push("...");
+          pages.push(totalPages);
+        }
+      }
+
+      return pages;
+    };
+
+    const handlePageChange = (page) => {
+      if (page >= 1 && page <= totalPages) {
+        setCurrentPage(page);
+      }
+    };
+
+    return (
+      <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-700 font-medium">Show</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+          <span className="text-sm text-gray-700 font-medium">entries</span>
+        </div>
+
+        <div className="hidden md:flex items-center gap-2">
+          <span className="text-sm text-gray-600">
+            Showing{" "}
+            <span className="font-semibold text-gray-900">
+              {(currentPage - 1) * itemsPerPage + 1}
+            </span>{" "}
+            to{" "}
+            <span className="font-semibold text-gray-900">
+              {Math.min(currentPage * itemsPerPage, totalDrivers)}
+            </span>{" "}
+            of <span className="font-semibold text-gray-900">{totalDrivers}</span>{" "}
+            drivers
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handlePageChange(1)}
+            disabled={!hasPrevPage}
+            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            title="First Page"
+          >
+            <ChevronsLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={!hasPrevPage}
+            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            title="Previous Page"
+          >
+            <ChevronLeft className="w-4 h-4 text-gray-600" />
+          </button>
+
+          <div className="flex items-center gap-1">
+            {getPageNumbers().map((page, index) => {
+              if (page === "...") {
+                return (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="px-3 py-2 text-gray-500 text-sm"
+                  >
+                    ...
+                  </span>
+                );
+              }
+              return (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`min-w-[36px] px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === page
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={!hasNextPage}
+            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            title="Next Page"
+          >
+            <ChevronRight className="w-4 h-4 text-gray-600" />
+          </button>
+          <button
+            onClick={() => handlePageChange(totalPages)}
+            disabled={!hasNextPage}
+            className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            title="Last Page"
+          >
+            <ChevronsRight className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
       </div>
     );
   };
@@ -518,227 +603,185 @@ const Drivers = () => {
       <ReasonModal />
 
       {/* Header */}
-      <div className="fade-in">
-        <h1 className="text-2xl font-bold text-secondary-900">
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h1 className="text-2xl font-semibold text-gray-900">
           Driver Management
         </h1>
-        <p className="text-secondary-600">
+        <p className="text-gray-600 text-sm mt-1">
           Manage driver registrations and approvals
         </p>
       </div>
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          <p className="text-xs text-gray-500 font-medium mb-1.5">
             Total Drivers
           </p>
-          <p className="text-2xl font-bold text-gray-900">{drivers.length}</p>
+          <p className="text-2xl font-semibold text-gray-900">{totalDrivers}</p>
         </div>
-        <div className="bg-green-50 rounded-lg shadow p-4 border border-green-200">
-          <p className="text-xs text-green-700 uppercase tracking-wide mb-1">
+        <div className="bg-white rounded-xl border border-emerald-200 p-4 hover:shadow-md transition-shadow">
+          <p className="text-xs text-emerald-700 font-medium mb-1.5 flex items-center gap-1">
+            <CheckCircle className="w-3.5 h-3.5" />
             Approved
           </p>
-          <p className="text-2xl font-bold text-green-600">
+          <p className="text-2xl font-semibold text-emerald-600">
             {drivers.filter((d) => d.status === "approved").length}
           </p>
         </div>
-        <div className="bg-yellow-50 rounded-lg shadow p-4 border border-yellow-200">
-          <p className="text-xs text-yellow-700 uppercase tracking-wide mb-1">
+        <div className="bg-white rounded-xl border border-amber-200 p-4 hover:shadow-md transition-shadow">
+          <p className="text-xs text-amber-700 font-medium mb-1.5 flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
             In Review
           </p>
-          <p className="text-2xl font-bold text-yellow-600">
+          <p className="text-2xl font-semibold text-amber-600">
             {
               drivers.filter((d) => !d.status || d.status === "in_review")
                 .length
             }
           </p>
         </div>
-        <div className="bg-red-50 rounded-lg shadow p-4 border border-red-200">
-          <p className="text-xs text-red-700 uppercase tracking-wide mb-1">
+        <div className="bg-white rounded-xl border border-red-200 p-4 hover:shadow-md transition-shadow">
+          <p className="text-xs text-red-700 font-medium mb-1.5 flex items-center gap-1">
+            <XCircle className="w-3.5 h-3.5" />
             Rejected
           </p>
-          <p className="text-2xl font-bold text-red-600">
+          <p className="text-2xl font-semibold text-red-600">
             {drivers.filter((d) => d.status === "rejected").length}
           </p>
         </div>
-        <div className="bg-red-50 rounded-lg shadow p-4 border border-red-300">
-          <p className="text-xs text-red-700 uppercase tracking-wide mb-1 flex items-center">
-            <AlertTriangle className="w-3 h-3 mr-1" />
+        <div className="bg-white rounded-xl border border-red-200 p-4 hover:shadow-md transition-shadow">
+          <p className="text-xs text-red-700 font-medium mb-1.5 flex items-center gap-1">
+            <AlertTriangle className="w-3.5 h-3.5" />
             Doc Expired
           </p>
-          <p className="text-2xl font-bold text-red-700">{docCounts.expired}</p>
+          <p className="text-2xl font-semibold text-red-600">
+            {docCounts.expired}
+          </p>
         </div>
-        <div className="bg-orange-50 rounded-lg shadow p-4 border border-orange-200">
-          <p className="text-xs text-orange-700 uppercase tracking-wide mb-1 flex items-center">
-            <Clock className="w-3 h-3 mr-1" />
+        <div className="bg-white rounded-xl border border-orange-200 p-4 hover:shadow-md transition-shadow">
+          <p className="text-xs text-orange-700 font-medium mb-1.5 flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
             Doc Expiring
           </p>
-          <p className="text-2xl font-bold text-orange-600">
+          <p className="text-2xl font-semibold text-orange-600">
             {docCounts.expiring}
           </p>
         </div>
-        <div className="bg-blue-50 rounded-lg shadow p-4 border border-blue-200">
-          <p className="text-xs text-blue-700 uppercase tracking-wide mb-1 flex items-center">
-            <CheckCircle className="w-3 h-3 mr-1" />
+        <div className="bg-white rounded-xl border border-blue-200 p-4 hover:shadow-md transition-shadow">
+          <p className="text-xs text-blue-700 font-medium mb-1.5 flex items-center gap-1">
+            <CheckCircle className="w-3.5 h-3.5" />
             Doc Valid
           </p>
-          <p className="text-2xl font-bold text-blue-600">{docCounts.valid}</p>
+          <p className="text-2xl font-semibold text-blue-600">
+            {docCounts.valid}
+          </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 gap-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search by name, email, city, or company..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
+            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+              Search Drivers
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search by name, email, city, or company..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 text-sm"
+              />
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <CustomDropdown
+              label="Status"
+              options={statusOptions}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              icon={Filter}
+              placeholder="Select status"
+              className="min-w-[160px]"
+            />
+
+            <CustomDropdown
+              label="Documents"
+              options={documentOptions}
+              value={documentFilter}
+              onChange={setDocumentFilter}
+              icon={FileText}
+              placeholder="Select document status"
+              className="min-w-[180px]"
+            />
+
             {(searchTerm ||
               statusFilter !== "all" ||
               documentFilter !== "all") && (
-              <div className="mt-5">
-                <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setStatusFilter("all");
-                    setDocumentFilter("all");
-                  }}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Clear Filters
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("all");
+                  setDocumentFilter("all");
+                }}
+                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Clear All
+              </button>
             )}
-
-            <div className="relative">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <div className="relative">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 cursor-pointer"
-                >
-                  <option value="all">All Status</option>
-                  <option value="in_review">In Review</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <svg
-                    className="w-4 h-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Documents
-              </label>
-              <div className="relative">
-                <select
-                  value={documentFilter}
-                  onChange={(e) => setDocumentFilter(e.target.value)}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 cursor-pointer"
-                >
-                  <option value="all">All Documents</option>
-                  <option value="expired">Expired</option>
-                  <option value="expiring">Expiring Soon</option>
-                  <option value="valid">Valid</option>
-                </select>
-                <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <svg
-                    className="w-4 h-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Drivers Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Driver
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Contact
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Location
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Rating
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status Description
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Experience
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Registered
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {filteredDrivers.map((driver) => {
                 const docStatus = checkDocumentExpiry(driver.documents);
+                const normalizedStatus = driver.status || "in_review";
+
                 return (
                   <tr
                     key={driver.driver_id}
-                    className={`transition-colors ${
-                      docStatus.hasExpired
-                        ? "bg-red-50 hover:bg-red-100"
-                        : docStatus.hasExpiring
-                        ? "bg-yellow-50 hover:bg-yellow-100"
-                        : "hover:bg-gray-50"
-                    }`}
+                    className="transition-colors hover:bg-gray-50"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0">
                           {driver.profile_image ? (
                             <img
                               src={driver.profile_image}
@@ -746,44 +789,44 @@ const Drivers = () => {
                               className="rounded-full w-10 h-10 object-cover"
                             />
                           ) : (
-                            <span className="text-primary-600 font-medium text-lg">
+                            <span className="text-slate-600 font-semibold text-sm">
                               {driver.firstname?.charAt(0).toUpperCase()}
                               {driver.lastname?.charAt(0).toUpperCase()}
                             </span>
                           )}
                         </div>
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <p className="font-medium text-gray-900">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-medium text-gray-900 text-sm">
                               {driver.firstname} {driver.lastname}
                             </p>
                             {docStatus.hasExpired && (
                               <span
-                                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 animate-pulse"
+                                className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200"
                                 title={`${docStatus.expiredCount} document(s) expired`}
                               >
                                 <AlertTriangle className="w-3 h-3 mr-1" />
-                                {docStatus.expiredCount} Expired
+                                {docStatus.expiredCount}
                               </span>
                             )}
                             {!docStatus.hasExpired && docStatus.hasExpiring && (
                               <span
-                                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800"
+                                className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200"
                                 title={`${docStatus.expiringCount} document(s) expiring soon`}
                               >
                                 <Clock className="w-3 h-3 mr-1" />
-                                {docStatus.expiringCount} Expiring
+                                {docStatus.expiringCount}
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <p className="text-sm text-gray-500">
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-xs text-gray-500">
                               ID: {driver.driver_id}
                             </p>
                             {driver.fleet_company_name && (
                               <>
                                 <span className="text-gray-300">•</span>
-                                <div className="flex items-center space-x-1">
+                                <div className="flex items-center gap-1">
                                   <Building2 className="w-3 h-3 text-blue-500" />
                                   <span className="text-xs text-blue-600 font-medium">
                                     {driver.fleet_company_name}
@@ -797,19 +840,19 @@ const Drivers = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <div className="flex items-center space-x-2 text-sm text-gray-900">
-                          <Mail className="w-4 h-4 text-gray-400" />
-                          <span>{driver.email}</span>
+                        <div className="flex items-center gap-2 text-sm text-gray-900">
+                          <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="truncate">{driver.email}</span>
                         </div>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
-                          <Phone className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
                           <span>{driver.phone_no}</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-start space-x-2">
-                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                         <div>
                           <p className="text-sm font-medium text-gray-900">
                             {driver.city_name}
@@ -828,34 +871,56 @@ const Drivers = () => {
                     </td>
                     <td className="px-6 py-4">
                       {driver.status_description ? (
-                        <p className="text-sm text-gray-900 max-w-xs">
+                        <p className="text-sm text-gray-900 max-w-xs line-clamp-2">
                           {driver.status_description}
                         </p>
                       ) : (
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm text-gray-500">
                           {driver.year_of_experiance}{" "}
-                          {driver.year_of_experiance === 1 ? "year" : "years"}{" "}
-                          exp
+                          {driver.year_of_experiance === 1 ? "year" : "years"}
                         </span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusDropdown
-                        currentStatus={driver.status}
-                        driverId={driver.driver_id}
+                      <CustomDropdown
+                        options={driverStatusOptions}
+                        value={normalizedStatus}
+                        onChange={(newStatus) =>
+                          handleStatusChange(driver.driver_id, newStatus)
+                        }
+                        buttonClassName="flex items-center px-3 py-2 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                        renderButton={(selectedOption) => {
+                          return getStatusBadge(normalizedStatus);
+                        }}
+                        renderOption={(option, isSelected) => {
+                          const Icon = option.icon;
+                          return (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <Icon
+                                  className={`w-4 h-4 ${
+                                    isSelected ? "text-white" : option.color
+                                  }`}
+                                />
+                                <span className="font-medium">
+                                  {option.label}
+                                </span>
+                              </div>
+                            </>
+                          );
+                        }}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Calendar className="w-4 h-4" />
                         <span>{formatDate(driver.created_at)}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
                       <Link
                         to={ADMIN_ROUTES.DRIVERS.VIEW_DRIVER + driver.driver_id}
-                        className="flex items-center space-x-1 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors font-medium"
-                        title="View Details"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors font-medium"
                       >
                         <span>View</span>
                         <ArrowRight className="w-4 h-4" />
@@ -868,13 +933,21 @@ const Drivers = () => {
           </table>
 
           {filteredDrivers.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">
-                No drivers found matching your criteria.
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <Search className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-900 font-medium text-lg mb-1">
+                No drivers found
+              </p>
+              <p className="text-gray-500 text-sm">
+                Try adjusting your search or filter criteria
               </p>
             </div>
           )}
         </div>
+
+        <Pagination />
       </div>
     </div>
   );

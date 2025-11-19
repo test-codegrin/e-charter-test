@@ -11,7 +11,40 @@ const imagekit = require("../config/imagekit");
 
 const getAllDrivers = asyncHandler(async (req, res) => {
     try {
-        const [drivers] = await db.query(adminGetQueries.getAllDrivers);
+        // Get pagination parameters from query string
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        
+        // Validate pagination parameters
+        if (page < 1) {
+            return res.status(400).json({ 
+                message: "Page number must be greater than 0" 
+            });
+        }
+        
+        if (limit < 1 || limit > 100) {
+            return res.status(400).json({ 
+                message: "Limit must be between 1 and 100" 
+            });
+        }
+
+        // Calculate offset
+        const offset = (page - 1) * limit;
+
+        // Get total count of drivers
+        const [countResult] = await db.query(adminGetQueries.getTotalDriversCount);
+        const totalDrivers = countResult[0].total;
+
+        // Calculate pagination metadata
+        const totalPages = Math.ceil(totalDrivers / limit);
+        const hasNextPage = page < totalPages;
+        const hasPrevPage = page > 1;
+
+        // Get paginated drivers
+        const [drivers] = await db.query(
+            adminGetQueries.getAllDrivers,
+            [limit, offset]
+        );
 
         // Parse documents JSON for each driver
         const parsedDrivers = drivers.map(driver => ({
@@ -21,12 +54,25 @@ const getAllDrivers = asyncHandler(async (req, res) => {
 
         res.status(200).json({
             message: "Drivers fetched successfully",
+            pagination: {
+                currentPage: page,
+                limit: limit,
+                totalPages: totalPages,
+                totalDrivers: totalDrivers,
+                hasNextPage: hasNextPage,
+                hasPrevPage: hasPrevPage,
+                nextPage: hasNextPage ? page + 1 : null,
+                prevPage: hasPrevPage ? page - 1 : null
+            },
             count: parsedDrivers.length,
             drivers: parsedDrivers
         });
     } catch (error) {
         console.error("Error fetching drivers:", error);
-        res.status(500).json({ message: "Internal server error", error: error.message });
+        res.status(500).json({ 
+            message: "Internal server error", 
+            error: error.message 
+        });
     }
 });
 
@@ -72,7 +118,6 @@ const getDriverById = asyncHandler(async (req, res) => {
         });
     }
 });
-
 
 const getAllVehicles = asyncHandler(async (req, res) => {
   try {
@@ -153,6 +198,7 @@ const getVehicleById = asyncHandler(async (req, res) => {
             ...vehicle[0],
             documents: vehicle[0].documents ? JSON.parse(vehicle[0].documents) : null,
             features: vehicle[0].features ? JSON.parse(vehicle[0].features) : null,
+            pricing: vehicle[0].pricing ? JSON.parse(vehicle[0].pricing) : null,
             fleet_company_details: vehicle[0].fleet_company_details 
                 ? JSON.parse(vehicle[0].fleet_company_details) 
                 : null
@@ -313,7 +359,6 @@ const deleteFleetCompany = asyncHandler(async (req, res) => {
     });
   }
 });
-
 
 const getAllVehiclesByFleetCompany = asyncHandler(async (req, res) => {
   try {
