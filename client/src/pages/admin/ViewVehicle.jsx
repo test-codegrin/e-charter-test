@@ -35,6 +35,7 @@ import { adminAPI } from "../../services/api";
 import toast from "react-hot-toast";
 import Loader from "../../components/Loader";
 import { ADMIN_ROUTES } from "../../constants/routes";
+import { formatCAD } from "../../utils/currency";
 
 const ViewVehicle = () => {
   const { vehicle_id } = useParams();
@@ -257,7 +258,7 @@ const ViewVehicle = () => {
 
   if (loading) {
     return <Loader />;
-  };
+  }
 
   if (!vehicle) {
     return (
@@ -271,6 +272,17 @@ const ViewVehicle = () => {
   }
 
   const statusInfo = getStatusInfo(pendingStatus);
+
+  const PriceBox = ({ label, value }) => {
+    return (
+      <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+        <label className="block text-xs font-medium text-gray-500 mb-1">
+          {label}
+        </label>
+        <p className="text-lg font-semibold text-gray-900">{value}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6 max-w-[1600px]">
@@ -314,7 +326,9 @@ const ViewVehicle = () => {
                 <p className="font-semibold text-gray-900">
                   {vehicle.maker} {vehicle.model}
                 </p>
-                <p className="text-sm text-gray-500">ID: #{vehicle.vehicle_id}</p>
+                <p className="text-sm text-gray-500">
+                  ID: #{vehicle.vehicle_id}
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -358,8 +372,8 @@ const ViewVehicle = () => {
               </h3>
 
               <p className="text-gray-600 text-center mb-6 text-sm">
-                Are you sure you want to delete this vehicle? This will remove all
-                vehicle data from the system.
+                Are you sure you want to delete this vehicle? This will remove
+                all vehicle data from the system.
               </p>
 
               <div className="bg-orange-50 rounded-xl p-4 mb-6 border border-orange-200">
@@ -369,8 +383,12 @@ const ViewVehicle = () => {
                 <p className="font-semibold text-gray-900">
                   {vehicle.maker} {vehicle.model}
                 </p>
-                <p className="text-sm text-gray-600">ID: #{vehicle.vehicle_id}</p>
-                <p className="text-sm text-gray-600">{vehicle.registration_number}</p>
+                <p className="text-sm text-gray-600">
+                  ID: #{vehicle.vehicle_id}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {vehicle.registration_number}
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -423,8 +441,12 @@ const ViewVehicle = () => {
                 <p className="font-semibold text-gray-900">
                   {vehicle.maker} {vehicle.model}
                 </p>
-                <p className="text-sm text-gray-600">{vehicle.registration_number}</p>
-                <p className="text-sm text-gray-600">ID: #{vehicle.vehicle_id}</p>
+                <p className="text-sm text-gray-600">
+                  {vehicle.registration_number}
+                </p>
+                <p className="text-sm text-gray-600">
+                  ID: #{vehicle.vehicle_id}
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -617,54 +639,43 @@ const ViewVehicle = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    Base Rate
-                  </label>
-                  <p className="text-lg font-semibold text-gray-900">
-                    CA${vehicle.pricing.base_rate}
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    Per KM
-                  </label>
-                  <p className="text-lg font-semibold text-gray-900">
-                    CA${vehicle.pricing.per_km_rate}
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    Waiting (per min)
-                  </label>
-                  <p className="text-lg font-semibold text-gray-900">
-                    CA${vehicle.pricing.waiting_per_min_rate}
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    Parking to Customer
-                  </label>
-                  <p className="text-lg font-semibold text-gray-900">
-                    CA${vehicle.pricing.parking_to_customer_rate}
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    Customer to Parking
-                  </label>
-                  <p className="text-lg font-semibold text-gray-900">
-                    CA${vehicle.pricing.customer_to_parking_rate}
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
-                    Tax
-                  </label>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {vehicle.pricing.tax_per}%
-                  </p>
-                </div>
+                <PriceBox
+                  label="Base Rate"
+                  value={formatCAD(vehicle.pricing.base_rate)}
+                />
+                <PriceBox
+                label="Parking To Customer Rate"
+                value={formatCAD(vehicle.pricing.parking_to_customer_rate)}
+                />
+                <PriceBox
+                label="Customer To Parking Rate"
+                value={formatCAD(vehicle.pricing.customer_to_parking_rate)}
+                />
+                <PriceBox
+                label="Per KM Rate"
+                value={formatCAD(vehicle.pricing.per_km_rate)}
+                />
+                <PriceBox
+                label="Waiting Per Min Rate"
+                value={formatCAD(vehicle.pricing.waiting_per_min_rate)}
+                />
+                <PriceBox
+                label="Not Stay Per Min Rate"
+                value={formatCAD(vehicle.pricing.not_stay_per_min_rate)}
+                />
+                <PriceBox
+                label="Cancellation Percent"
+                value={vehicle.pricing.cancellation_per}
+                />
+                <PriceBox
+                label="Tax Percent"
+                value={vehicle.pricing.tax_per}
+                />
+                <PriceBox
+                label="Gratuities Percent"
+                value={vehicle.pricing.gratuities_per}
+                />
+
               </div>
             </div>
           )}
@@ -681,20 +692,42 @@ const ViewVehicle = () => {
                     Features & Amenities
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {Object.values(vehicle.features).filter((v) => v === 1).length - 1} of 7 features available
+                    {Object.values(vehicle.features).filter((v) => v === 1)
+                      .length - 1}{" "}
+                    of 7 features available
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { key: 'has_air_conditioner', label: 'Air Conditioner', icon: Wind },
-                  { key: 'has_charging_port', label: 'Charging Port', icon: Zap },
-                  { key: 'has_wifi', label: 'WiFi', icon: Wifi },
-                  { key: 'has_entertainment_system', label: 'Entertainment', icon: Monitor },
-                  { key: 'has_gps', label: 'GPS', icon: Navigation },
-                  { key: 'has_recliner_seats', label: 'Recliner Seats', icon: Armchair },
-                  { key: 'is_wheelchair_accessible', label: 'Wheelchair', icon: Accessibility },
+                  {
+                    key: "has_air_conditioner",
+                    label: "Air Conditioner",
+                    icon: Wind,
+                  },
+                  {
+                    key: "has_charging_port",
+                    label: "Charging Port",
+                    icon: Zap,
+                  },
+                  { key: "has_wifi", label: "WiFi", icon: Wifi },
+                  {
+                    key: "has_entertainment_system",
+                    label: "Entertainment",
+                    icon: Monitor,
+                  },
+                  { key: "has_gps", label: "GPS", icon: Navigation },
+                  {
+                    key: "has_recliner_seats",
+                    label: "Recliner Seats",
+                    icon: Armchair,
+                  },
+                  {
+                    key: "is_wheelchair_accessible",
+                    label: "Wheelchair",
+                    icon: Accessibility,
+                  },
                 ].map(({ key, label, icon: Icon }) => {
                   const isAvailable = vehicle.features[key];
                   return (
@@ -922,7 +955,9 @@ const ViewVehicle = () => {
               Vehicle Documents
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              {vehicle.documents?.filter((d) => d.vehicle_document_id !== null).length || 0} documents uploaded
+              {vehicle.documents?.filter((d) => d.vehicle_document_id !== null)
+                .length || 0}{" "}
+              documents uploaded
             </p>
           </div>
         </div>
@@ -961,9 +996,7 @@ const ViewVehicle = () => {
                       </div>
                       <div className="space-y-2">
                         <div className="p-2 bg-white/50 rounded-lg border border-gray-200/50">
-                          <p className="text-xs text-gray-500 mb-0.5">
-                            Number
-                          </p>
+                          <p className="text-xs text-gray-500 mb-0.5">Number</p>
                           <p className="text-xs font-medium text-gray-900">
                             {doc.document_number}
                           </p>

@@ -418,7 +418,6 @@ const Vehicles = () => {
         <button
           ref={buttonRef}
           onClick={handleToggle}
-          className="flex items-center space-x-2 px-3 py-2 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
         >
           {getStatusBadge(normalizedStatus)}
         </button>
