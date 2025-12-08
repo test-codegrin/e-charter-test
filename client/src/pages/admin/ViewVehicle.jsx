@@ -644,38 +644,37 @@ const ViewVehicle = () => {
                   value={formatCAD(vehicle.pricing.base_rate)}
                 />
                 <PriceBox
-                label="Parking To Customer Rate"
-                value={formatCAD(vehicle.pricing.parking_to_customer_rate)}
+                  label="Parking To Customer Rate"
+                  value={formatCAD(vehicle.pricing.parking_to_customer_rate)}
                 />
                 <PriceBox
-                label="Customer To Parking Rate"
-                value={formatCAD(vehicle.pricing.customer_to_parking_rate)}
+                  label="Customer To Parking Rate"
+                  value={formatCAD(vehicle.pricing.customer_to_parking_rate)}
                 />
                 <PriceBox
-                label="Per KM Rate"
-                value={formatCAD(vehicle.pricing.per_km_rate)}
+                  label="Per KM Rate"
+                  value={formatCAD(vehicle.pricing.per_km_rate)}
                 />
                 <PriceBox
-                label="Waiting Per Min Rate"
-                value={formatCAD(vehicle.pricing.waiting_per_min_rate)}
+                  label="Waiting Per Min Rate"
+                  value={formatCAD(vehicle.pricing.waiting_per_min_rate)}
                 />
                 <PriceBox
-                label="Not Stay Per Min Rate"
-                value={formatCAD(vehicle.pricing.not_stay_per_min_rate)}
+                  label="Not Stay Per Min Rate"
+                  value={formatCAD(vehicle.pricing.not_stay_per_min_rate)}
                 />
                 <PriceBox
-                label="Cancellation Percent"
-                value={vehicle.pricing.cancellation_per}
+                  label="Cancellation Percent"
+                  value={`${vehicle.pricing.cancellation_per}%`}
                 />
                 <PriceBox
-                label="Tax Percent"
-                value={vehicle.pricing.tax_per}
+                  label="Tax Percent"
+                  value={`${vehicle.pricing.tax_per}%`}
                 />
                 <PriceBox
-                label="Gratuities Percent"
-                value={vehicle.pricing.gratuities_per}
+                  label="Gratuities Percent"
+                  value={`${vehicle.pricing.gratuities_per}%`}
                 />
-
               </div>
             </div>
           )}
