@@ -331,9 +331,12 @@ SELECT
                 'customer_to_parking_rate', vp.customer_to_parking_rate,
                 'per_km_rate', vp.per_km_rate,
                 'waiting_per_min_rate', vp.waiting_per_min_rate,
+                'not_stay_per_min_rate', vp.not_stay_per_min_rate,
                 'cancellation_per', vp.cancellation_per,
                 'tax_per', vp.tax_per,
-                'gratuities_per', vp.gratuities_per
+                'gratuities_per', vp.gratuities_per,
+                'created_at', vp.created_at,
+                'updated_at', vp.updated_at
             )
         ELSE NULL
     END AS pricing,
